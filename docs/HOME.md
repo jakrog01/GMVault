@@ -21,6 +21,7 @@ The **Parties** section lists every note with `type: party` and **Members: <coun
 The count is the number of list items under that party note's `## Members` heading, stopping at the next level-two heading.
 Party cards have an **Open party** action.
 An empty vault shows **No campaigns, runs, or parties yet.**
+If a note cannot be read while the lists load, Home keeps its title and create actions and shows **Home data could not be read.**; the original error is written to the developer console.
 
 ## Create actions
 

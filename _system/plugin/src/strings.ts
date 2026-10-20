@@ -27,6 +27,7 @@ export const englishStrings = {
   homePartyMembers: "Members: {count}",
   homeUnassignedRuns: "Runs without a campaign",
   homeEmpty: "No campaigns, runs, or parties yet.",
+  homeLoadError: "Home data could not be read.",
   homeRoleGm: "Game master",
   homeRolePlayer: "Player",
   homeOpenRun: "Open run",

@@ -173,14 +173,29 @@ export function createEnvironment() {
     activeView: null,
     plugin: null,
     getLeavesOfType: type => leaves.filter(leaf => leaf.type === type),
-    getRightLeaf: () => {
-      const leaf = { app, type: null, view: null, async setViewState(state) { this.type = state.type; this.view = workspace.plugin.viewFactories.get(state.type)(this); leaves.push(this); await this.view.onOpen() } }
-      return leaf
-    },
-    revealLeaf: () => {},
+    getRightLeaf: () => makeLeaf(),
+    revealLeaf: async leaf => { await Promise.resolve(); leaf.revealed = true },
     getActiveFile: () => workspace.activeFile,
     getActiveViewOfType: () => workspace.activeView,
     openLinkText: async target => { opened.push(target) },
+  }
+  const makeLeaf = (type = null, deferred = false) => ({
+    app, type, deferred, view: type ? new ItemView({ app }) : null,
+    async setViewState(state) {
+      this.type = state.type
+      this.deferred = false
+      this.view = workspace.plugin.viewFactories.get(state.type)(this)
+      if (!leaves.includes(this)) leaves.push(this)
+      await this.view.onOpen()
+    },
+    async loadIfDeferred() {
+      if (this.deferred) await this.setViewState({ type: this.type })
+    },
+  })
+  const restoreLeaf = (type, { deferred = true } = {}) => {
+    const leaf = makeLeaf(type, deferred)
+    leaves.push(leaf)
+    return leaf
   }
   const app = {
     vault: {
@@ -194,7 +209,8 @@ export function createEnvironment() {
     },
     metadataCache: {
       getFileCache: file => ({ frontmatter: files.get(file.path)?.frontmatter ?? undefined }),
-      getFirstLinkpathDest: link => {
+      getFirstLinkpathDest: (link, sourcePath) => {
+        if (link === "") return files.get(sourcePath)?.file ?? null
         const clean = String(link).replace(/\.md$/, "")
         return files.get(`${clean}.md`)?.file ?? [...files.values()].find(entry => entry.file.basename === clean)?.file ?? null
       },
@@ -235,7 +251,7 @@ export function createEnvironment() {
   Object.defineProperty(globalThis, "navigator", { value: { clipboard: { writeText: async text => { clipboard.push(text); record(text) } } }, configurable: true })
 
   return {
-    app, workspace, files, addFile, adapterFiles, appended, opened, leaves, modals, notices, rendered, requests, network, platform, clipboard, storage, emit,
+    app, workspace, files, addFile, adapterFiles, appended, opened, leaves, restoreLeaf, modals, notices, rendered, requests, network, platform, clipboard, storage, emit,
     MockElement, TFile, MarkdownView, load, byLabel, byClass, byText, settingByName, buttonComponent, record,
   }
 }

@@ -7,7 +7,7 @@ import { Combat, DEFAULTS, EncounterSet, ScopePolicy, Settings, SourceKind } fro
 import { AssistantIndex } from "./indexer";
 import { Skill, loadSkills } from "./tools";
 import { assistantLayerPaths, defaultScopePolicy } from "./scope";
-import { HomeView, HOME_VIEW } from "./home";
+import { HomeView, HOME_VIEW, linkPath } from "./home";
 import { checkLatestRelease, checkedRecently, ReleaseCheck } from "./update";
 
 interface PluginData { settings: Settings; combat: Combat; encounterSets: EncounterSet[] }
@@ -91,9 +91,11 @@ export default class TableTools extends Plugin {
 
     this.addSettingTab(new TableToolsSettingTab(this.app, this));
     const workspace = this.app.workspace as typeof this.app.workspace & { onLayoutReady?: (callback: () => void) => void };
-    workspace.onLayoutReady?.(() => {
-      if (this.settings.openHomeOnStartup && !this.app.workspace.getLeavesOfType(HOME_VIEW).length) void this.openHome();
+    workspace.onLayoutReady?.(async () => {
       void this.checkForUpdatesOnStart();
+      const home = this.app.workspace.getLeavesOfType(HOME_VIEW)[0];
+      if (home) await home.loadIfDeferred?.();
+      else if (this.settings.openHomeOnStartup) await this.openHome();
     });
   }
 
@@ -227,22 +229,22 @@ export default class TableTools extends Plugin {
 
   async openView(type: string): Promise<void> {
     const existing = this.app.workspace.getLeavesOfType(type)[0];
-    if (existing) { this.app.workspace.revealLeaf(existing); return; }
+    if (existing) { await existing.loadIfDeferred?.(); await this.app.workspace.revealLeaf(existing); return; }
     const leaf = this.app.workspace.getRightLeaf(false);
     if (!leaf) return;
     await leaf.setViewState({ type, active: true });
-    this.app.workspace.revealLeaf(leaf);
+    await this.app.workspace.revealLeaf(leaf);
   }
 
   /** Opens the overview in the main workspace area, reusing an existing home leaf. */
   async openHome(): Promise<void> {
     const existing = this.app.workspace.getLeavesOfType(HOME_VIEW)[0];
-    if (existing) { this.app.workspace.revealLeaf(existing); return; }
+    if (existing) { await existing.loadIfDeferred?.(); await this.app.workspace.revealLeaf(existing); return; }
     const workspace = this.app.workspace as typeof this.app.workspace & { getLeaf?: (newLeaf?: boolean) => ReturnType<typeof this.app.workspace.getRightLeaf> };
     const leaf = workspace.getLeaf?.(true) ?? this.app.workspace.getRightLeaf(false);
     if (!leaf) return;
     await leaf.setViewState({ type: HOME_VIEW, active: true });
-    this.app.workspace.revealLeaf(leaf);
+    await this.app.workspace.revealLeaf(leaf);
   }
 
   /** Changes the single active-run pointer while preserving the ADR-0002 pointer semantics. */
@@ -289,12 +291,9 @@ export default class TableTools extends Plugin {
     return this.app.workspace.getLeavesOfType(ASSISTANT_VIEW)[0]?.view as AssistantView | undefined;
   }
 
-  private linkPath(value: unknown): string {
-    return String(value ?? "").replace(/^\[\[/, "").replace(/\]\]$/, "").split("|")[0].split("#")[0];
-  }
-
   private resolve(value: unknown, source: TFile): TFile | null {
-    return this.app.metadataCache.getFirstLinkpathDest(this.linkPath(value), source.path);
+    const path = linkPath(value);
+    return path ? this.app.metadataCache.getFirstLinkpathDest(path, source.path) : null;
   }
 
   /** Resolves the active run from the pointer note, then its campaign, party, state, and world day. */

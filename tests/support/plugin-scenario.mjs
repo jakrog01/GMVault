@@ -616,6 +616,16 @@ export async function runScenario({ override } = {}) {
   addFile("Campaigns/Glass/Campaign.md", "Campaign: Glassgate.", { type: "campaign", system: "dnd5e" })
   addFile("Parties/Watch/Party.md", "", { type: "party" })
   await home.render()
+  const cachedRead = env.app.vault.cachedRead
+  env.app.vault.cachedRead = async file => { if (file.path === "Parties/Watch/Party.md") throw new Error("Scenario home read error."); return cachedRead(file) }
+  home.invalidate("Parties/Watch/Party.md")
+  const consoleError = console.error
+  console.error = () => {}
+  await home.render()
+  console.error = consoleError
+  env.app.vault.cachedRead = cachedRead
+  assert.ok(home.contentEl.textContent.includes(s.homeLoadError))
+  await home.render()
   await byLabel(home.contentEl, s.homeNewCampaign)[0].click()
   let homeModal = modals.at(-1)
   await buttonComponent(homeModal.contentEl, s.homeCreate).click()

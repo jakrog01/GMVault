@@ -23,7 +23,7 @@ interface HomeModel {
 
 const folderName = (file: TFile): string => file.parent?.path.split("/").at(-1) ?? file.basename;
 
-const linkPath = (value: unknown): string => String(value ?? "").replace(/^\[\[/, "").replace(/\]\]$/, "").split("|")[0].split("#")[0];
+export const linkPath = (value: unknown): string => String(value ?? "").trim().replace(/^\[\[/, "").replace(/\]\]$/, "").split("|")[0].split("#")[0].trim();
 
 /** The main-area overview of the active table and all campaign material. */
 export class HomeView extends ItemView {
@@ -53,18 +53,25 @@ export class HomeView extends ItemView {
 
   async render(): Promise<void> {
     const generation = ++this.renderGeneration;
-    const model = await this.model();
-    if (generation !== this.renderGeneration) return;
     const root = this.contentEl;
     const s = this.plugin.strings;
     root.empty();
     root.addClass("tt-home");
     root.createEl("h2", { text: s.homeTitle });
-    if (model.update) this.renderUpdate(root, model.update);
     const create = root.createDiv("tt-home-actions");
     this.button(create, s.homeNewCampaign, () => new CampaignModal(this.app, this.plugin, this).open());
     this.button(create, s.homeNewParty, () => new PartyModal(this.app, this.plugin, this).open());
     this.button(create, s.homeNewRun, () => new RunModal(this.app, this.plugin, this).open());
+    let model: HomeModel;
+    try { model = await this.model(); }
+    catch (error) {
+      if (generation !== this.renderGeneration) return;
+      console.error("Table home could not load", error);
+      root.createDiv({ cls: "tt-empty", text: s.homeLoadError });
+      return;
+    }
+    if (generation !== this.renderGeneration) return;
+    if (model.update) this.renderUpdate(root, model.update);
 
     const { campaigns, runs, parties, context, worldDay, systems, members } = model;
     if (context) this.renderActive(root, context, worldDay, systems.get(context.campaign.path) ?? "generic");
@@ -99,6 +106,7 @@ export class HomeView extends ItemView {
   }
 
   private async model(): Promise<HomeModel> {
+    const updatePromise = recordedUpdate(this.app.vault.adapter);
     const notes = this.notes();
     const campaigns = notes.filter(note => note.fields.type === "campaign");
     const runs = notes.filter(note => note.fields.type === "run");
@@ -109,7 +117,7 @@ export class HomeView extends ItemView {
     const entries = await Promise.all(systemNotes.map(async note => [note.file.path, await this.systemName(note.fields.system)] as const));
     const memberEntries = await Promise.all(parties.map(async party => [party.file.path, await this.memberCountFor(party.file)] as const));
     const worldDay = context?.day ? await this.dayLine(context.day) : "";
-    const update = await recordedUpdate(this.app.vault.adapter);
+    const update = await updatePromise;
     return { campaigns, runs, parties, context, worldDay, systems: new Map(entries), members: new Map(memberEntries), update };
   }
 
@@ -130,7 +138,8 @@ export class HomeView extends ItemView {
   }
 
   private resolvesTo(value: unknown, source: TFile, target: TFile): boolean {
-    return this.app.metadataCache.getFirstLinkpathDest(linkPath(value), source.path)?.path === target.path;
+    const path = linkPath(value);
+    return !!path && this.app.metadataCache.getFirstLinkpathDest(path, source.path)?.path === target.path;
   }
 
   private role(value: unknown): string {
@@ -176,6 +185,7 @@ export class HomeView extends ItemView {
     if (cached) return cached;
     const result = this.firstDayLine(file);
     this.dayLines.set(file.path, result);
+    result.catch(() => this.dayLines.delete(file.path));
     return result;
   }
 
@@ -194,7 +204,8 @@ export class HomeView extends ItemView {
       const card = parent.createDiv({ cls: "tt-home-run" + (run.file.path === activePath ? " tt-active" : ""), attr: { "data-path": run.file.path } });
       card.createDiv({ cls: "tt-home-name", text: folderName(run.file) });
       card.createDiv({ cls: "tt-home-role", text: this.role(run.fields.role) });
-      const party = this.app.metadataCache.getFirstLinkpathDest(linkPath(run.fields.party), run.file.path);
+      const path = linkPath(run.fields.party);
+      const party = path ? this.app.metadataCache.getFirstLinkpathDest(path, run.file.path) : null;
       if (party) card.createDiv({ cls: "tt-muted", text: folderName(party) });
       this.button(card, this.plugin.strings.homeMakeActive, () => void this.plugin.setActiveRun(run.file.path));
     }
@@ -226,6 +237,7 @@ export class HomeView extends ItemView {
     if (cached) return cached;
     const result = this.memberCount(file);
     this.memberCounts.set(file.path, result);
+    result.catch(() => this.memberCounts.delete(file.path));
     return result;
   }
 }
