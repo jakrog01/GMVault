@@ -21,6 +21,8 @@ interface HomeModel {
   update: RecordedUpdate | null;
 }
 
+const isGameNote = (file: TFile): boolean => !/^_(system|local)\//.test(file.path);
+
 const folderName = (file: TFile): string => file.parent?.path.split("/").at(-1) ?? file.basename;
 
 export const linkPath = (value: unknown): string => String(value ?? "").trim().replace(/^\[\[/, "").replace(/\]\]$/, "").split("|")[0].split("#")[0].trim();
@@ -131,7 +133,7 @@ export class HomeView extends ItemView {
   }
 
   private notes(): NoteSummary[] {
-    return this.app.vault.getMarkdownFiles().map(file => ({
+    return this.app.vault.getMarkdownFiles().filter(isGameNote).map(file => ({
       file,
       fields: this.app.metadataCache.getFileCache(file)?.frontmatter ?? {},
     }));
@@ -151,7 +153,7 @@ export class HomeView extends ItemView {
     button.onclick = action;
   }
 
-  private open(path: string): void { void this.app.workspace.openLinkText(path, ""); }
+  private openNote(path: string): void { void this.app.workspace.openLinkText(path, ""); }
 
   private async systemName(id: unknown): Promise<string> { return this.plugin.systemName(String(id || "generic")); }
 
@@ -166,9 +168,9 @@ export class HomeView extends ItemView {
     card.createDiv({ text: folderName(context.party) });
     if (day) card.createDiv({ cls: "tt-home-day", text: day });
     const actions = card.createDiv("tt-home-actions");
-    this.button(actions, s.homeOpenRun, () => this.open(context.run.path));
-    this.button(actions, s.homeOpenCampaign, () => this.open(context.campaign.path));
-    this.button(actions, s.homeOpenParty, () => this.open(context.party.path));
+    this.button(actions, s.homeOpenRun, () => this.openNote(context.run.path));
+    this.button(actions, s.homeOpenCampaign, () => this.openNote(context.campaign.path));
+    this.button(actions, s.homeOpenParty, () => this.openNote(context.party.path));
     this.button(actions, s.homeOpenAssistant, () => void this.plugin.openView("tt-assistant"));
     this.button(actions, s.homeOpenCombat, () => void this.plugin.openView("tt-combat"));
   }
@@ -196,7 +198,7 @@ export class HomeView extends ItemView {
     card.createDiv({ cls: "tt-muted", text: system });
     const count = runs.filter(run => this.resolvesTo(run.fields.campaign, run.file, campaign.file)).length;
     card.createDiv({ cls: "tt-muted", text: format(s.homeRunCount, { count }) });
-    this.button(card, s.homeOpenCampaign, () => this.open(campaign.file.path));
+    this.button(card, s.homeOpenCampaign, () => this.openNote(campaign.file.path));
   }
 
   private renderRuns(parent: HTMLElement, runs: NoteSummary[], activePath: string): void {
@@ -216,7 +218,7 @@ export class HomeView extends ItemView {
     const card = parent.createDiv({ cls: "tt-home-party", attr: { "data-path": party.file.path } });
     card.createDiv({ cls: "tt-home-name", text: folderName(party.file) });
     card.createDiv({ cls: "tt-muted", text: format(s.homePartyMembers, { count: members }) });
-    this.button(card, s.homeOpenParty, () => this.open(party.file.path));
+    this.button(card, s.homeOpenParty, () => this.openNote(party.file.path));
   }
 
   private async memberCount(file: TFile): Promise<number> {
@@ -407,7 +409,7 @@ class RunModal extends HomeCreateModal {
   private noteDropdown(label: string, type: string, change: (value: string) => void): void {
     new Setting(this.contentEl).setName(label).addDropdown(dropdown => {
       dropdown.addOption("", "");
-      this.app.vault.getMarkdownFiles().filter(file => this.app.metadataCache.getFileCache(file)?.frontmatter?.type === type)
+      this.app.vault.getMarkdownFiles().filter(file => isGameNote(file) && this.app.metadataCache.getFileCache(file)?.frontmatter?.type === type)
         .forEach(file => dropdown.addOption(file.path, folderName(file)));
       dropdown.setValue("").onChange(change);
     });

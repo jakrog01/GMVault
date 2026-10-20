@@ -142,7 +142,10 @@ export function createEnvironment() {
   const buttonComponent = (container, text) => container.settings.flatMap(setting => setting.components).find(component => component.kind === "button" && component.text === text)
 
   class Notice { constructor(message) { notices.push(String(message)); record(message) } }
-  class ItemView { constructor(leaf) { this.leaf = leaf; this.app = leaf.app; this.contentEl = new MockElement("div") } }
+  class ItemView {
+    constructor(leaf) { this.leaf = leaf; this.app = leaf.app; this.containerEl = new MockElement("div"); this.contentEl = new MockElement("div") }
+    async open(containerEl) { this.containerEl = containerEl; await this.onOpen?.() }
+  }
   class MarkdownView {}
   class PluginSettingTab { constructor(app) { this.app = app; this.containerEl = new MockElement("div") } }
 
@@ -186,7 +189,7 @@ export function createEnvironment() {
       this.deferred = false
       this.view = workspace.plugin.viewFactories.get(state.type)(this)
       if (!leaves.includes(this)) leaves.push(this)
-      await this.view.onOpen()
+      await this.view.open(this.view.containerEl)
     },
     async loadIfDeferred() {
       if (this.deferred) await this.setViewState({ type: this.type })

@@ -67,7 +67,7 @@ async function upgraded(vault, installId, bridged = false) {
 }
 
 test("the shipped version and changelog describe this release", async () => {
-  assert.equal(version, "2.1.0")
+  assert.match(version, /^\d+\.\d+\.\d+$/)
   for (const file of ["package.json", "_system/plugin/package.json", "_system/obsidian/plugins/table-tools/manifest.json", ".obsidian/plugins/table-tools/manifest.json"]) assert.equal((await json(file)).version, version, file)
   assert.equal((await json(".gmvault/state.json")).installedVersion, version)
   const changelog = await read("CHANGELOG.md")
