@@ -128,7 +128,7 @@ test("a workflow builds the site on every push and publishes it only for a relea
   const [, build] = building[0]
   assert.ok(build.includes("docs-requirements.txt"), "the build installs the pinned dependencies")
   assert.ok(build.includes(CONFIG.replace(".github/", "")) || build.includes(CONFIG), "the build uses the shipped configuration")
-  assert.ok(/branches:\s*\[\s*main\s*\]|branches:\n\s+-\s*main/.test(build), "the site is built on pushes to main")
+  assert.ok(/branches:\s*\[\s*master\s*\]|branches:\n\s+-\s*master/.test(build), "the site is built on pushes to master")
   const publishing = Object.entries(workflows).filter(([, body]) => body.includes("actions/deploy-pages"))
   assert.ok(publishing.length, "a workflow publishes the site to Pages")
   const [, publish] = publishing[0]
