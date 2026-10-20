@@ -14,7 +14,16 @@ The bridge points the old updater at the GMVault release. The update preserves y
 
 ## Keep your vault in your own repository
 
-Start your vault with **Use this template** on GitHub, or clone this repository and point `origin` at your own private repository. Commit your notes there as usual. Do not merge the template repository into your vault: take each release with **Install update** in Table home or `node _system/bin/gmvault.mjs update --latest`, then commit the result. The shipped GitHub workflows run only in a repository marked as a template, so a vault repository spends no Actions minutes on them.
+Start with the [release zip](https://github.com/jakrog01/GMVault/releases/latest/download/GMVault.zip) and unzip it. In the vault folder, create your own repository and add its private remote:
+
+```text
+git init
+git remote add origin <private-remote-url>
+git add .
+git commit -m "Start GMVault vault"
+```
+
+Commit your notes there as usual. Never merge the template repository into your vault. Take each release with **Install update** in Table home or `node _system/bin/gmvault.mjs update --latest`, then commit the result.
 
 ## See whether a release exists
 
@@ -36,17 +45,17 @@ On desktop Obsidian, choose **Install update** in the Table home banner. The but
 node _system/bin/gmvault.mjs update --latest
 ```
 
-For an offline or air-gapped vault, download or otherwise obtain the complete release archive, unpack it, and install that source instead:
+For an offline or air-gapped vault, download `GMVault.zip` from the release page and install that archive instead:
 
 ```text
-node _system/bin/gmvault.mjs update --from /path/to/GMVault-release
+node _system/bin/gmvault.mjs update --from /path/to/GMVault.zip
 ```
 
 Add `--dry-run` to either installation path to preview replacements and migrations without writing the vault.
 
 ## Know what changes
 
-An update replaces `_system`, shipped root notes, and shipped documentation. It mirrors shipped folders such as `docs/` and `.github/`, so an item absent from the release is removed from those folders. Managed Obsidian artifacts are reconciled, pending migrations run, the bundled plugin is refreshed, and the final check runs.
+An update replaces `_system/` and the shipped `Home.md`. Managed Obsidian artifacts are reconciled, pending migrations run, the bundled plugin is refreshed, and the final check runs. The lean-vault migration moves old repository files into `.gmvault/backups/2026-10-20-lean-vault/`.
 
 Your `_local` layer and content roots are never replaced. Local community plugins and their files stay local. Before a replacement or removal, the updater saves the affected shipped material under `.gmvault/backups/<timestamp>`.
 

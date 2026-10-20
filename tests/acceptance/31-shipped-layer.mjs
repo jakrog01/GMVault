@@ -49,7 +49,7 @@ test("the declared shipped files are replaced, and the release's own state and u
   const host = await serve(release("1.1.0", {
     "docs/CLI.md": "# CLI reference\n\nnew shipped page\n",
     "README.md": "# GMVault\n\nnew shipped readme\n",
-    "CHANGELOG.md": "# Changelog\n\n## 1.1.0\n",
+    "CHANGELOG.md": "# Changelog\n\nnew shipped changelog\n",
     "Home.md": "---\ntype: home\n---\n\n# GMVault\n\nnew shipped home\n",
     ".github/workflows/release.yml": "name: release\n",
     ".gmvault/state.json": '{"installedVersion":"1.1.0","appliedMigrations":[],"installId":"gmvault-template","adoptedFrom":null}\n',
@@ -57,11 +57,11 @@ test("the declared shipped files are replaced, and the release's own state and u
   }))
   const result = await cli(vault, ["update", "--latest"], { GMVAULT_RELEASE_API: host.answer.base })
   assert.equal(result.code, 0, `the update succeeds; stdout: ${result.stdout}\nstderr: ${result.stderr}`)
-  assert.ok((await read(vault, "docs/CLI.md")).includes("new shipped page"), "a shipped documentation page is replaced")
-  assert.ok((await read(vault, "README.md")).includes("new shipped readme"), "the shipped readme is replaced")
-  assert.ok((await read(vault, "CHANGELOG.md")).includes("## 1.1.0"), "the shipped changelog is replaced")
+  assert.equal((await read(vault, "docs/CLI.md")).includes("new shipped page"), false, "repository documentation is not shipped")
+  assert.equal((await read(vault, "README.md")).includes("new shipped readme"), false, "the repository readme is not shipped")
+  assert.equal((await read(vault, "CHANGELOG.md")).includes("new shipped changelog"), false, "the changelog is not shipped")
   assert.ok((await read(vault, "Home.md")).includes("new shipped home"), "the shipped home note is replaced")
-  assert.equal(await read(vault, ".github/workflows/release.yml"), "name: release\n", "the shipped workflow is replaced")
+  assert.notEqual(await read(vault, ".github/workflows/release.yml"), "name: release\n", "workflows are not shipped")
   assert.equal(JSON.parse(await read(vault, ".gmvault/state.json")).installId, installId, "the install identity survives")
   assert.equal(await read(vault, "package.json"), '{"name":"my-fork"}\n', "a file no glob declares is left alone")
   assert.ok((await read(vault, "Campaigns/User/Campaign.md")).includes("owner content"), "the owner's note survives")
@@ -85,32 +85,27 @@ test("what the update overwrote is in the backup and named in the report", async
   await cleanup(vault)
 }, 180000)
 
-test("a file the owner added inside a shipped folder is backed up, removed and reported", async () => {
+test("repository folders are not mirrored by the updater", async () => {
   const vault = await cloneVault("gmvault-layer31-mirror-")
   await writeFile(path.join(vault, "docs/MY-NOTES.md"), "# My notes\n\nmine\n")
   const host = await serve(release("1.1.0", { "docs/ADOPTING.md": null }))
   const result = await cli(vault, ["update", "--latest"], { GMVAULT_RELEASE_API: host.answer.base })
   assert.equal(result.code, 0, `the update succeeds; stdout: ${result.stdout}\nstderr: ${result.stderr}`)
-  const backup = await backupDirectory(vault)
-  assert.equal(await exists(path.join(vault, "docs/MY-NOTES.md")), false, "the undeclared page inside the shipped folder is removed")
-  assert.ok((await readFile(path.join(backup, "docs/MY-NOTES.md"), "utf8")).includes("mine"), "it is in the backup first")
-  assert.equal(await exists(path.join(vault, "docs/ADOPTING.md")), false, "a page the release dropped is removed")
-  assert.ok(await exists(path.join(backup, "docs/ADOPTING.md")), "the dropped page is in the backup")
-  assert.ok(result.stdout.includes("MY-NOTES.md"), `the report names the removal: ${result.stdout}`)
+  assert.equal(await exists(path.join(vault, "docs/MY-NOTES.md")), true)
+  assert.equal(await exists(path.join(vault, "docs/ADOPTING.md")), true)
+  assert.equal(result.stdout.includes("MY-NOTES.md"), false)
   await host.close()
   await cleanup(vault)
 }, 180000)
 
-test("a source that provides none of a shipped group leaves that group alone and says so", async () => {
+test("a source without Home.md leaves the shipped note alone and says so", async () => {
   const vault = await cloneVault("gmvault-layer31-partial-")
-  const before = await read(vault, "docs/CLI.md")
-  const trimmed = {}
-  for (const entry of wholeRelease) if (entry.name.startsWith("docs/") || entry.name === "README.md") trimmed[entry.name] = null
-  const host = await serve(release("1.1.0", trimmed))
+  const before = await read(vault, "Home.md")
+  const host = await serve(release("1.1.0", { "Home.md": null }))
   const result = await cli(vault, ["update", "--latest"], { GMVAULT_RELEASE_API: host.answer.base })
   assert.equal(result.code, 0, `the update succeeds; stdout: ${result.stdout}\nstderr: ${result.stderr}`)
-  assert.equal(await read(vault, "docs/CLI.md"), before, "the documentation the source lacks is kept")
-  assert.ok(/docs/.test(result.stdout) && /kept/i.test(result.stdout), `the report says the group was kept: ${result.stdout}`)
+  assert.equal(await read(vault, "Home.md"), before)
+  assert.ok(/kept Home\.md/.test(result.stdout), `the report says the note was kept: ${result.stdout}`)
   await host.close()
   await cleanup(vault)
 }, 180000)
@@ -135,12 +130,12 @@ test("the selectively managed Obsidian files keep their own handling", async () 
 
 test("a preview lists the shipped layer it would replace and changes nothing", async () => {
   const vault = await cloneVault("gmvault-layer31-dry-")
-  const before = await read(vault, "README.md")
-  const host = await serve(release("1.1.0", { "README.md": "# GMVault\n\nnew shipped readme\n" }))
+  const before = await read(vault, "Home.md")
+  const host = await serve(release("1.1.0", { "Home.md": "---\ntype: home\n---\n\n# GMVault\n\nnew shipped home\n" }))
   const result = await cli(vault, ["update", "--latest", "--dry-run"], { GMVAULT_RELEASE_API: host.answer.base })
   assert.equal(result.code, 0, `the preview succeeds; stderr: ${result.stderr}`)
-  assert.ok(result.stdout.includes("README.md"), `the preview names what it would replace: ${result.stdout}`)
-  assert.equal(await read(vault, "README.md"), before, "the preview replaces nothing")
+  assert.ok(result.stdout.includes("Home.md"), `the preview names what it would replace: ${result.stdout}`)
+  assert.equal(await read(vault, "Home.md"), before, "the preview replaces nothing")
   assert.deepEqual(await readdir(path.join(vault, ".gmvault/backups")).catch(() => []), [], "the preview writes no backup")
   await host.close()
   await cleanup(vault)

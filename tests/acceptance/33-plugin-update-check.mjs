@@ -77,6 +77,19 @@ test("a successful check records the answer beside the CLI's own state and keeps
   await unload(plugin)
 })
 
+test("the first check creates state in a fresh release vault", async () => {
+  const env = vault()
+  env.adapterFiles.delete(".gmvault/state.json")
+  env.network.requestUrl = async () => release("v1.2.3")
+  const plugin = await boot(env)
+  await checkButton(env, plugin).click()
+  const after = state(env)
+  assert.equal(after.installedVersion, "1.0.0")
+  assert.match(after.installId, /^[0-9a-f-]{36}$/)
+  assert.equal(after.updateCheck.latestVersion, "1.2.3")
+  await unload(plugin)
+})
+
 test("`_local/release.json` sends the check to a fork", async () => {
   const env = vault({ "_local/release.json": JSON.stringify({ repo: "someone/Fork" }) })
   env.network.requestUrl = async () => release("v1.1.0")

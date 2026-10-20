@@ -16,7 +16,7 @@ jobs:
         with:
           fetch-depth: 0
       - run: npm test
-      - run: zip -r GMVault.zip . -x '.git/*' '.gmvault/backups/*'
+      - run: node _system/bin/package-release.mjs GMVault.zip
       - uses: softprops/action-gh-release@v2
         with:
           files: GMVault.zip

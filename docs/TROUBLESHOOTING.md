@@ -20,7 +20,7 @@ Fix: restore the named root at the vault root; it is a user-content folder and c
 
 Meaning: a top-level directory is not a known system, application, documentation, test, or content directory.
 Usual cause: a scratch or imported folder was left at the vault root.
-Fix: move its content into an appropriate content root, `_local/`, or `docs/`, then remove the undeclared root.
+Fix: move its content into an appropriate content root or `_local/`, then remove the undeclared root.
 
 ## `undeclared root file: <name>`
 

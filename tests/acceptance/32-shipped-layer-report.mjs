@@ -37,16 +37,14 @@ test("an entry the release leaves unchanged is not reported as replaced", async 
   const host = await serve(release("1.1.0", { "docs/CLI.md": "# CLI reference\n\nupstream edit\n" }))
   const result = await cli(vault, ["update", "--latest"], { GMVAULT_RELEASE_API: host.answer.base })
   assert.equal(result.code, 0, `the update succeeds; stdout: ${result.stdout}\nstderr: ${result.stderr}`)
-  for (const name of ["Home.md", "README.md", "CHANGELOG.md"]) {
+  for (const name of ["Home.md"]) {
     const line = entryLine(result, name)
     assert.ok(line, `${name} has a report line: ${result.stdout}`)
     assert.equal(/^replaced /.test(line), false, `${name} was not replaced and must not say so: ${line}`)
     assert.equal(/backup/.test(line), false, `${name} points at no backup: ${line}`)
     assert.ok(/unchanged/i.test(line), `${name} says it is unchanged: ${line}`)
   }
-  const docs = entryLine(result, "docs")
-  assert.ok(/^replaced docs \(1 written, 0 removed\)/.test(docs), `docs reports the one file that changed: ${docs}`)
-  assert.ok(/backup/.test(docs), `docs names the backup: ${docs}`)
+  assert.equal(entryLine(result, "docs"), "", "documentation has no update handler")
   await host.close()
   await cleanup(vault)
 }, 180000)
@@ -75,21 +73,18 @@ test("a preview reads as a plan, in grammatical English", async () => {
   assert.equal(result.code, 0, `the preview succeeds; stderr: ${result.stderr}`)
   assert.equal(/would replaced|would removed|would kept/.test(result.stdout), false, `the preview is grammatical: ${result.stdout}`)
   assert.ok(/would replace Home\.md/.test(result.stdout), `the preview names the file it would replace: ${result.stdout}`)
-  assert.ok(/would remove[^d].*MY-NOTES\.md/.test(result.stdout), `the preview names the file it would remove: ${result.stdout}`)
+  assert.equal(result.stdout.includes("MY-NOTES.md"), false)
   assert.equal(await readFile(path.join(vault, "docs/MY-NOTES.md"), "utf8"), "# mine\n", "the preview removes nothing")
   await host.close()
   await cleanup(vault)
 }, 180000)
 
-test("a group the release does not provide is still reported as kept", async () => {
+test("a shipped note the release does not provide is still reported as kept", async () => {
   const vault = await cloneVault("gmvault-report32-kept-")
-  const trimmed = {}
-  for (const entry of wholeRelease) if (entry.name.startsWith(".github/")) trimmed[entry.name] = null
-  const host = await serve(release("1.1.0", trimmed))
+  const host = await serve(release("1.1.0", { "Home.md": null }))
   const result = await cli(vault, ["update", "--latest"], { GMVAULT_RELEASE_API: host.answer.base })
   assert.equal(result.code, 0, `the update succeeds; stderr: ${result.stderr}`)
-  assert.ok(/kept \.github/.test(result.stdout), `the missing group is reported as kept: ${result.stdout}`)
-  assert.ok(await readFile(path.join(vault, ".github/workflows/release.yml"), "utf8"), "the vault keeps its own copy")
+  assert.ok(/kept Home\.md/.test(result.stdout), `the missing note is reported as kept: ${result.stdout}`)
   await host.close()
   await cleanup(vault)
 }, 180000)

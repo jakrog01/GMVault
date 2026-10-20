@@ -7,7 +7,7 @@ All command examples use the CLI shipped with this vault.
 
 ## Start here
 
-- [Getting started](GETTING-STARTED.md) answers: how do I turn a clone into my first active game?
+- [Getting started](GETTING-STARTED.md) answers: how do I turn a downloaded vault into my first active game?
 - [Concepts](CONCEPTS.md) answers: which layer, content root, note, and state file owns this information?
 - [Architecture](ARCHITECTURE.md) answers: how do the shipped, local, content, system-package, and radar boundaries fit together?
 - [CLI reference](CLI.md) answers: what does each `gmvault` command write, print, and require?
@@ -33,7 +33,7 @@ All command examples use the CLI shipped with this vault.
 
 ## Reading order
 
-Start with Getting started before changing anything in a fresh clone.
+Start with Getting started before changing anything in a fresh vault.
 Read Concepts before deciding whether a file belongs in shipped or local state.
 Open the Table home page when you are ready to create your own records.
 Keep the CLI reference nearby when working from a terminal.

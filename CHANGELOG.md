@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+## 2.1.0
+
+- GMVault releases now contain only the files needed to open and run a vault; the package list lives in the manifest.
+- Updates no longer ship the repository manual, changelog, tests, workflows, or package metadata into a vault.
+- A migration moves those files from existing vaults into a named backup while preserving install identity.
+- Setup instructions now begin with the release download instead of a repository clone.
+
 ## 2.0.1
 
 - The shipped documentation and release workflows run only in a GitHub repository marked as a template, so a vault kept in its own repository no longer builds the GMVault manual or tries to publish GMVault releases.

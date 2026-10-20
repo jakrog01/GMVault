@@ -44,9 +44,9 @@ Generated references to those repeated names should be path-qualified.
 System packages in `_system/systems/` describe supported note shapes and radar requirements.
 They do not contain published rules text or statblocks.
 Use a local package while experimenting; see [Authoring systems](AUTHORING-SYSTEMS.md) for that workflow.
-`.gmvault/state.json` records install identity, installed version, applied migrations, and adoption state.
+`.gmvault/state.json` records install identity, installed version, applied migrations, and adoption state after the first state write. A fresh release vault has no state file.
 `.gmvault/cache/` holds local derived caches, including assistant indexing data.
-`.gmvault/backups/` receives a timestamped copy of `_system/` before an update replaces it.
+`.gmvault/backups/` receives a timestamped copy of `_system/` before an update replaces it and a named backup of repository files moved by the lean-vault migration.
 An update may replace `_system/`, reconcile manifest-managed Obsidian artifacts, refresh the bundled plugin, and write state.
 An update does not replace `_local/`, the six content roots, or the root active pointer.
 

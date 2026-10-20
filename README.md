@@ -1,19 +1,9 @@
 # GMVault
 
-GMVault is an English, upgradeable Obsidian template for tabletop campaigns. It keeps the shipped system separate from your game material.
+Download [`GMVault.zip` from the latest release](https://github.com/jakrog01/GMVault/releases/latest/download/GMVault.zip), unzip it, and open the folder as a vault in Obsidian. Enable community plugins when Obsidian asks. You can also browse [all releases](https://github.com/jakrog01/GMVault/releases).
 
-```
-_system/  shipped, replaced on update
-_local/   your overrides, never updated
-Campaigns/ Parties/ Runs/ Library/ Calendar/ Archive/  your content
-```
+GMVault keeps its system in `_system/`, your overrides in `_local/`, and game material in `Campaigns/`, `Parties/`, `Runs/`, `Library/`, `Calendar/`, and `Archive/`.
 
-Open a clone in Obsidian, then run `node _system/bin/gmvault.mjs doctor`. Install the example with `node _system/bin/gmvault.mjs demo install`; remove only its stamped notes with `demo remove`.
+To update, choose **Install update** in Table home or run `node _system/bin/gmvault.mjs update --latest`. The updater backs up affected files in `.gmvault/backups/`.
 
-For an offline update, download a release and run `node _system/bin/gmvault.mjs update --from /path/to/release`. Backups are written to `.gmvault/backups/`. GitHub's **Use this template** starts your own vault repository, which can be private; keep it current with `update --latest`, not by merging the template. See [keeping a vault in your own repository](docs/UPDATING.md#keep-your-vault-in-your-own-repository).
-
-The Table Tools plugin adds a combat tracker and a Gemini assistant; translate or rename any of its labels through `_local/plugins/table-tools/strings.json`.
-
-Start with [the GMVault manual](docs/README.md), published at [jakrog01.github.io/GMVault](https://jakrog01.github.io/GMVault/). It links the getting-started guide, concepts, CLI reference, troubleshooting catalogue, and the existing topic pages.
-
-See [the table home](docs/HOME.md), [architecture](docs/ARCHITECTURE.md), [assistant retrieval](docs/ASSISTANT.md), [customisation](docs/CUSTOMISING.md), [keeping a vault up to date](docs/UPDATING.md), and [adopting an existing vault](docs/ADOPTING.md).
+Read the [GMVault manual](https://jakrog01.github.io/GMVault/) and its [source index](docs/README.md) for setup, game management, and updates. Cloning or using this repository as a template is for contributing to GMVault itself, not for running a game.

@@ -51,6 +51,16 @@ test("relative links in the manual and the root README resolve", async () => {
   }
 })
 
+test("owner setup starts with the release download", async () => {
+  const readme = await read("README.md")
+  const gettingStarted = await read("docs/GETTING-STARTED.md")
+  const updating = await read("docs/UPDATING.md")
+  assert.ok(readme.split("\n").find(line => line.trim() && !line.startsWith("#"))?.startsWith("Download"))
+  for (const body of [readme, gettingStarted, updating]) assert.ok(body.includes("https://github.com/jakrog01/GMVault/releases/latest/download/GMVault.zip"))
+  assert.equal(gettingStarted.includes("git clone"), false)
+  assert.ok(updating.includes("git init"))
+})
+
 test("docs/CLI.md documents every command, subcommand and flag the CLI accepts", async () => {
   const body = await read("docs/CLI.md")
   const commands = [...cli.matchAll(/command === '([a-z-]+)'/g)].map(match => match[1])

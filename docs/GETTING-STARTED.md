@@ -1,17 +1,18 @@
 # Getting started
 
-These steps take a new clone to an active run and a first game note.
+These steps take a new vault to an active run and a first game note.
 They use the shipped command-line tool only for vault maintenance and demo content.
 Creating campaigns, parties, and runs happens in the Table Tools home view.
 
-1. Clone the repository and enter the vault directory.
+1. Download [GMVault.zip](https://github.com/jakrog01/GMVault/releases/latest/download/GMVault.zip) from the [latest release](https://github.com/jakrog01/GMVault/releases/latest), unzip it, and enter the vault directory.
 
    ```text
-   git clone https://github.com/jakrog01/GMVault.git
+   mkdir GMVault
+   unzip GMVault.zip -d GMVault
    cd GMVault
    ```
 
-   Cloning creates the complete vault, including `_system/`, `_local/`, content-root folders, and the shipped Obsidian configuration.
+   The archive contains `_system/`, `_local/`, content-root folders, and the Obsidian configuration.
 
 2. Open the `GMVault` folder as a vault in Obsidian.
 

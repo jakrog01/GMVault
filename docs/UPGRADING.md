@@ -6,7 +6,7 @@ This page is for maintainers preparing a release. Owners who need to update a va
 
 Finish the release changes, rebuild the shipped plugin, and run the repository test suite and `doctor` before cutting the release. Update the shipped version consistently with the release version, then create and push a `v*` tag such as `v2.0.0`.
 
-The release workflow runs `npm test`, packages the repository as `GMVault.zip`, and creates the GitHub release from that tagged commit. The tag is the boundary: do not change the release contents after the tag has been cut.
+The release workflow runs `npm test`, runs `_system/bin/package-release.mjs`, and creates the GitHub release from that tagged commit. The tag is the boundary: do not change the release contents after the tag has been cut.
 
 ## Keep migrations permanent
 
@@ -18,4 +18,4 @@ Review a migration against an already-updated vault as well as a fresh one. The 
 
 Pushing a `v*` tag triggers the release workflow after its `package` job has passed `npm test`. It publishes the release archive and builds the documentation site for GitHub Pages. Repository settings must enable GitHub Pages with **Source: GitHub Actions** once before the first deployment.
 
-The released archive is the input to both online and offline owner updates. Keep it complete: it must contain the shipped `_system/` layer and its matching version so the updater can validate it.
+The released archive is the input to both online and offline owner updates. The `releaseInclude` and `releaseExclude` fields in `_system/manifest.json` are the package source of truth. The archive contains `_system/`, `_local/`, Obsidian configuration except workspace files, `.gmvault/plugin-build.json`, the six content roots and their keep files, `Active.md`, `Home.md`, and `.gitignore`. It excludes repository documentation, tests, workflows, `package.json`, and `.gmvault/state.json`. Keep `_system/VERSION` in the archive so the updater can validate it.

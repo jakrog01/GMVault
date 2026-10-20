@@ -1,6 +1,6 @@
 # Customising Table Tools
 
-Keep personal changes in `_local` or the content roots. The local layer mirrors shipped paths and wins during resolution, so it is the durable place for overrides that should survive updates. Do not put owner material in `docs/`, `.github/`, `Home.md`, `README.md`, or `CHANGELOG.md`: they are shipped paths and updates replace or mirror them after making a backup.
+Keep personal changes in `_local` or the content roots. The local layer mirrors shipped paths and wins during resolution, so it is the durable place for overrides that should survive updates. `Home.md` is shipped and replaced after a backup. The lean-vault migration moves old repository documentation and metadata into a named backup.
 
 ## Labels and templates
 

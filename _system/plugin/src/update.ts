@@ -58,7 +58,12 @@ export const checkLatestRelease = async (adapter: VaultAdapter): Promise<Release
   const latestVersion = releaseVersion((response.json as { tag_name?: unknown } | null)?.tag_name);
   if (!latestVersion) throw new Error("release host returned no valid version tag");
   const installedVersion = (await adapter.read(`${SHIPPED}VERSION`)).trim();
-  const state = await readJson(adapter, STATE) as Record<string, unknown>;
+  let state: Record<string, unknown>;
+  try {
+    state = await readJson(adapter, STATE) as Record<string, unknown>;
+  } catch {
+    state = { installedVersion, appliedMigrations: [], installId: globalThis.crypto.randomUUID(), adoptedFrom: null };
+  }
   state.updateCheck = { checkedAt: new Date().toISOString(), latestVersion, repo: source.repo };
   await adapter.write(STATE, `${JSON.stringify(state, null, 2)}\n`);
   return { source, latestVersion, installedVersion, newer: compareReleaseVersions(latestVersion, installedVersion) > 0 };

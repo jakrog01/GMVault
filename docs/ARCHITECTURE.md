@@ -9,9 +9,9 @@ The manifest's `ownedGlobs` gives each shipped path exactly one update handler. 
 - `_system/**` is replaced wholesale.
 - `.obsidian/**` is selectively reconciled as managed Obsidian artifacts, while workspace files and plugin data listed as never-touch stay owned by the vault.
 - `.gmvault/state.json` is written by the CLI to record installed state and migrations.
-- `replaceOnUpdate` mirrors the shipped root notes and folders: `Home.md`, `README.md`, `CHANGELOG.md`, `docs/**`, and `.github/**`.
+- `replaceOnUpdate` replaces the shipped `Home.md` note.
 
-Mirroring means a released folder is made to match the release. Before an overwritten or removed shipped item is changed, the updater preserves it in the update backup. `_local` and the content roots are not in the shipped layer.
+Before replacing `_system/` or `Home.md`, the updater preserves the old version in the update backup. The lean-vault migration moves old repository files into its own backup. `_local` and the content roots are not in the shipped layer.
 
 ## Content and packages
 

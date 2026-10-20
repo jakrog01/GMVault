@@ -41,7 +41,7 @@ node _system/bin/gmvault.mjs update --latest [--dry-run]
 ```
 
 `--from` is required and names a release directory or a `.zip` release containing `_system/`.
-Without `--dry-run`, update copies the current `_system/` to `.gmvault/backups/<timestamp>/`, replaces `_system/`, then replaces shipped `Home.md`, `README.md`, `CHANGELOG.md`, `docs/`, and `.github/` entries that the release provides before it runs `finalize-update`.
+Without `--dry-run`, update copies the current `_system/` to `.gmvault/backups/<timestamp>/`, replaces `_system/` and the shipped `Home.md`, then runs `finalize-update`. The lean-vault migration backs up old repository files in `.gmvault/backups/2026-10-20-lean-vault/`.
 Shipped folders are mirrored, so files absent from the release are removed; every overwritten or removed item is saved in that backup first.
 The report gives one line for each shipped entry: `replaced` with written and removed counts plus a backup when work occurred, `unchanged` when the release matches it, or `kept` when the release provides none.
 It names only files actually changed or removed; previews use `would replace` and `would remove` for planned work.
