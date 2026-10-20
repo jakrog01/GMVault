@@ -2,6 +2,16 @@
 
 ## Unreleased
 
+## 1.2.0
+
+- Fancy-a-Story is the default theme for new and updated vaults. The CLI installs it when the vault has none and selects it only when no theme was chosen; your own theme choice is never changed, and an installed Fancy-a-Story is never overwritten, so Obsidian's theme updates keep working.
+- The bundled Style Settings plugin is enabled with the other template plugins, so the theme's textures, colours, and options can be adjusted from Settings without installing anything.
+- The `rpgvault-fantasy` snippet gives notes 5e sourcebook headings: accent-coloured small capitals for H1 to H3 and a gold rule under each H3. Add `cssclasses: [chapter]` to a note for a chapter opener with an ornament and a drop cap, and use a `[!statblock]` callout for a monster-block card.
+- Cinzel and EB Garamond ship inside the `rpgvault-fonts` snippet, including Polish and other Latin Extended letters, so every vault gets the headings and body font with nothing to install. They are enabled together with the fantasy snippet, and switching the fantasy snippet off stays off through updates.
+- Table home keeps its title and create buttons while it loads, after a demo removal, and when a note cannot be read; a read failure shows **Home data could not be read.** and logs the original error.
+- An empty `run`, `campaign`, or `party` link no longer resolves to the note that contains it, so an unset `Active.md` pointer shows no active run.
+- Table home, combat, and assistant views restored by Obsidian as deferred tabs are loaded when opened, and a Home tab left open from the last session renders at startup.
+
 ## 1.1.0
 
 - `rpgvault update --check` asks the release host named in `_system/manifest.json` whether a newer release exists and records the answer in `.rpgvault/state.json`; `_local/release.json` points a fork somewhere else.

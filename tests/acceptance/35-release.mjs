@@ -56,7 +56,7 @@ test("the changelog describes this release and leaves nothing unreleased", async
   assert.ok(entries.length >= 3, `the section lists what changed, found ${entries.length} entries`)
   const unreleased = changelog.match(/## Unreleased([\s\S]*?)(\n## |$)/)
   assert.equal(unreleased?.[1].split("\n").filter(line => line.trim().startsWith("-")).length ?? 0, 0, "nothing is left under Unreleased")
-  assert.ok(section.includes("update --latest"), "the section names the network update this release adds")
+  assert.ok(section.includes("Fancy-a-Story"), "the section names the default theme this release adds")
 })
 
 test("the workflow packages the asset the manifest asks the updater to download", async () => {
