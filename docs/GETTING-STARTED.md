@@ -17,7 +17,7 @@ Creating campaigns, parties, and runs happens in the Table Tools home view.
 
    Opening does not ask the CLI to create notes; Obsidian reads the existing vault files.
 
-3. In Obsidian, enable community plugins and enable `templater-obsidian`, `calendarium`, and `table-tools`.
+3. In Obsidian, enable community plugins and enable `templater-obsidian`, `calendarium`, `table-tools`, and `obsidian-style-settings`.
 
    The template contributes those ids through `.obsidian/community-plugins.json`; Obsidian stores its application settings under `.obsidian/`.
 

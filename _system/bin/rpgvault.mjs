@@ -68,6 +68,30 @@ const copyManagedObsidian = async () => {
       await writeJson(target, targetJson)
     }
   }
+  const themeSource = path.join(system, 'obsidian', 'themes', 'Fancy-a-Story')
+  const themeTarget = path.join(root, '.obsidian', 'themes', 'Fancy-a-Story')
+  if (!(await exists(path.join(themeTarget, 'theme.css')))) {
+    await mkdir(themeTarget, { recursive: true })
+    for (const name of ['theme.css', 'manifest.json', 'LICENSE']) {
+      await cp(path.join(themeSource, name), path.join(themeTarget, name))
+    }
+  }
+  const appearancePath = path.join(root, '.obsidian', 'appearance.json')
+  const appearance = await exists(appearancePath) ? await readJson(appearancePath) : {}
+  let appearanceChanged = false
+  if (!Object.hasOwn(appearance, 'enabledCssSnippets')) {
+    appearance.enabledCssSnippets = ['rpgvault-fonts', 'rpgvault-fantasy']
+    appearanceChanged = true
+  }
+  if (Array.isArray(appearance.enabledCssSnippets) && appearance.enabledCssSnippets.includes('rpgvault-fantasy') && !appearance.enabledCssSnippets.includes('rpgvault-fonts')) {
+    appearance.enabledCssSnippets.unshift('rpgvault-fonts')
+    appearanceChanged = true
+  }
+  if (!Object.hasOwn(appearance, 'cssTheme')) {
+    appearance.cssTheme = 'Fancy-a-Story'
+    appearanceChanged = true
+  }
+  if (appearanceChanged) await writeJson(appearancePath, appearance)
 }
 
 const sourceHash = async () => {

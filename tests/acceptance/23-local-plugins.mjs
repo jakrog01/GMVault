@@ -9,7 +9,7 @@ import { assert, run, test } from "./support.mjs"
 const repository = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..")
 const skipped = item => item.includes(`${path.sep}.git`) || item.includes(`${path.sep}node_modules`)
 const templatePlugins = JSON.parse(await readFile(path.join(repository, "_system/obsidian/community-plugins.json"), "utf8"))
-const extras = ["obsidian-style-settings", "dataview"]
+const extras = ["obsidian-excalidraw-plugin", "dataview"]
 
 function cli(vault, ...args) {
   return new Promise(resolve => execFile("node", [path.join(vault, "_system/bin/rpgvault.mjs"), ...args], { cwd: vault, timeout: 120000 },

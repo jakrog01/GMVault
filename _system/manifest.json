@@ -5,7 +5,7 @@
   "replaceOnUpdate": ["Home.md", "README.md", "CHANGELOG.md", "docs/**", ".github/**"],
   "contractualNames": ["Active.md", "Campaign.md", "Party.md", "Run.md", "State.md", "Dashboard.md", "Radar.md", "World Day.md"],
   "runtimeReadOnlyAllowlist": ["_system/"],
-  "asciiAllowlist": ["_system/obsidian/plugins/calendarium/main.js"],
+  "asciiAllowlist": ["_system/obsidian/plugins/calendarium/main.js", "_system/obsidian/themes/Fancy-a-Story/theme.css", "_system/obsidian/plugins/obsidian-style-settings/main.js", "_system/obsidian/plugins/obsidian-style-settings/styles.css"],
   "referenceFolders": ["Library/Mechanics/*/Spells", "Library/Mechanics/*/Bestiary", "Library/Mechanics/*/Items"],
   "neverTouch": [".obsidian/workspace.json", ".obsidian/workspace-mobile.json", ".obsidian/plugins/table-tools/data.json", ".obsidian/plugins/calendarium/data.json"],
   "managedObsidian": [
@@ -17,6 +17,11 @@
     {"path":"plugins/calendarium/manifest.json", "keys":["id", "name", "version", "minAppVersion", "description", "author", "isDesktopOnly"]},
     {"path":"plugins/calendarium/main.js", "keys":null},
     {"path":"plugins/calendarium/styles.css", "keys":null},
+    {"path":"plugins/obsidian-style-settings/manifest.json", "keys":["id", "name", "version", "minAppVersion", "description", "author", "isDesktopOnly"]},
+    {"path":"plugins/obsidian-style-settings/main.js", "keys":null},
+    {"path":"plugins/obsidian-style-settings/styles.css", "keys":null},
+    {"path":"snippets/rpgvault-fonts.css", "keys":null},
+    {"path":"snippets/rpgvault-fantasy.css", "keys":null},
     {"path":"plugins/table-tools/manifest.json", "keys":["id", "name", "version", "minAppVersion", "description", "author", "isDesktopOnly"]},
     {"path":"plugins/table-tools/main.js", "keys":[]}
   ],

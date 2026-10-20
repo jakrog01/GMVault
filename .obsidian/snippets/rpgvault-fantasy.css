@@ -1,0 +1,252 @@
+body.theme-light,
+body.theme-dark {
+  --rpg-heading-font: "Cinzel", "Cinzel Decorative", "Trajan Pro", "Cormorant SC", "Palatino Linotype", Palatino, "Book Antiqua", Georgia, serif;
+  --font-text-theme: "EB Garamond", "Cormorant Garamond", "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
+  --h1-font: var(--rpg-heading-font);
+  --h2-font: var(--rpg-heading-font);
+  --h3-font: var(--rpg-heading-font);
+  --h4-font: var(--rpg-heading-font);
+  --h5-font: var(--rpg-heading-font);
+  --h6-font: var(--rpg-heading-font);
+  --h1-color: var(--rpg-heading);
+  --h2-color: var(--rpg-heading);
+  --h3-color: var(--rpg-heading);
+  --h4-color: var(--text-normal);
+  --h5-color: var(--text-normal);
+  --h6-color: var(--text-normal);
+  --rpg-note: color-mix(in srgb, var(--rpg-gold) 9%, var(--background-primary));
+  --rpg-stripe: color-mix(in srgb, var(--rpg-gold) 6%, var(--background-primary));
+}
+
+body.theme-light {
+  --rpg-heading: #8b2e1f;
+  --rpg-gold: #b08d3c;
+  --rpg-section-rule: #b08d3c;
+  --rpg-ember: #8b2e1f;
+  --rpg-statblock-paper: #efe1c4;
+  --rpg-statblock-ink: #2b2118;
+  --rpg-statblock-red: #8b2e1f;
+}
+
+body.theme-dark {
+  --rpg-heading: #d4a24c;
+  --rpg-gold: #d4a24c;
+  --rpg-section-rule: #8a6d32;
+  --rpg-ember: #c0533a;
+  --rpg-statblock-paper: #dfcfad;
+  --rpg-statblock-ink: #2b2118;
+  --rpg-statblock-red: #8b2e1f;
+}
+
+.markdown-rendered :is(h1, h2, h3, h4, h5, h6),
+.cm-header,
+.markdown-source-view.mod-cm6 .HyperMD-header,
+.tt-home :is(h2, h3),
+.tt-card-header h3,
+.tt-section-title {
+  font-family: var(--rpg-heading-font);
+}
+
+.markdown-rendered h1,
+.markdown-source-view.mod-cm6 .HyperMD-header-1 {
+  margin-top: 1.5em;
+  border-bottom: 0;
+  color: var(--rpg-heading);
+  font-size: 2.4em;
+  font-variant: small-caps;
+  letter-spacing: 0.04em;
+}
+
+.markdown-rendered h2,
+.markdown-source-view.mod-cm6 .HyperMD-header-2 {
+  border-bottom: 0;
+  color: var(--rpg-heading);
+  font-size: 1.85em;
+  font-variant: small-caps;
+  letter-spacing: 0.03em;
+}
+
+.markdown-rendered h3,
+.markdown-source-view.mod-cm6 .HyperMD-header-3 {
+  padding-bottom: 0.15em;
+  border-bottom: 2px solid var(--rpg-section-rule);
+  color: var(--rpg-heading);
+  font-size: 1.45em;
+  font-variant: small-caps;
+}
+
+.markdown-rendered :is(h4, h5, h6),
+.markdown-source-view.mod-cm6 :is(.HyperMD-header-4, .HyperMD-header-5, .HyperMD-header-6) {
+  border-bottom: 0;
+  color: var(--text-normal);
+  font-weight: 700;
+}
+
+.markdown-source-view.mod-cm6 :is(.cm-header-1, .cm-header-2, .cm-header-3) {
+  color: var(--rpg-heading);
+  font-variant: small-caps;
+}
+
+.markdown-source-view.mod-cm6 :is(.cm-header-4, .cm-header-5, .cm-header-6) {
+  color: var(--text-normal);
+  font-weight: 700;
+}
+
+.markdown-source-view.mod-cm6 .HyperMD-header-1 .cm-header-1,
+.markdown-source-view.mod-cm6 .HyperMD-header-2 .cm-header-2,
+.markdown-source-view.mod-cm6 .HyperMD-header-3 .cm-header-3 {
+  font-size: inherit;
+}
+
+:is(.chapter .markdown-rendered, .chapter.markdown-rendered) h1,
+:is(.chapter .markdown-source-view.mod-cm6, .chapter.markdown-source-view.mod-cm6) .HyperMD-header-1 {
+  position: relative;
+  padding-bottom: 0.65em;
+  border-bottom: 1px solid var(--rpg-gold);
+  font-size: 2.9em;
+  text-align: center;
+}
+
+:is(.chapter .markdown-rendered, .chapter.markdown-rendered) h1::after,
+:is(.chapter .markdown-source-view.mod-cm6, .chapter.markdown-source-view.mod-cm6) .HyperMD-header-1::after {
+  content: "\2766";
+  position: absolute;
+  bottom: -0.65em;
+  left: 50%;
+  padding: 0 0.45em;
+  transform: translateX(-50%);
+  background: var(--background-primary);
+  color: var(--rpg-gold);
+  font-size: 0.65em;
+}
+
+:is(.chapter .markdown-rendered, .chapter.markdown-rendered) :is(h1 + p, .el-h1 + .el-p > p)::first-letter {
+  float: left;
+  margin: 0.03em 0.12em 0 0;
+  color: var(--text-accent);
+  font-family: var(--rpg-heading-font);
+  font-size: 3.2em;
+  line-height: 0.8;
+}
+
+.markdown-rendered blockquote {
+  padding: 0.4em 1em;
+  border-left: 3px solid var(--rpg-gold);
+  background: var(--rpg-note);
+  color: var(--text-normal);
+}
+
+.markdown-rendered hr {
+  position: relative;
+  overflow: visible;
+  margin: 2em 0;
+  border: 0;
+  border-top: 1px solid var(--rpg-gold);
+}
+
+.markdown-rendered hr::after {
+  content: "\2766";
+  position: absolute;
+  top: -0.7em;
+  left: 50%;
+  padding: 0 0.6em;
+  transform: translateX(-50%);
+  background: var(--background-primary);
+  color: var(--rpg-gold);
+}
+
+.markdown-rendered table {
+  border: 1px solid var(--background-modifier-border);
+}
+
+.markdown-rendered table thead th {
+  border-bottom: 2px solid var(--rpg-gold);
+  background: var(--background-secondary);
+  color: var(--text-normal);
+  font-family: var(--rpg-heading-font);
+}
+
+.markdown-rendered table tbody tr:nth-child(even) {
+  background: var(--rpg-stripe);
+}
+
+.markdown-rendered table :is(th, td) {
+  border-color: var(--background-modifier-border);
+}
+
+.callout {
+  border: 1px solid var(--rpg-gold);
+  background: color-mix(in srgb, var(--rpg-gold) 9%, var(--background-primary));
+}
+
+.callout[data-callout="quote"] {
+  --callout-color: 176, 141, 60;
+}
+
+.callout[data-callout="note"] {
+  --callout-color: 139, 46, 31;
+}
+
+.callout[data-callout="danger"] {
+  --callout-color: 192, 83, 58;
+  border-color: var(--rpg-ember);
+}
+
+.callout[data-callout="statblock"] {
+  --text-normal: var(--rpg-statblock-ink);
+  --text-muted: #5a4a38;
+  --bold-color: var(--rpg-statblock-red);
+  --link-color: var(--rpg-statblock-red);
+  --background-primary: var(--rpg-statblock-paper);
+  border: 0;
+  border-top: 3px solid var(--rpg-statblock-red);
+  border-bottom: 3px solid var(--rpg-statblock-red);
+  background: var(--rpg-statblock-paper);
+  color: var(--rpg-statblock-ink);
+}
+
+.callout[data-callout="statblock"] .callout-title {
+  color: var(--rpg-statblock-ink);
+  font-family: var(--rpg-heading-font);
+}
+
+.callout[data-callout="statblock"] .callout-icon {
+  display: none;
+}
+
+body.theme-dark .callout[data-callout="quote"] {
+  --callout-color: 212, 162, 76;
+}
+
+body.theme-dark .callout[data-callout="note"] {
+  --callout-color: 224, 178, 94;
+}
+
+.tt-home-active,
+.tt-home-campaign,
+.tt-home-run,
+.tt-home-party,
+.tt-card {
+  border: 3px double var(--rpg-gold);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--rpg-gold) 28%, transparent);
+}
+
+.tt-btn {
+  border-color: var(--rpg-gold);
+}
+
+.tt-btn-primary {
+  border-color: var(--interactive-accent);
+  background: var(--interactive-accent);
+  color: var(--text-on-accent);
+}
+
+.tt-btn-primary:hover {
+  border-color: var(--interactive-accent-hover);
+  background: var(--interactive-accent-hover);
+}
+
+.tt-table th {
+  border-bottom-color: var(--rpg-gold);
+  color: var(--text-muted);
+}
