@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+## 2.1.1
+
+- Table home opens with its title, create buttons and lists again. Its note-opening helper was named `open`, which replaced the `open` method Obsidian uses to show a view, so the view stayed blank and the console reported `e.startsWith is not a function`.
+- Table home and the new-run form list only your game notes; the shipped templates and demo notes in `_system/` and your templates in `_local/` no longer appear as campaigns, parties or runs.
+- The GMVault test harness opens views through `View.open` as Obsidian does, so a view method that shadows an Obsidian one now fails the test suite.
+
 ## 2.1.0
 
 - GMVault releases now contain only the files needed to open and run a vault; the package list lives in the manifest.
