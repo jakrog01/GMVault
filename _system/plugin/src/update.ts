@@ -11,7 +11,7 @@ export interface RecordedUpdate { latestVersion: string; installedVersion: strin
 
 /** The shipped layer is read-only at runtime; the manifest allows this prefix and nothing deeper. */
 const SHIPPED = "_system/";
-const STATE = ".rpgvault/state.json";
+const STATE = ".gmvault/state.json";
 
 const readJson = async (adapter: VaultAdapter, path: string): Promise<unknown> => JSON.parse(await adapter.read(path));
 
@@ -77,7 +77,6 @@ export const recordedUpdate = async (adapter: VaultAdapter): Promise<RecordedUpd
   }
 };
 
-/** True when `.rpgvault/state.json` holds a check younger than `within` milliseconds. */
 export const checkedRecently = async (adapter: VaultAdapter, within: number): Promise<boolean> => {
   try {
     const state = await readJson(adapter, STATE) as { updateCheck?: { checkedAt?: unknown } };

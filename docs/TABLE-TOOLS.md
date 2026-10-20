@@ -79,7 +79,7 @@ Export the combat to an open session note before clearing it.
 The Settings reference documents bestiary, party, hit-point, group-initiative, and attack-roll controls.
 See [Assistant retrieval](ASSISTANT.md) for how combat state can be attached to a request.
 
-## RPGVault updates
+## GMVault updates
 
 When the table home has a recorded release newer than this vault, it shows an update banner with both versions and the CLI command. On desktop Obsidian, **Install update** runs the update through the shipped CLI; phones show the banner and command but cannot install it from Table Tools.
 

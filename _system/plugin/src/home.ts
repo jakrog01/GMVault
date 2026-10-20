@@ -124,7 +124,7 @@ export class HomeView extends ItemView {
   private renderUpdate(root: HTMLElement, update: RecordedUpdate): void {
     const banner = root.createDiv("tt-home-update");
     banner.createDiv({ text: format(this.plugin.strings.homeUpdateAvailable, { version: update.latestVersion, installed: update.installedVersion }) });
-    banner.createEl("code", { text: "node _system/bin/rpgvault.mjs update --latest" });
+    banner.createEl("code", { text: "node _system/bin/gmvault.mjs update --latest" });
     if (Platform.isDesktopApp) {
       this.button(banner, this.plugin.strings.homeUpdateInstall, () => new UpdateModal(this.app, this.plugin).open());
     }
@@ -250,7 +250,7 @@ class UpdateModal extends Modal {
     this.contentEl.createEl("h3", { text: s.homeUpdateRunning });
     const output = this.contentEl.createEl("pre", { cls: "tt-update-output" });
     try {
-      const code = await this.plugin.commandRunner(shippedPath("bin/rpgvault.mjs"), ["update", "--latest"], chunk => output.appendText(chunk));
+      const code = await this.plugin.commandRunner(shippedPath("bin/gmvault.mjs"), ["update", "--latest"], chunk => output.appendText(chunk));
       output.appendText(`\n${code === 0 ? s.homeUpdateReload : s.homeUpdateFailed}`);
     } catch (error) {
       output.appendText(`\n${s.homeUpdateFailed}\n${error instanceof Error ? error.message : String(error)}`);

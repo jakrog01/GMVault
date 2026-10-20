@@ -5,7 +5,7 @@
 !.obsidian/plugins/calendarium/data.json
 .trash/
 node_modules/
-.rpgvault/backups/
-.rpgvault/cache/
+.gmvault/backups/
+.gmvault/cache/
 .DS_Store
 .github/site/

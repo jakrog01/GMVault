@@ -11,8 +11,8 @@ const repository = path.resolve(path.dirname(fileURLToPath(import.meta.url)), ".
 const skipped = item => item.includes(`${path.sep}.git`) || item.includes(`${path.sep}node_modules`)
 
 async function setup(files) {
-  const vault = await mkdtemp(path.join(os.tmpdir(), "rpgvault-adopt22-target-"))
-  const source = await mkdtemp(path.join(os.tmpdir(), "rpgvault-adopt22-source-"))
+  const vault = await mkdtemp(path.join(os.tmpdir(), "gmvault-adopt22-target-"))
+  const source = await mkdtemp(path.join(os.tmpdir(), "gmvault-adopt22-source-"))
   await cp(repository, vault, { recursive: true, filter: item => !skipped(item) })
   for (const [relative, content] of Object.entries(files)) {
     const item = path.join(source, relative)
@@ -24,9 +24,9 @@ async function setup(files) {
 
 function adopt(vault, source, map) {
   return new Promise(async resolve => {
-    const mapPath = path.join(os.tmpdir(), `rpgvault-adopt22-map-${process.pid}-${Date.now()}.json`)
+    const mapPath = path.join(os.tmpdir(), `gmvault-adopt22-map-${process.pid}-${Date.now()}.json`)
     await writeFile(mapPath, JSON.stringify(map))
-    execFile("node", [path.join(vault, "_system/bin/rpgvault.mjs"), "adopt", source, "--map", mapPath], { cwd: vault, timeout: 60000 }, (error, stdout, stderr) => {
+    execFile("node", [path.join(vault, "_system/bin/gmvault.mjs"), "adopt", source, "--map", mapPath], { cwd: vault, timeout: 60000 }, (error, stdout, stderr) => {
       resolve({ code: error ? (error.code ?? 1) : 0, stdout, stderr })
     })
   })

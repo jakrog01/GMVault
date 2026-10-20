@@ -55,10 +55,10 @@ Turn it off when creating preparation material that should not become the table'
 
 ## Templates and updates
 
-When a recorded update is newer than the installed RPGVault, the top of the home view shows its version and the command to run.
-On desktop Obsidian, choose **Install update** to open a report headed **Installing RPGVault update**.
+When a recorded update is newer than the installed GMVault, the top of the home view shows its version and the command to run.
+On desktop Obsidian, choose **Install update** to open a report headed **Installing GMVault update**.
 The report streams the CLI output while it works; a successful run ends with **Update complete. Reload Obsidian to use the new version.**
-If it cannot complete, the report says **RPGVault update failed.** and stays open so its output can be copied.
+If it cannot complete, the report says **GMVault update failed.** and stays open so its output can be copied.
 On a phone, the banner still names the command, but no install button is available.
 
 The creation forms read `_local/templates/campaign.md`, `_local/templates/party.md`, or `_local/templates/run.md` first.

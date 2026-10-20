@@ -154,7 +154,7 @@ test("vectors persist across restarts, and a model change re-embeds without re-r
   const plugin = await withProvider(first, "ollama")
   await waitEmbedded(plugin)
   await unload(plugin)
-  assert.ok(first.binaryWrites.includes(".rpgvault/cache/assistant/vectors.bin"), `binary writes ${JSON.stringify(first.binaryWrites)}`)
+  assert.ok(first.binaryWrites.includes(".gmvault/cache/assistant/vectors.bin"), `binary writes ${JSON.stringify(first.binaryWrites)}`)
   const embeddedInputs = firstCalls.flatMap(call => [].concat(call.payload.input)).length
   assert.ok(embeddedInputs >= 3)
 

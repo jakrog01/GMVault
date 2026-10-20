@@ -15,10 +15,10 @@ jobs:
         with:
           fetch-depth: 0
       - run: npm test
-      - run: zip -r RPGVault.zip . -x '.git/*' '.rpgvault/backups/*'
+      - run: zip -r GMVault.zip . -x '.git/*' '.gmvault/backups/*'
       - uses: softprops/action-gh-release@v2
         with:
-          files: RPGVault.zip
+          files: GMVault.zip
 
   publish-docs:
     needs: package

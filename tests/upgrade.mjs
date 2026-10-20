@@ -1,5 +1,5 @@
 import assert from "node:assert/strict"
-import { cp, mkdtemp, mkdir, readFile, rm, writeFile } from "node:fs/promises"
+import { access, cp, mkdtemp, mkdir, readFile, rm, writeFile } from "node:fs/promises"
 import os from "node:os"
 import path from "node:path"
 import { execFile } from "node:child_process"
@@ -15,10 +15,11 @@ const previous = []
 for (const tag of tags) if ((await exec("git", ["rev-parse", `${tag}^{}`], { cwd: root })).stdout.trim() !== head) previous.push(tag)
 if (!previous.length) console.log("no earlier release tag exists; running self-upgrade")
 for (const tag of previous.length ? previous : ["HEAD"]) {
-  const source = await mkdtemp(path.join(os.tmpdir(), "rpgvault-upgrade-source-"))
-  const target = await mkdtemp(path.join(os.tmpdir(), "rpgvault-upgrade-target-"))
+  const source = await mkdtemp(path.join(os.tmpdir(), "gmvault-upgrade-source-"))
+  const target = await mkdtemp(path.join(os.tmpdir(), "gmvault-upgrade-target-"))
   await exec("git", ["archive", tag, "|", "tar", "-x", "-C", source], { cwd: root, shell: "/bin/bash" })
-  const oldCli = path.join(source, "_system/bin/rpgvault.mjs")
+  const legacy = path.join(source, "_system/bin/rpgvault.mjs")
+  const oldCli = await access(legacy).then(() => legacy).catch(() => path.join(source, "_system/bin/gmvault.mjs"))
   await exec("node", [oldCli, "init"], { cwd: source })
   await mkdir(path.join(source, "Campaigns/User"), { recursive: true })
   await mkdir(path.join(source, "_local/templates"), { recursive: true })
@@ -28,10 +29,10 @@ for (const tag of previous.length ? previous : ["HEAD"]) {
   await writeFile(path.join(source, "Active.md"), "---\nrun: [[Runs/User/Run]]\n---\n")
   await writeFile(path.join(source, ".obsidian/plugins/table-tools/data.json"), '{"apiKey":"fake-key-012345"}\n')
   await cp(source, target, { recursive: true })
-  const result = await exec("node", [path.join(target, "_system/bin/rpgvault.mjs"), "update", "--from", root], { cwd: target })
+  const result = await exec("node", [path.join(target, "_system/bin", path.basename(oldCli)), "update", "--from", root], { cwd: target })
   assert.equal(`${result.stdout}${result.stderr}`.includes("fake-key-012345"), false)
   assert.equal(await readFile(path.join(target, "Campaigns/User/Campaign.md"), "utf8"), "user content\n")
   assert.equal(await readFile(path.join(target, "_local/templates/campaign.md"), "utf8"), "local override\n")
-  await exec("node", [path.join(target, "_system/bin/rpgvault.mjs"), "doctor"], { cwd: target })
+  await exec("node", [path.join(target, "_system/bin/gmvault.mjs"), "doctor"], { cwd: target })
   await rm(source, { recursive: true }); await rm(target, { recursive: true })
 }

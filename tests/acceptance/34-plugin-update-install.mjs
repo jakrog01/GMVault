@@ -1,18 +1,18 @@
-// Prompt 34: the table home shows a banner when a newer RPGVault is recorded, and on the desktop a
+// Prompt 34: the table home shows a banner when a newer GMVault is recorded, and on the desktop a
 // button in that banner runs `update --latest` in a modal that streams the CLI's own report. On a
 // phone there is no button, only the command to run.
 import { assert, boot, createVault, idle, run, startObsidian, test, unload } from "./support.mjs"
 
-const MANIFEST = JSON.stringify({ release: { repo: "jakrog01/RPGVault", asset: "RPGVault.zip", api: "https://example.invalid" } })
+const MANIFEST = JSON.stringify({ release: { repo: "jakrog01/GMVault", asset: "GMVault.zip", api: "https://example.invalid" } })
 const baseState = { installedVersion: "1.0.0", appliedMigrations: [], installId: "vault-abc", adoptedFrom: null }
 const stateWith = updateCheck => JSON.stringify(updateCheck ? { ...baseState, updateCheck } : baseState, null, 2)
-const recorded = (version, ageHours = 0) => ({ checkedAt: new Date(Date.now() - ageHours * 3600 * 1000).toISOString(), latestVersion: version, repo: "jakrog01/RPGVault" })
+const recorded = (version, ageHours = 0) => ({ checkedAt: new Date(Date.now() - ageHours * 3600 * 1000).toISOString(), latestVersion: version, repo: "jakrog01/GMVault" })
 
 function vault(updateCheck, files = {}) {
   return createVault({ adapterFiles: new Map(Object.entries({
     "_system/manifest.json": MANIFEST,
     "_system/VERSION": "1.0.0\n",
-    ".rpgvault/state.json": stateWith(updateCheck),
+    ".gmvault/state.json": stateWith(updateCheck),
     ...files,
   })) })
 }
@@ -47,7 +47,7 @@ test("no banner appears when the vault is current, when nothing was ever checked
     ["current", recorded("1.0.0")],
     ["older", recorded("0.9.0")],
     ["never checked", null],
-    ["junk version", { checkedAt: new Date().toISOString(), latestVersion: "release-2", repo: "jakrog01/RPGVault" }],
+    ["junk version", { checkedAt: new Date().toISOString(), latestVersion: "release-2", repo: "jakrog01/GMVault" }],
   ]) {
     const env = vault(updateCheck)
     const plugin = await boot(env)
@@ -90,8 +90,8 @@ test("the install button streams the CLI output into a modal and reports success
   const plugin = await boot(env)
   stubRunner(plugin, async (file, args, onOutput) => {
     calls.push({ file, args })
-    onOutput("replaced docs (1 written, 0 removed), backup .rpgvault/backups/2026-01-01T00-00-00-000Z\n")
-    onOutput("RPGVault doctor: clean (1.1.0)\n")
+    onOutput("replaced docs (1 written, 0 removed), backup .gmvault/backups/2026-01-01T00-00-00-000Z\n")
+    onOutput("GMVault doctor: clean (1.1.0)\n")
     return 0
   })
   startObsidian(env)
@@ -100,12 +100,12 @@ test("the install button streams the CLI output into a modal and reports success
   await env.byLabel(view.contentEl, plugin.strings.homeUpdateInstall)[0].click()
   const invocation = calls.at(-1)
   assert.ok(invocation, "contract: the button runs the CLI through plugin.commandRunner")
-  assert.ok(String(invocation.file).endsWith("_system/bin/rpgvault.mjs"), `it runs the shipped CLI: ${JSON.stringify(invocation)}`)
+  assert.ok(String(invocation.file).endsWith("_system/bin/gmvault.mjs"), `it runs the shipped CLI: ${JSON.stringify(invocation)}`)
   assert.deepEqual(invocation.args, ["update", "--latest"], `it passes update --latest: ${JSON.stringify(invocation.args)}`)
   const modal = env.modals.at(-1)
   assert.ok(modal, "a modal is open")
   const shown = env.rendered.join("\n")
-  assert.ok(shown.includes("RPGVault doctor: clean (1.1.0)"), `the modal shows the CLI output: ${shown.slice(-400)}`)
+  assert.ok(shown.includes("GMVault doctor: clean (1.1.0)"), `the modal shows the CLI output: ${shown.slice(-400)}`)
   assert.ok(shown.includes(plugin.strings.homeUpdateReload), "the modal asks for a reload when the update succeeded")
   await unload(plugin)
 })
@@ -115,8 +115,8 @@ test("a failed install keeps the modal open, shows the CLI's own failure and nev
   env.platform.isDesktopApp = true
   const plugin = await boot(env)
   stubRunner(plugin, async (_file, _args, onOutput) => {
-    onOutput("RPGVault doctor found 1 violation(s):\n- undeclared root: Campaign Library\n")
-    onOutput("rpgvault: _system was replaced but finalisation failed; backup is .rpgvault/backups/2026-01-01T00-00-00-000Z\n")
+    onOutput("GMVault doctor found 1 violation(s):\n- undeclared root: Campaign Library\n")
+    onOutput("gmvault: _system was replaced but finalisation failed; backup is .gmvault/backups/2026-01-01T00-00-00-000Z\n")
     return 1
   })
   startObsidian(env)

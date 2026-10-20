@@ -1,10 +1,10 @@
-// Prompt 33: Table Tools can ask the configured release host whether a newer RPGVault exists —
+// Prompt 33: Table Tools can ask the configured release host whether a newer GMVault exists —
 // from a settings button and, when the owner opts in, once a day at startup — and records the
 // answer where the CLI keeps it, without touching anything else in the vault.
 import { assert, boot, createVault, idle, run, startObsidian, test, unload } from "./support.mjs"
 
 const MANIFEST = JSON.stringify({
-  release: { repo: "jakrog01/RPGVault", asset: "RPGVault.zip", api: "https://api.github.com" },
+  release: { repo: "jakrog01/GMVault", asset: "GMVault.zip", api: "https://api.github.com" },
   contentRoots: ["Campaigns", "Parties", "Runs", "Library", "Calendar", "Archive"],
 })
 const STATE = JSON.stringify({ installedVersion: "1.0.0", appliedMigrations: ["0001-example"], installId: "vault-abc", adoptedFrom: null }, null, 2)
@@ -15,14 +15,14 @@ function vault(files = {}) {
   const env = createVault({ adapterFiles: new Map(Object.entries({
     "_system/manifest.json": MANIFEST,
     "_system/VERSION": VERSION,
-    ".rpgvault/state.json": STATE,
+    ".gmvault/state.json": STATE,
     ...files,
   })) })
   return env
 }
 
-const release = (tag, extra = {}) => ({ status: 200, json: { tag_name: tag, assets: [{ name: "RPGVault.zip", browser_download_url: "https://example.invalid/RPGVault.zip" }], ...extra } })
-const state = env => JSON.parse(env.adapterFiles.get(".rpgvault/state.json"))
+const release = (tag, extra = {}) => ({ status: 200, json: { tag_name: tag, assets: [{ name: "GMVault.zip", browser_download_url: "https://example.invalid/GMVault.zip" }], ...extra } })
+const state = env => JSON.parse(env.adapterFiles.get(".gmvault/state.json"))
 const checkButton = (env, plugin) => {
   const tab = plugin.settingTabs.at(-1)
   assert.ok(tab, "contract: the plugin registers a settings tab")
@@ -41,7 +41,7 @@ test("the settings button reports a newer release and names both versions", asyn
   await checkButton(env, plugin).click()
   const asked = releaseRequests(env)
   assert.equal(asked.length, 1, `exactly one release request: ${env.requests.map(item => item.url).join(", ")}`)
-  assert.ok(String(asked[0].url).includes("/repos/jakrog01/RPGVault/releases/latest"), `the manifest repo is queried: ${asked[0].url}`)
+  assert.ok(String(asked[0].url).includes("/repos/jakrog01/GMVault/releases/latest"), `the manifest repo is queried: ${asked[0].url}`)
   const notice = env.notices.at(-1)
   assert.ok(notice.includes("1.1.0"), `the notice names the new version: ${notice}`)
   assert.ok(notice.includes("1.0.0"), `the notice names the installed version: ${notice}`)
@@ -67,13 +67,13 @@ test("a successful check records the answer beside the CLI's own state and keeps
   await checkButton(env, plugin).click()
   const after = state(env)
   assert.equal(after.updateCheck.latestVersion, "1.2.3", "the version is recorded without the tag prefix")
-  assert.equal(after.updateCheck.repo, "jakrog01/RPGVault", "the repository is recorded")
+  assert.equal(after.updateCheck.repo, "jakrog01/GMVault", "the repository is recorded")
   const checkedAt = Date.parse(after.updateCheck.checkedAt)
   assert.ok(Number.isFinite(checkedAt) && checkedAt >= started - 60000, `checkedAt is the time of the check: ${after.updateCheck.checkedAt}`)
   assert.equal(after.installedVersion, "1.0.0", "installedVersion is untouched")
   assert.equal(after.installId, "vault-abc", "installId is untouched")
   assert.deepEqual(after.appliedMigrations, ["0001-example"], "appliedMigrations is untouched")
-  assert.deepEqual(env.writes.filter(item => !item.startsWith(".rpgvault/state.json")), [], `nothing else is written: ${env.writes.join(", ")}`)
+  assert.deepEqual(env.writes.filter(item => !item.startsWith(".gmvault/state.json")), [], `nothing else is written: ${env.writes.join(", ")}`)
   await unload(plugin)
 })
 
@@ -131,7 +131,7 @@ test("with the startup check on, the vault is asked once a day and not again", a
   assert.ok(env.notices.some(notice => notice.includes("1.1.0")), `the owner is told: ${env.notices.join(" | ")}`)
   await unload(plugin)
 
-  const second = vault({ ".rpgvault/state.json": JSON.stringify({ ...JSON.parse(STATE), updateCheck: { checkedAt: new Date().toISOString(), latestVersion: "1.1.0", repo: "jakrog01/RPGVault" } }, null, 2) })
+  const second = vault({ ".gmvault/state.json": JSON.stringify({ ...JSON.parse(STATE), updateCheck: { checkedAt: new Date().toISOString(), latestVersion: "1.1.0", repo: "jakrog01/GMVault" } }, null, 2) })
   second.network.requestUrl = async () => release("v1.1.0")
   const again = await boot(second)
   again.settings.checkForUpdatesOnStart = true
@@ -140,7 +140,7 @@ test("with the startup check on, the vault is asked once a day and not again", a
   assert.deepEqual(releaseRequests(second), [], `a check from today is not repeated: ${second.requests.map(item => item.url).join(", ")}`)
   await unload(again)
 
-  const old = vault({ ".rpgvault/state.json": JSON.stringify({ ...JSON.parse(STATE), updateCheck: { checkedAt: new Date(Date.now() - 48 * 3600 * 1000).toISOString(), latestVersion: "1.0.0", repo: "jakrog01/RPGVault" } }, null, 2) })
+  const old = vault({ ".gmvault/state.json": JSON.stringify({ ...JSON.parse(STATE), updateCheck: { checkedAt: new Date(Date.now() - 48 * 3600 * 1000).toISOString(), latestVersion: "1.0.0", repo: "jakrog01/GMVault" } }, null, 2) })
   old.network.requestUrl = async () => release("v1.1.0")
   const third = await boot(old)
   third.settings.checkForUpdatesOnStart = true

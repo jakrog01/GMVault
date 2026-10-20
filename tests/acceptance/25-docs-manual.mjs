@@ -8,7 +8,7 @@ const repository = path.resolve(path.dirname(fileURLToPath(import.meta.url)), ".
 const read = file => readFile(path.join(repository, file), "utf8")
 const exists = file => stat(path.join(repository, file)).then(() => true, () => false)
 const required = ["docs/README.md", "docs/GETTING-STARTED.md", "docs/CONCEPTS.md", "docs/CLI.md", "docs/TROUBLESHOOTING.md"]
-const cli = await read("_system/bin/rpgvault.mjs")
+const cli = await read("_system/bin/gmvault.mjs")
 
 const markdownFiles = async (directory = "docs") => {
   const found = []
@@ -58,15 +58,15 @@ test("docs/CLI.md documents every command, subcommand and flag the CLI accepts",
   const flags = [...cli.matchAll(/'(--[a-z-]+)'/g)].map(match => match[1])
   assert.ok(commands.length >= 6, `found the CLI commands in the source: ${commands.join(", ")}`)
   for (const name of new Set([...commands, ...subcommands, ...flags])) assert.ok(body.includes(name), `docs/CLI.md documents ${name}`)
-  assert.ok(body.includes("node _system/bin/rpgvault.mjs"), "docs/CLI.md shows how the CLI is invoked")
+  assert.ok(body.includes("node _system/bin/gmvault.mjs"), "docs/CLI.md shows how the CLI is invoked")
 })
 
 test("every command example in the manual uses the shipped CLI path", async () => {
   for (const file of ["README.md", ...await markdownFiles()]) {
     const body = await read(file)
-    for (const [, line] of body.matchAll(/^(.*rpgvault\.mjs.*)$/gm)) {
-      if (!/rpgvault\.mjs/.test(line)) continue
-      assert.ok(/_system\/bin\/rpgvault\.mjs/.test(line), `${file}: ${line.trim()}`)
+    for (const [, line] of body.matchAll(/^(.*node _system\/bin\/(?:gmvault|rpgvault)\.mjs.*)$/gm)) {
+      if (line.includes("node _system/bin/rpgvault.mjs")) assert.ok(file === "docs/UPDATING.md" && line.trim() === "node _system/bin/rpgvault.mjs update --latest", `${file}: ${line.trim()}`)
+      else assert.ok(/_system\/bin\/gmvault\.mjs/.test(line), `${file}: ${line.trim()}`)
     }
   }
 })

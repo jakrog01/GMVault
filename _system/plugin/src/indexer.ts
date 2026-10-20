@@ -7,8 +7,8 @@ import { Chunk, Scope } from "./types";
 import { format } from "./strings";
 import { cosine, EmbeddingProvider, GeminiEmbeddingProvider, NoneEmbeddingProvider, OllamaEmbeddingProvider } from "./embeddings";
 
-const cachePath = ".rpgvault/cache/assistant/manifest.json";
-const vectorsPath = ".rpgvault/cache/assistant/vectors.bin";
+const cachePath = ".gmvault/cache/assistant/manifest.json";
+const vectorsPath = ".gmvault/cache/assistant/vectors.bin";
 const version = 5;
 
 export type ScoredChunk = { chunk: Chunk; score: number };
@@ -213,7 +213,7 @@ export class AssistantIndex {
   }
 
   private globalKind(file: TFile): Chunk["kind"] | null {
-    if (/^(?:Archive|_system|_local|\.obsidian|\.rpgvault)(?:\/|$)/.test(file.path)) return null;
+    if (/^(?:Archive|_system|_local|\.obsidian|\.gmvault)(?:\/|$)/.test(file.path)) return null;
     const frontmatter = this.plugin.app.metadataCache.getFileCache(file)?.frontmatter ?? {};
     if (frontmatter.assistant === "exclude") return null;
     if (/^Runs\//.test(file.path)) return file.basename === "State" ? "state" : "run";
@@ -311,7 +311,7 @@ export class AssistantIndex {
   }
   private async persist(): Promise<void> {
     try {
-      await this.plugin.app.vault.adapter.mkdir?.(".rpgvault/cache/assistant");
+      await this.plugin.app.vault.adapter.mkdir?.(".gmvault/cache/assistant");
       const temporary = `${cachePath}.tmp`;
       const live = new Set([...this.records.values()].flat().map(chunk => chunk.id));
       for (const id of this.vectors.keys()) if (!live.has(id)) this.vectors.delete(id);

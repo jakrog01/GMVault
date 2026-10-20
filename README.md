@@ -1,6 +1,6 @@
-# RPGVault
+# GMVault
 
-RPGVault is an English, upgradeable Obsidian template for tabletop campaigns. It keeps the shipped system separate from your game material.
+GMVault is an English, upgradeable Obsidian template for tabletop campaigns. It keeps the shipped system separate from your game material.
 
 ```
 _system/  shipped, replaced on update
@@ -8,12 +8,12 @@ _local/   your overrides, never updated
 Campaigns/ Parties/ Runs/ Library/ Calendar/ Archive/  your content
 ```
 
-Open a clone in Obsidian, then run `node _system/bin/rpgvault.mjs doctor`. Install the example with `node _system/bin/rpgvault.mjs demo install`; remove only its stamped notes with `demo remove`.
+Open a clone in Obsidian, then run `node _system/bin/gmvault.mjs doctor`. Install the example with `node _system/bin/gmvault.mjs demo install`; remove only its stamped notes with `demo remove`.
 
-For an offline update, download a release and run `node _system/bin/rpgvault.mjs update --from /path/to/release`. Backups are written to `.rpgvault/backups/`. GitHub's **Use this template** starts an independent vault; it does not preserve history and is not an upgrade mechanism.
+For an offline update, download a release and run `node _system/bin/gmvault.mjs update --from /path/to/release`. Backups are written to `.gmvault/backups/`. GitHub's **Use this template** starts an independent vault; it does not preserve history and is not an upgrade mechanism.
 
 The Table Tools plugin adds a combat tracker and a Gemini assistant; translate or rename any of its labels through `_local/plugins/table-tools/strings.json`.
 
-Start with [the RPGVault manual](docs/README.md), published at [jakrog01.github.io/RPGVault](https://jakrog01.github.io/RPGVault/). It links the getting-started guide, concepts, CLI reference, troubleshooting catalogue, and the existing topic pages.
+Start with [the GMVault manual](docs/README.md), published at [jakrog01.github.io/GMVault](https://jakrog01.github.io/GMVault/). It links the getting-started guide, concepts, CLI reference, troubleshooting catalogue, and the existing topic pages.
 
 See [the table home](docs/HOME.md), [architecture](docs/ARCHITECTURE.md), [assistant retrieval](docs/ASSISTANT.md), [customisation](docs/CUSTOMISING.md), [keeping a vault up to date](docs/UPDATING.md), and [adopting an existing vault](docs/ADOPTING.md).

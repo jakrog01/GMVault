@@ -11,9 +11,9 @@ const cleanup = async (...items) => { for (const item of items) await rm(item, {
 const read = (vault, file) => readFile(path.join(vault, file), "utf8")
 const exists = item => stat(item).then(() => true, () => false)
 const backupDirectory = async vault => {
-  const saved = await readdir(path.join(vault, ".rpgvault/backups"))
+  const saved = await readdir(path.join(vault, ".gmvault/backups"))
   assert.equal(saved.length, 1, `exactly one backup was written: ${saved.join(", ")}`)
-  return path.join(vault, ".rpgvault/backups", saved[0])
+  return path.join(vault, ".gmvault/backups", saved[0])
 }
 
 /**
@@ -43,26 +43,26 @@ async function serve(archive) {
 }
 
 test("the declared shipped files are replaced, and the release's own state and undeclared files are not", async () => {
-  const vault = await cloneVault("rpgvault-layer31-replace-")
-  const installId = JSON.parse(await read(vault, ".rpgvault/state.json")).installId
+  const vault = await cloneVault("gmvault-layer31-replace-")
+  const installId = JSON.parse(await read(vault, ".gmvault/state.json")).installId
   await writeFile(path.join(vault, "package.json"), '{"name":"my-fork"}\n')
   const host = await serve(release("1.1.0", {
     "docs/CLI.md": "# CLI reference\n\nnew shipped page\n",
-    "README.md": "# RPGVault\n\nnew shipped readme\n",
+    "README.md": "# GMVault\n\nnew shipped readme\n",
     "CHANGELOG.md": "# Changelog\n\n## 1.1.0\n",
-    "Home.md": "---\ntype: home\n---\n\n# RPGVault\n\nnew shipped home\n",
+    "Home.md": "---\ntype: home\n---\n\n# GMVault\n\nnew shipped home\n",
     ".github/workflows/release.yml": "name: release\n",
-    ".rpgvault/state.json": '{"installedVersion":"1.1.0","appliedMigrations":[],"installId":"rpgvault-template","adoptedFrom":null}\n',
-    "package.json": '{"name":"rpgvault-upstream"}\n',
+    ".gmvault/state.json": '{"installedVersion":"1.1.0","appliedMigrations":[],"installId":"gmvault-template","adoptedFrom":null}\n',
+    "package.json": '{"name":"gmvault-upstream"}\n',
   }))
-  const result = await cli(vault, ["update", "--latest"], { RPGVAULT_RELEASE_API: host.answer.base })
+  const result = await cli(vault, ["update", "--latest"], { GMVAULT_RELEASE_API: host.answer.base })
   assert.equal(result.code, 0, `the update succeeds; stdout: ${result.stdout}\nstderr: ${result.stderr}`)
   assert.ok((await read(vault, "docs/CLI.md")).includes("new shipped page"), "a shipped documentation page is replaced")
   assert.ok((await read(vault, "README.md")).includes("new shipped readme"), "the shipped readme is replaced")
   assert.ok((await read(vault, "CHANGELOG.md")).includes("## 1.1.0"), "the shipped changelog is replaced")
   assert.ok((await read(vault, "Home.md")).includes("new shipped home"), "the shipped home note is replaced")
   assert.equal(await read(vault, ".github/workflows/release.yml"), "name: release\n", "the shipped workflow is replaced")
-  assert.equal(JSON.parse(await read(vault, ".rpgvault/state.json")).installId, installId, "the install identity survives")
+  assert.equal(JSON.parse(await read(vault, ".gmvault/state.json")).installId, installId, "the install identity survives")
   assert.equal(await read(vault, "package.json"), '{"name":"my-fork"}\n', "a file no glob declares is left alone")
   assert.ok((await read(vault, "Campaigns/User/Campaign.md")).includes("owner content"), "the owner's note survives")
   assert.equal(await read(vault, "_local/templates/campaign.md"), "local override\n", "the local override survives")
@@ -71,10 +71,10 @@ test("the declared shipped files are replaced, and the release's own state and u
 }, 180000)
 
 test("what the update overwrote is in the backup and named in the report", async () => {
-  const vault = await cloneVault("rpgvault-layer31-backup-")
+  const vault = await cloneVault("gmvault-layer31-backup-")
   await writeFile(path.join(vault, "Home.md"), "---\ntype: home\n---\n\n# My table\n\nmy own notes\n")
-  const host = await serve(release("1.1.0", { "Home.md": "---\ntype: home\n---\n\n# RPGVault\n\nnew shipped home\n" }))
-  const result = await cli(vault, ["update", "--latest"], { RPGVAULT_RELEASE_API: host.answer.base })
+  const host = await serve(release("1.1.0", { "Home.md": "---\ntype: home\n---\n\n# GMVault\n\nnew shipped home\n" }))
+  const result = await cli(vault, ["update", "--latest"], { GMVAULT_RELEASE_API: host.answer.base })
   assert.equal(result.code, 0, `the update succeeds; stderr: ${result.stderr}`)
   const backup = await backupDirectory(vault)
   assert.ok((await readFile(path.join(backup, "Home.md"), "utf8")).includes("my own notes"), "the owner's version is in the backup")
@@ -86,10 +86,10 @@ test("what the update overwrote is in the backup and named in the report", async
 }, 180000)
 
 test("a file the owner added inside a shipped folder is backed up, removed and reported", async () => {
-  const vault = await cloneVault("rpgvault-layer31-mirror-")
+  const vault = await cloneVault("gmvault-layer31-mirror-")
   await writeFile(path.join(vault, "docs/MY-NOTES.md"), "# My notes\n\nmine\n")
   const host = await serve(release("1.1.0", { "docs/ADOPTING.md": null }))
-  const result = await cli(vault, ["update", "--latest"], { RPGVAULT_RELEASE_API: host.answer.base })
+  const result = await cli(vault, ["update", "--latest"], { GMVAULT_RELEASE_API: host.answer.base })
   assert.equal(result.code, 0, `the update succeeds; stdout: ${result.stdout}\nstderr: ${result.stderr}`)
   const backup = await backupDirectory(vault)
   assert.equal(await exists(path.join(vault, "docs/MY-NOTES.md")), false, "the undeclared page inside the shipped folder is removed")
@@ -102,12 +102,12 @@ test("a file the owner added inside a shipped folder is backed up, removed and r
 }, 180000)
 
 test("a source that provides none of a shipped group leaves that group alone and says so", async () => {
-  const vault = await cloneVault("rpgvault-layer31-partial-")
+  const vault = await cloneVault("gmvault-layer31-partial-")
   const before = await read(vault, "docs/CLI.md")
   const trimmed = {}
   for (const entry of wholeRelease) if (entry.name.startsWith("docs/") || entry.name === "README.md") trimmed[entry.name] = null
   const host = await serve(release("1.1.0", trimmed))
-  const result = await cli(vault, ["update", "--latest"], { RPGVAULT_RELEASE_API: host.answer.base })
+  const result = await cli(vault, ["update", "--latest"], { GMVAULT_RELEASE_API: host.answer.base })
   assert.equal(result.code, 0, `the update succeeds; stdout: ${result.stdout}\nstderr: ${result.stderr}`)
   assert.equal(await read(vault, "docs/CLI.md"), before, "the documentation the source lacks is kept")
   assert.ok(/docs/.test(result.stdout) && /kept/i.test(result.stdout), `the report says the group was kept: ${result.stdout}`)
@@ -116,7 +116,7 @@ test("a source that provides none of a shipped group leaves that group alone and
 }, 180000)
 
 test("the selectively managed Obsidian files keep their own handling", async () => {
-  const vault = await cloneVault("rpgvault-layer31-obsidian-")
+  const vault = await cloneVault("gmvault-layer31-obsidian-")
   await mkdir(path.join(vault, ".obsidian/plugins/table-tools"), { recursive: true })
   await writeFile(path.join(vault, ".obsidian/plugins/table-tools/data.json"), '{"apiKey":"fake-key-012345"}\n')
   await writeFile(path.join(vault, ".obsidian/workspace.json"), '{"main":"my layout"}\n')
@@ -124,7 +124,7 @@ test("the selectively managed Obsidian files keep their own handling", async () 
     ".obsidian/workspace.json": '{"main":"shipped layout"}\n',
     ".obsidian/plugins/table-tools/data.json": '{"apiKey":""}\n',
   }))
-  const result = await cli(vault, ["update", "--latest"], { RPGVAULT_RELEASE_API: host.answer.base })
+  const result = await cli(vault, ["update", "--latest"], { GMVAULT_RELEASE_API: host.answer.base })
   assert.equal(result.code, 0, `the update succeeds; stderr: ${result.stderr}`)
   assert.equal(await read(vault, ".obsidian/workspace.json"), '{"main":"my layout"}\n', "the workspace is never touched")
   assert.equal(JSON.parse(await read(vault, ".obsidian/plugins/table-tools/data.json")).apiKey, "fake-key-012345", "the plugin settings are never touched")
@@ -134,20 +134,20 @@ test("the selectively managed Obsidian files keep their own handling", async () 
 }, 180000)
 
 test("a preview lists the shipped layer it would replace and changes nothing", async () => {
-  const vault = await cloneVault("rpgvault-layer31-dry-")
+  const vault = await cloneVault("gmvault-layer31-dry-")
   const before = await read(vault, "README.md")
-  const host = await serve(release("1.1.0", { "README.md": "# RPGVault\n\nnew shipped readme\n" }))
-  const result = await cli(vault, ["update", "--latest", "--dry-run"], { RPGVAULT_RELEASE_API: host.answer.base })
+  const host = await serve(release("1.1.0", { "README.md": "# GMVault\n\nnew shipped readme\n" }))
+  const result = await cli(vault, ["update", "--latest", "--dry-run"], { GMVAULT_RELEASE_API: host.answer.base })
   assert.equal(result.code, 0, `the preview succeeds; stderr: ${result.stderr}`)
   assert.ok(result.stdout.includes("README.md"), `the preview names what it would replace: ${result.stdout}`)
   assert.equal(await read(vault, "README.md"), before, "the preview replaces nothing")
-  assert.deepEqual(await readdir(path.join(vault, ".rpgvault/backups")).catch(() => []), [], "the preview writes no backup")
+  assert.deepEqual(await readdir(path.join(vault, ".gmvault/backups")).catch(() => []), [], "the preview writes no backup")
   await host.close()
   await cleanup(vault)
 }, 180000)
 
 test("doctor refuses a manifest whose owned glob no handler covers", async () => {
-  const vault = await cloneVault("rpgvault-layer31-coverage-")
+  const vault = await cloneVault("gmvault-layer31-coverage-")
   const manifestPath = path.join(vault, "_system/manifest.json")
   const manifest = JSON.parse(await readFile(manifestPath, "utf8"))
   manifest.ownedGlobs = [...manifest.ownedGlobs, "Undeclared.md"]
@@ -159,11 +159,11 @@ test("doctor refuses a manifest whose owned glob no handler covers", async () =>
 }, 60000)
 
 test("a vault that installs the shipped layer unchanged still ends clean", async () => {
-  const vault = await cloneVault("rpgvault-layer31-guard-")
+  const vault = await cloneVault("gmvault-layer31-guard-")
   const host = await serve(release("1.1.0"))
-  const result = await cli(vault, ["update", "--latest"], { RPGVAULT_RELEASE_API: host.answer.base })
+  const result = await cli(vault, ["update", "--latest"], { GMVAULT_RELEASE_API: host.answer.base })
   assert.equal(result.code, 0, `the update succeeds; stdout: ${result.stdout}\nstderr: ${result.stderr}`)
-  assert.ok(result.stdout.includes("RPGVault doctor: clean (1.1.0)"), `it ends with the clean line: ${result.stdout}`)
+  assert.ok(result.stdout.includes("GMVault doctor: clean (1.1.0)"), `it ends with the clean line: ${result.stdout}`)
   await host.close()
   await cleanup(vault)
 }, 180000)

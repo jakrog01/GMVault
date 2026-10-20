@@ -12,12 +12,12 @@ const templatePlugins = JSON.parse(await readFile(path.join(repository, "_system
 const extras = ["obsidian-excalidraw-plugin", "dataview"]
 
 function cli(vault, ...args) {
-  return new Promise(resolve => execFile("node", [path.join(vault, "_system/bin/rpgvault.mjs"), ...args], { cwd: vault, timeout: 120000 },
+  return new Promise(resolve => execFile("node", [path.join(vault, "_system/bin/gmvault.mjs"), ...args], { cwd: vault, timeout: 120000 },
     (error, stdout, stderr) => resolve({ code: error ? (error.code ?? 1) : 0, output: `${stdout}${stderr}` })))
 }
 
 async function vaultWithLocalLook(plugins) {
-  const vault = await mkdtemp(path.join(os.tmpdir(), "rpgvault-local23-"))
+  const vault = await mkdtemp(path.join(os.tmpdir(), "gmvault-local23-"))
   await cp(repository, vault, { recursive: true, filter: item => !skipped(item) })
   await writeFile(path.join(vault, ".obsidian/community-plugins.json"), JSON.stringify(plugins, null, 2))
   for (const id of extras) {
@@ -34,7 +34,7 @@ async function vaultWithLocalLook(plugins) {
 }
 
 async function source() {
-  const directory = await mkdtemp(path.join(os.tmpdir(), "rpgvault-local23-source-"))
+  const directory = await mkdtemp(path.join(os.tmpdir(), "gmvault-local23-source-"))
   await cp(repository, directory, { recursive: true, filter: item => !skipped(item) })
   return directory
 }

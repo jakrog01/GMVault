@@ -7,13 +7,13 @@ Creating campaigns, parties, and runs happens in the Table Tools home view.
 1. Clone the repository and enter the vault directory.
 
    ```text
-   git clone https://github.com/jakrog01/RPGVault.git
-   cd RPGVault
+   git clone https://github.com/jakrog01/GMVault.git
+   cd GMVault
    ```
 
    Cloning creates the complete vault, including `_system/`, `_local/`, content-root folders, and the shipped Obsidian configuration.
 
-2. Open the `RPGVault` folder as a vault in Obsidian.
+2. Open the `GMVault` folder as a vault in Obsidian.
 
    Opening does not ask the CLI to create notes; Obsidian reads the existing vault files.
 
@@ -24,15 +24,15 @@ Creating campaigns, parties, and runs happens in the Table Tools home view.
 4. Check the shipped vault before changing it.
 
    ```text
-   node _system/bin/rpgvault.mjs doctor
+   node _system/bin/gmvault.mjs doctor
    ```
 
-   `doctor` reads the vault and prints `RPGVault doctor: clean (<version>)` when its checks pass; it does not create content.
+   `doctor` reads the vault and prints `GMVault doctor: clean (<version>)` when its checks pass; it does not create content.
 
 5. Install the example material and look through its campaigns, parties, runs, library, and calendar notes in Obsidian.
 
    ```text
-   node _system/bin/rpgvault.mjs demo install
+   node _system/bin/gmvault.mjs demo install
    ```
 
    This copies the shipped demo files into content roots and reports `demo installed`.
@@ -40,7 +40,7 @@ Creating campaigns, parties, and runs happens in the Table Tools home view.
 6. Remove the example when you are finished studying it.
 
    ```text
-   node _system/bin/rpgvault.mjs demo remove
+   node _system/bin/gmvault.mjs demo remove
    ```
 
    This deletes only Markdown notes whose frontmatter has `origin: demo`, removes emptied demo directories, and reports how many demo notes it removed.

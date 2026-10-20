@@ -68,7 +68,7 @@ test("indexing 1500 notes and one edit write the cache at most twice", async () 
   env.editFile(npc(3), "# About\nChanged.", { type: "npc" })
   await idle(plugin)
   await unload(plugin)
-  const cacheWrites = env.writes.filter(item => item.startsWith(".rpgvault/cache/"))
+  const cacheWrites = env.writes.filter(item => item.startsWith(".gmvault/cache/"))
   assert.ok(cacheWrites.length >= 1, "the cache is written by unload at the latest")
   assert.ok(cacheWrites.length <= 4, `cache written ${cacheWrites.length} times (temp and final count separately)`)
 })
@@ -160,7 +160,7 @@ test("a restart reuses the cache: unchanged notes are not re-read, removed notes
   startObsidian(first)
   await idle(plugin)
   await unload(plugin)
-  assert.ok([...first.adapterFiles.keys()].some(key => key.startsWith(".rpgvault/cache/")), "unload persists the cache")
+  assert.ok([...first.adapterFiles.keys()].some(key => key.startsWith(".gmvault/cache/")), "unload persists the cache")
 
   const second = createVault({ adapterFiles: first.adapterFiles })
   for (let index = 0; index < 50; index++) {

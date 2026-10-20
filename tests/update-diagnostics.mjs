@@ -15,22 +15,22 @@ const failures = []
 const check = (name, condition, detail) => { if (!condition) failures.push(`${name}: ${detail}`) }
 
 {
-  const vault = await cloneVault("rpgvault-diagnostics-nostate-")
-  await rm(path.join(vault, ".rpgvault"), { recursive: true, force: true })
+  const vault = await cloneVault("gmvault-diagnostics-nostate-")
+  await rm(path.join(vault, ".gmvault"), { recursive: true, force: true })
   const host = await releaseHost({ release: { tag_name: newerTag, assets: [] } })
-  const result = await cli(vault, ["update", "--check"], { RPGVAULT_RELEASE_API: host.base })
-  check("a vault without .rpgvault still reports the release", result.code === 0, `exit ${result.code}, stderr: ${result.stderr}`)
-  check("a vault without .rpgvault leaks no file error", !/ENOENT/.test(result.stderr), result.stderr)
-  check("a vault without .rpgvault leaks no absolute path", !new RegExp(vault).test(result.stderr), result.stderr)
+  const result = await cli(vault, ["update", "--check"], { GMVAULT_RELEASE_API: host.base })
+  check("a vault without .gmvault still reports the release", result.code === 0, `exit ${result.code}, stderr: ${result.stderr}`)
+  check("a vault without .gmvault leaks no file error", !/ENOENT/.test(result.stderr), result.stderr)
+  check("a vault without .gmvault leaks no absolute path", !new RegExp(vault).test(result.stderr), result.stderr)
   await host.close()
   await cleanup(vault)
 }
 
 {
-  for (const [name, assets] of [["an object", {}], ["a string", "RPGVault.zip"], ["a list of non-objects", [null, 7]]]) {
-    const vault = await cloneVault("rpgvault-diagnostics-assets-")
+  for (const [name, assets] of [["an object", {}], ["a string", "GMVault.zip"], ["a list of non-objects", [null, 7]]]) {
+    const vault = await cloneVault("gmvault-diagnostics-assets-")
     const host = await releaseHost({ release: { tag_name: newerTag, assets } })
-    const result = await cli(vault, ["update", "--latest"], { RPGVAULT_RELEASE_API: host.base })
+    const result = await cli(vault, ["update", "--latest"], { GMVAULT_RELEASE_API: host.base })
     check(`assets as ${name} is refused`, result.code !== 0, `exit ${result.code}, stdout: ${result.stdout}`)
     check(`assets as ${name} is refused by name`, /release/.test(result.stderr) && !/is not a function|undefined|Cannot read/.test(result.stderr), result.stderr)
     await host.close()

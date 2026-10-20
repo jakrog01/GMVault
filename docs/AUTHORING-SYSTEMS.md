@@ -18,6 +18,6 @@ Decide whether the shape contributes to the GM radar's campaign, party, run, or 
 
 Keep package metadata, template rules, bases, and radar expectations together in the release review so their contracts stay aligned.
 
-Run `node _system/bin/rpgvault.mjs doctor` after changing a package, template rule, or base. It verifies the package-facing template and base relationships alongside roots, owned paths, and other vault contracts before the system is shipped.
+Run `node _system/bin/gmvault.mjs doctor` after changing a package, template rule, or base. It verifies the package-facing template and base relationships alongside roots, owned paths, and other vault contracts before the system is shipped.
 
 Fix every reported contract violation before publishing the package.

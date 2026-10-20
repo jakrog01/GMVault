@@ -7,18 +7,18 @@ import { assert, run, test } from "./support.mjs"
 
 const repository = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..")
 const skipped = item => item.includes(`${path.sep}.git`) || item.includes(`${path.sep}node_modules`)
-const snippet = ".obsidian/snippets/rpgvault-fantasy.css"
-const fonts = ".obsidian/snippets/rpgvault-fonts.css"
+const snippet = ".obsidian/snippets/gmvault-fantasy.css"
+const fonts = ".obsidian/snippets/gmvault-fonts.css"
 const theme = ".obsidian/themes/Fancy-a-Story"
 const appearance = ".obsidian/appearance.json"
 
 function cli(vault, ...args) {
-  return new Promise(resolve => execFile("node", [path.join(vault, "_system/bin/rpgvault.mjs"), ...args], { cwd: vault, timeout: 120000 },
+  return new Promise(resolve => execFile("node", [path.join(vault, "_system/bin/gmvault.mjs"), ...args], { cwd: vault, timeout: 120000 },
     (error, stdout, stderr) => resolve({ code: error ? (error.code ?? 1) : 0, output: `${stdout}${stderr}` })))
 }
 
 async function copyVault() {
-  const vault = await mkdtemp(path.join(os.tmpdir(), "rpgvault-fantasy38-"))
+  const vault = await mkdtemp(path.join(os.tmpdir(), "gmvault-fantasy38-"))
   await cp(repository, vault, { recursive: true, filter: item => !skipped(item) })
   return vault
 }
@@ -38,12 +38,12 @@ test("init installs the theme and both snippets when appearance is missing", asy
     await rm(path.join(vault, theme), { recursive: true, force: true })
     const result = await cli(vault, "init")
     assert.equal(result.code, 0, result.output)
-    assert.equal(await readFile(path.join(vault, snippet), "utf8"), await readFile(path.join(vault, "_system/obsidian/snippets/rpgvault-fantasy.css"), "utf8"))
-    assert.equal(await readFile(path.join(vault, fonts), "utf8"), await readFile(path.join(vault, "_system/obsidian/snippets/rpgvault-fonts.css"), "utf8"))
+    assert.equal(await readFile(path.join(vault, snippet), "utf8"), await readFile(path.join(vault, "_system/obsidian/snippets/gmvault-fantasy.css"), "utf8"))
+    assert.equal(await readFile(path.join(vault, fonts), "utf8"), await readFile(path.join(vault, "_system/obsidian/snippets/gmvault-fonts.css"), "utf8"))
     for (const name of ["theme.css", "manifest.json", "LICENSE"]) {
       assert.deepEqual(await readFile(path.join(vault, theme, name)), await readFile(path.join(vault, "_system/obsidian/themes/Fancy-a-Story", name)))
     }
-    assert.deepEqual(JSON.parse(await readFile(path.join(vault, appearance), "utf8")), { enabledCssSnippets: ["rpgvault-fonts", "rpgvault-fantasy"], cssTheme: "Fancy-a-Story" })
+    assert.deepEqual(JSON.parse(await readFile(path.join(vault, appearance), "utf8")), { enabledCssSnippets: ["gmvault-fonts", "gmvault-fantasy"], cssTheme: "Fancy-a-Story" })
     assert.ok(JSON.parse(await readFile(path.join(vault, ".obsidian/community-plugins.json"), "utf8")).includes("obsidian-style-settings"))
     assert.equal(await readFile(path.join(vault, ".obsidian/plugins/obsidian-style-settings/main.js"), "utf8"), await readFile(path.join(vault, "_system/obsidian/plugins/obsidian-style-settings/main.js"), "utf8"))
     await cleanDoctor(vault)
@@ -58,7 +58,7 @@ test("init adds the snippets without replacing an existing theme choice", async 
     await writeFile(path.join(vault, appearance), '{"cssTheme":""}\n')
     const result = await cli(vault, "init")
     assert.equal(result.code, 0, result.output)
-    assert.deepEqual(JSON.parse(await readFile(path.join(vault, appearance), "utf8")), { cssTheme: "", enabledCssSnippets: ["rpgvault-fonts", "rpgvault-fantasy"] })
+    assert.deepEqual(JSON.parse(await readFile(path.join(vault, appearance), "utf8")), { cssTheme: "", enabledCssSnippets: ["gmvault-fonts", "gmvault-fantasy"] })
     await cleanDoctor(vault)
   } finally {
     await rm(vault, { recursive: true, force: true })
@@ -73,7 +73,7 @@ test("update adds the snippets without replacing an existing theme choice or the
     await writeFile(path.join(vault, theme, "theme.css"), "/* Obsidian updated this theme */\n")
     const result = await cli(vault, "update", "--from", from)
     assert.equal(result.code, 0, result.output)
-    assert.deepEqual(JSON.parse(await readFile(path.join(vault, appearance), "utf8")), { cssTheme: "Minimal", enabledCssSnippets: ["rpgvault-fonts", "rpgvault-fantasy"] })
+    assert.deepEqual(JSON.parse(await readFile(path.join(vault, appearance), "utf8")), { cssTheme: "Minimal", enabledCssSnippets: ["gmvault-fonts", "gmvault-fantasy"] })
     assert.equal(await readFile(path.join(vault, theme, "theme.css"), "utf8"), "/* Obsidian updated this theme */\n")
     await cleanDoctor(vault)
   } finally {
@@ -100,11 +100,11 @@ test("a disabled snippet stays disabled byte for byte during init and update", a
   }
 }, 150000)
 
-test("an enabled fantasy snippet gains fonts without enabling a removed fantasy snippet", async () => {
+test("an absent snippet stays absent when another snippet is enabled", async () => {
   const vault = await copyVault()
   try {
     for (const [enabled, expected] of [
-      [["rpgvault-fantasy"], ["rpgvault-fonts", "rpgvault-fantasy"]],
+      [["gmvault-fantasy"], ["gmvault-fantasy"]],
       [[], []],
       [["other"], ["other"]]
     ]) {
@@ -138,12 +138,12 @@ test("doctor names a changed or missing shipped snippet", async () => {
 }, 60000)
 
 test("the template snippet is identical to its shipped source", async () => {
-  assert.equal(await readFile(path.join(repository, snippet), "utf8"), await readFile(path.join(repository, "_system/obsidian/snippets/rpgvault-fantasy.css"), "utf8"))
-  assert.equal(await readFile(path.join(repository, fonts), "utf8"), await readFile(path.join(repository, "_system/obsidian/snippets/rpgvault-fonts.css"), "utf8"))
+  assert.equal(await readFile(path.join(repository, snippet), "utf8"), await readFile(path.join(repository, "_system/obsidian/snippets/gmvault-fantasy.css"), "utf8"))
+  assert.equal(await readFile(path.join(repository, fonts), "utf8"), await readFile(path.join(repository, "_system/obsidian/snippets/gmvault-fonts.css"), "utf8"))
 })
 
 test("the snippet includes chapter openers, section rules, and statblocks", async () => {
-  const css = await readFile(path.join(repository, "_system/obsidian/snippets/rpgvault-fantasy.css"), "utf8")
+  const css = await readFile(path.join(repository, "_system/obsidian/snippets/gmvault-fantasy.css"), "utf8")
   assert.match(css, /\.chapter\b/)
   assert.match(css, /\.markdown-rendered h3,[^{]*\{[^}]*border-bottom:\s*2px solid var\(--rpg-section-rule\)/)
   assert.match(css, /\.callout\[data-callout="statblock"\]/)
@@ -151,7 +151,7 @@ test("the snippet includes chapter openers, section rules, and statblocks", asyn
 })
 
 test("bundled font faces include Cinzel, EB Garamond and Latin Extended", async () => {
-  const css = await readFile(path.join(repository, "_system/obsidian/snippets/rpgvault-fonts.css"), "utf8")
+  const css = await readFile(path.join(repository, "_system/obsidian/snippets/gmvault-fonts.css"), "utf8")
   assert.match(css, /font-family:\s*"Cinzel"/)
   assert.match(css, /font-family:\s*"EB Garamond"/)
   assert.match(css, /url\(data:font\/woff2;base64,/)

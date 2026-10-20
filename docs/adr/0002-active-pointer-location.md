@@ -6,4 +6,4 @@ The active run pointer is the root `Active.md` note. It is user state, not shipp
 
 ## Rationale
 
-The pointer must survive wholesale replacement of `_system` during an update. Keeping it at the root also allows Obsidian link resolution without plugin-specific storage APIs. `rpgvault` treats it as a contractual note name and migrations recover legacy pointers from backups.
+The pointer must survive wholesale replacement of `_system` during an update. Keeping it at the root also allows Obsidian link resolution without plugin-specific storage APIs. `gmvault` treats it as a contractual note name and migrations recover legacy pointers from backups.

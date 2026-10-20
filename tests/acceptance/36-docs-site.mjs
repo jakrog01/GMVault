@@ -78,7 +78,7 @@ test("every page has one heading, and every page is reachable from the index", a
 test("one page owns keeping a vault up to date, and the others point at it", async () => {
   assert.ok(await exists("docs/UPDATING.md"), "docs/UPDATING.md exists")
   const updating = await read("docs/UPDATING.md")
-  for (const topic of ["update --check", "update --latest", "update --from", ".rpgvault/backups", "Install update", "1.0.0"]) {
+  for (const topic of ["update --check", "update --latest", "update --from", ".gmvault/backups", "Install update", "1.0.0"]) {
     assert.ok(updating.includes(topic), `the updating page covers ${topic}`)
   }
   assert.ok(contentLines(updating) >= 25, `the updating page is substantial, found ${contentLines(updating)} lines`)

@@ -1,9 +1,9 @@
 {
   "id": "table-tools",
-  "name": "RPGVault Table Tools",
-  "version": "1.2.0",
+  "name": "GMVault Table Tools",
+  "version": "2.0.0",
   "minAppVersion": "1.5.0",
-  "description": "Combat tracker, dice, statblock cards, and a Gemini assistant for RPGVault",
-  "author": "RPGVault",
+  "description": "Combat tracker, dice, statblock cards, and a Gemini assistant for GMVault",
+  "author": "GMVault",
   "isDesktopOnly": false
 }

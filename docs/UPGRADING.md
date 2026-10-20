@@ -4,15 +4,15 @@ This page is for maintainers preparing a release. Owners who need to update a va
 
 ## Cut a release
 
-Finish the release changes, rebuild the shipped plugin, and run the repository test suite and `doctor` before cutting the release. Update the shipped version consistently with the release version, then create and push a `v*` tag such as `v1.2.0`.
+Finish the release changes, rebuild the shipped plugin, and run the repository test suite and `doctor` before cutting the release. Update the shipped version consistently with the release version, then create and push a `v*` tag such as `v2.0.0`.
 
-The release workflow runs `npm test`, packages the repository as `RPGVault.zip`, and creates the GitHub release from that tagged commit. The tag is the boundary: do not change the release contents after the tag has been cut.
+The release workflow runs `npm test`, packages the repository as `GMVault.zip`, and creates the GitHub release from that tagged commit. The tag is the boundary: do not change the release contents after the tag has been cut.
 
 ## Keep migrations permanent
 
 Migration IDs are immutable. Never edit or reuse an existing migration: an installed vault records completed IDs and will not run an edited migration again. Put a repair in a new migration. The CLI already installed in a vault performs the initial replacement, and only the newly installed CLI runs pending migrations.
 
-Review a migration against an already-updated vault as well as a fresh one. The update process records completed migration IDs in `.rpgvault/state.json`, so reuse would make a changed migration invisible to vaults that already recorded it.
+Review a migration against an already-updated vault as well as a fresh one. The update process records completed migration IDs in `.gmvault/state.json`, so reuse would make a changed migration invisible to vaults that already recorded it.
 
 ## What the tag triggers
 

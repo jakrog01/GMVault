@@ -1,6 +1,6 @@
-# RPGVault concepts
+# GMVault concepts
 
-RPGVault is an Obsidian vault with a shipped layer, a local layer, and content roots.
+GMVault is an Obsidian vault with a shipped layer, a local layer, and content roots.
 The boundary lets the template evolve without treating game notes as generated files.
 Use the layer and root names below when deciding where to place a file.
 
@@ -44,9 +44,9 @@ Generated references to those repeated names should be path-qualified.
 System packages in `_system/systems/` describe supported note shapes and radar requirements.
 They do not contain published rules text or statblocks.
 Use a local package while experimenting; see [Authoring systems](AUTHORING-SYSTEMS.md) for that workflow.
-`.rpgvault/state.json` records install identity, installed version, applied migrations, and adoption state.
-`.rpgvault/cache/` holds local derived caches, including assistant indexing data.
-`.rpgvault/backups/` receives a timestamped copy of `_system/` before an update replaces it.
+`.gmvault/state.json` records install identity, installed version, applied migrations, and adoption state.
+`.gmvault/cache/` holds local derived caches, including assistant indexing data.
+`.gmvault/backups/` receives a timestamped copy of `_system/` before an update replaces it.
 An update may replace `_system/`, reconcile manifest-managed Obsidian artifacts, refresh the bundled plugin, and write state.
 An update does not replace `_local/`, the six content roots, or the root active pointer.
 

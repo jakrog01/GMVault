@@ -1,6 +1,6 @@
-site_name: RPGVault manual
+site_name: GMVault manual
 site_description: The practical manual for an upgradeable tabletop RPG vault
-site_url: https://jakrog01.github.io/RPGVault/
+site_url: https://jakrog01.github.io/GMVault/
 docs_dir: ../docs
 site_dir: ../.github/site
 theme:
@@ -53,7 +53,7 @@ plugins:
   - search
 nav:
   - Getting started: GETTING-STARTED.md
-  - RPGVault concepts: CONCEPTS.md
+  - GMVault concepts: CONCEPTS.md
   - Architecture: ARCHITECTURE.md
   - CLI reference: CLI.md
   - Troubleshooting: TROUBLESHOOTING.md

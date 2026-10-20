@@ -3,8 +3,8 @@ import type TableTools from "./main";
 import { Scope, ScopePolicy, SourceKind } from "./types";
 
 export const assistantLayerPaths = (name: string): string[] => [`_local/assistant/${name}`, `_system/assistant/${name}`];
-export const builtInExclusions = ["Archive/", "_local/", "_system/", ".obsidian/", ".rpgvault/"];
-export const isBuiltInExcluded = (path: string): boolean => /^(?:Archive|_system|_local|\.obsidian|\.rpgvault)(?:\/|$)/.test(path);
+export const builtInExclusions = ["Archive/", "_local/", "_system/", ".obsidian/", ".gmvault/"];
+export const isBuiltInExcluded = (path: string): boolean => /^(?:Archive|_system|_local|\.obsidian|\.gmvault)(?:\/|$)/.test(path);
 const excluded = (path: string, prefixes: string[] = []): boolean => isBuiltInExcluded(path) || prefixes.some(prefix => path === prefix.replace(/\/$/, "") || path.startsWith(prefix));
 export const defaultScopePolicy: ScopePolicy = {
   version: 1,

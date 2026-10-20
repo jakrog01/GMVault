@@ -35,13 +35,13 @@ test("vectors.bin stores raw Float32 data, not text", async () => {
   for (let index = 0; index < 300; index++) env.addFile(`Campaigns/Glass/Lore/L${index}.md`, `# Lore ${index}\nThe harbor lantern ${index} glows.`, { type: "lore" })
   const plugin = await start(env, state)
   await unload(plugin)
-  const binary = env.adapterFiles.get(".rpgvault/cache/assistant/vectors.bin")
+  const binary = env.adapterFiles.get(".gmvault/cache/assistant/vectors.bin")
   assert.ok(binary instanceof ArrayBuffer, "vectors.bin written through writeBinary")
   const vectors = state.inputs.length
   const raw = vectors * DIMENSIONS * 4
   assert.ok(binary.byteLength <= raw + 64 * 1024, `vectors.bin is ${binary.byteLength} bytes for ${vectors} vectors (raw Float32 ${raw})`)
   assert.notEqual(new Uint8Array(binary)[0], "{".charCodeAt(0), "vectors.bin starts like JSON")
-  const manifest = JSON.parse(env.adapterFiles.get(".rpgvault/cache/assistant/manifest.json"))
+  const manifest = JSON.parse(env.adapterFiles.get(".gmvault/cache/assistant/manifest.json"))
   assert.ok(JSON.stringify(manifest).length < raw / 2, "the manifest must not carry the vectors")
 })
 
@@ -73,9 +73,9 @@ test("deleting notes removes their vectors from memory and from the persisted ca
   await idle(plugin)
   assert.deepEqual(paths(await plugin.index.hybridSearch("lore text", undefined, 100)).filter(path => path.includes("/Lore/")), [])
   await unload(plugin)
-  const manifest = JSON.stringify(JSON.parse(env.adapterFiles.get(".rpgvault/cache/assistant/manifest.json")))
+  const manifest = JSON.stringify(JSON.parse(env.adapterFiles.get(".gmvault/cache/assistant/manifest.json")))
   assert.ok(!manifest.includes("/Lore/L"), "deleted notes are still referenced by the persisted cache")
-  const binary = env.adapterFiles.get(".rpgvault/cache/assistant/vectors.bin")
+  const binary = env.adapterFiles.get(".gmvault/cache/assistant/vectors.bin")
   const remaining = state.inputs.length - 40
   assert.ok(!binary || binary.byteLength <= Math.max(0, remaining) * DIMENSIONS * 4 + 64 * 1024, `vectors.bin still ${binary?.byteLength} bytes`)
 })

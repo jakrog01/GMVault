@@ -1,6 +1,6 @@
 # Architecture
 
-RPGVault separates shipped machinery from the material a table owns. `_system` is the shipped layer and is replaced by an update, so it is never a place for campaign work. `_local` mirrors paths in `_system`; the resolver tries `_local/<path>` before `_system/<path>`. A local template, string override, or private script therefore wins without changing a shipped file and survives later updates.
+GMVault separates shipped machinery from the material a table owns. `_system` is the shipped layer and is replaced by an update, so it is never a place for campaign work. `_local` mirrors paths in `_system`; the resolver tries `_local/<path>` before `_system/<path>`. A local template, string override, or private script therefore wins without changing a shipped file and survives later updates.
 
 ## Layers and update ownership
 
@@ -8,7 +8,7 @@ The manifest's `ownedGlobs` gives each shipped path exactly one update handler. 
 
 - `_system/**` is replaced wholesale.
 - `.obsidian/**` is selectively reconciled as managed Obsidian artifacts, while workspace files and plugin data listed as never-touch stay owned by the vault.
-- `.rpgvault/state.json` is written by the CLI to record installed state and migrations.
+- `.gmvault/state.json` is written by the CLI to record installed state and migrations.
 - `replaceOnUpdate` mirrors the shipped root notes and folders: `Home.md`, `README.md`, `CHANGELOG.md`, `docs/**`, and `.github/**`.
 
 Mirroring means a released folder is made to match the release. Before an overwritten or removed shipped item is changed, the updater preserves it in the update backup. `_local` and the content roots are not in the shipped layer.

@@ -14,7 +14,7 @@ Player scope includes run, state, party, and ordinary scoped notes, but not camp
 Rule results are ordered house rule, campaign homebrew, then system library when they occupy retrieved positions.
 Campaign-linked rules are restricted to that campaign; system rules require the active campaign system.
 
-The assistant excludes `Archive/`, `_system/`, `_local/`, `.obsidian/`, and `.rpgvault/` from indexing and scope.
+The assistant excludes `Archive/`, `_system/`, `_local/`, `.obsidian/`, and `.gmvault/` from indexing and scope.
 Notes with `assistant: exclude` frontmatter are also excluded.
 The shipped scope policy is `_system/assistant/scope.json`; a local `_local/assistant/scope.json` policy overrides it when valid.
 The policy shape is `{ "version": 1, "exclude": ["prefix/"], "gm": ["kind"], "player": ["kind"] }`, with optional `exclude` prefixes supplementing built-in exclusions.
@@ -81,7 +81,7 @@ The assistant may warn about blocked responses, an invalid key, unavailable mode
 ## Local index and semantic search
 
 The lexical index is always local and indexes visible Markdown using the scope rules above.
-Its cache is `.rpgvault/cache/assistant/manifest.json`; vectors, when enabled, are `.rpgvault/cache/assistant/vectors.bin` Float32 data.
+Its cache is `.gmvault/cache/assistant/manifest.json`; vectors, when enabled, are `.gmvault/cache/assistant/vectors.bin` Float32 data.
 The view status reports indexing and indexed note and chunk counts.
 Run **Assistant: rebuild index** to force a rebuild after substantial note or provider changes.
 

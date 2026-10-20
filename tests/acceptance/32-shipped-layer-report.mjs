@@ -33,9 +33,9 @@ async function serve(archive) {
 }
 
 test("an entry the release leaves unchanged is not reported as replaced", async () => {
-  const vault = await cloneVault("rpgvault-report32-unchanged-")
+  const vault = await cloneVault("gmvault-report32-unchanged-")
   const host = await serve(release("1.1.0", { "docs/CLI.md": "# CLI reference\n\nupstream edit\n" }))
-  const result = await cli(vault, ["update", "--latest"], { RPGVAULT_RELEASE_API: host.answer.base })
+  const result = await cli(vault, ["update", "--latest"], { GMVAULT_RELEASE_API: host.answer.base })
   assert.equal(result.code, 0, `the update succeeds; stdout: ${result.stdout}\nstderr: ${result.stderr}`)
   for (const name of ["Home.md", "README.md", "CHANGELOG.md"]) {
     const line = entryLine(result, name)
@@ -52,26 +52,26 @@ test("an entry the release leaves unchanged is not reported as replaced", async 
 }, 180000)
 
 test("an update that changes nothing in the shipped layer says so and writes no shipped backup", async () => {
-  const vault = await cloneVault("rpgvault-report32-none-")
+  const vault = await cloneVault("gmvault-report32-none-")
   const host = await serve(release("1.1.0"))
-  const result = await cli(vault, ["update", "--latest"], { RPGVAULT_RELEASE_API: host.answer.base })
+  const result = await cli(vault, ["update", "--latest"], { GMVAULT_RELEASE_API: host.answer.base })
   assert.equal(result.code, 0, `the update succeeds; stdout: ${result.stdout}\nstderr: ${result.stderr}`)
   assert.equal(lines(result).some(line => /^replaced /.test(line)), false, `nothing is reported as replaced: ${result.stdout}`)
   assert.equal(lines(result).some(line => /file:/.test(line)), false, `no file is named: ${result.stdout}`)
-  const saved = await readdir(path.join(vault, ".rpgvault/backups"))
+  const saved = await readdir(path.join(vault, ".gmvault/backups"))
   assert.equal(saved.length, 1, `the shipped layer backup is still written: ${saved.join(", ")}`)
-  const backup = path.join(vault, ".rpgvault/backups", saved[0])
+  const backup = path.join(vault, ".gmvault/backups", saved[0])
   assert.deepEqual((await readdir(backup)).sort(), ["_system"], `only _system is backed up when nothing else changed: ${(await readdir(backup)).join(", ")}`)
-  assert.ok(result.stdout.includes("RPGVault doctor: clean (1.1.0)"), `the update still ends clean: ${result.stdout}`)
+  assert.ok(result.stdout.includes("GMVault doctor: clean (1.1.0)"), `the update still ends clean: ${result.stdout}`)
   await host.close()
   await cleanup(vault)
 }, 180000)
 
 test("a preview reads as a plan, in grammatical English", async () => {
-  const vault = await cloneVault("rpgvault-report32-preview-")
+  const vault = await cloneVault("gmvault-report32-preview-")
   await writeFile(path.join(vault, "docs/MY-NOTES.md"), "# mine\n")
-  const host = await serve(release("1.1.0", { "Home.md": "---\ntype: home\n---\n\n# RPGVault\n\nnew shipped home\n" }))
-  const result = await cli(vault, ["update", "--latest", "--dry-run"], { RPGVAULT_RELEASE_API: host.answer.base })
+  const host = await serve(release("1.1.0", { "Home.md": "---\ntype: home\n---\n\n# GMVault\n\nnew shipped home\n" }))
+  const result = await cli(vault, ["update", "--latest", "--dry-run"], { GMVAULT_RELEASE_API: host.answer.base })
   assert.equal(result.code, 0, `the preview succeeds; stderr: ${result.stderr}`)
   assert.equal(/would replaced|would removed|would kept/.test(result.stdout), false, `the preview is grammatical: ${result.stdout}`)
   assert.ok(/would replace Home\.md/.test(result.stdout), `the preview names the file it would replace: ${result.stdout}`)
@@ -82,11 +82,11 @@ test("a preview reads as a plan, in grammatical English", async () => {
 }, 180000)
 
 test("a group the release does not provide is still reported as kept", async () => {
-  const vault = await cloneVault("rpgvault-report32-kept-")
+  const vault = await cloneVault("gmvault-report32-kept-")
   const trimmed = {}
   for (const entry of wholeRelease) if (entry.name.startsWith(".github/")) trimmed[entry.name] = null
   const host = await serve(release("1.1.0", trimmed))
-  const result = await cli(vault, ["update", "--latest"], { RPGVAULT_RELEASE_API: host.answer.base })
+  const result = await cli(vault, ["update", "--latest"], { GMVAULT_RELEASE_API: host.answer.base })
   assert.equal(result.code, 0, `the update succeeds; stderr: ${result.stderr}`)
   assert.ok(/kept \.github/.test(result.stdout), `the missing group is reported as kept: ${result.stdout}`)
   assert.ok(await readFile(path.join(vault, ".github/workflows/release.yml"), "utf8"), "the vault keeps its own copy")

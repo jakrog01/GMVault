@@ -3,11 +3,11 @@
 Run the check from the vault root:
 
 ```text
-node _system/bin/rpgvault.mjs doctor
+node _system/bin/gmvault.mjs doctor
 ```
 
-A healthy vault prints `RPGVault doctor: clean (<version>)`.
-Otherwise it prints `RPGVault doctor found <count> violation(s):` and one or more lines below.
+A healthy vault prints `GMVault doctor: clean (<version>)`.
+Otherwise it prints `GMVault doctor found <count> violation(s):` and one or more lines below.
 Fix the reported files, then run `doctor` again rather than assuming the first issue was the only one.
 
 ## `missing content root: <folder>`
@@ -32,7 +32,7 @@ Fix: move the file into a content root or a documented location, then run `docto
 
 Meaning: a template-managed Obsidian file is missing.
 Usual cause: a plugin manifest, stylesheet, or shared Obsidian configuration was deleted.
-Fix: run `node _system/bin/rpgvault.mjs init` to refresh managed artifacts, or update from a known-good release.
+Fix: run `node _system/bin/gmvault.mjs init` to refresh managed artifacts, or update from a known-good release.
 
 ## `invalid community plugin list: .obsidian/community-plugins.json`
 
@@ -50,19 +50,19 @@ Fix: enable the named ids in Obsidian or run update, which appends missing templ
 
 Meaning: a wholly managed Obsidian artifact no longer matches the shipped version.
 Usual cause: a shipped plugin file, manifest, or stylesheet was manually edited.
-Fix: update from a known-good release, or run `node _system/bin/rpgvault.mjs init` to refresh the managed artifact.
+Fix: update from a known-good release, or run `node _system/bin/gmvault.mjs init` to refresh the managed artifact.
 
 ## `managed Obsidian key differs: .obsidian/<path>:<key>`
 
 Meaning: a managed key in a shared Obsidian JSON file differs from the shipped value.
 Usual cause: a setting owned by the template was changed locally.
-Fix: run `node _system/bin/rpgvault.mjs init` or update from a known-good release to restore that managed key.
+Fix: run `node _system/bin/gmvault.mjs init` or update from a known-good release to restore that managed key.
 
 ## `plugin build is stale`
 
-Meaning: `.rpgvault/plugin-build.json` does not match the shipped Table Tools source hash.
+Meaning: `.gmvault/plugin-build.json` does not match the shipped Table Tools source hash.
 Usual cause: the bundled plugin source changed without a refreshed bundle, or build state was removed.
-Fix: run `node _system/bin/rpgvault.mjs init` to refresh the bundled plugin and build state, then rerun `doctor`.
+Fix: run `node _system/bin/gmvault.mjs init` to refresh the bundled plugin and build state, then rerun `doctor`.
 
 ## `missing template: <file>`
 
@@ -108,7 +108,7 @@ Fix: restore the shipped file from a known-good release; keep tracked shipped te
 
 ## `empty scaffold without declaration: <folder>`
 
-Meaning: a lone `.gitkeep` or `.rpgvault-keep` marks an empty folder that is not declared as a scaffold or content root.
+Meaning: a lone `.gitkeep` or `.gmvault-keep` marks an empty folder that is not declared as a scaffold or content root.
 Usual cause: an empty temporary folder was committed outside the recognised folder layout.
 Fix: remove the placeholder and folder, or move the intended folder under the appropriate declared content root or local layer.
 
@@ -121,24 +121,24 @@ Restore the matching `ownedGlobs` and `replaceOnUpdate` declarations so root fil
 Fix the map `from` value or source layout; when all required folders are inside one wrapper, use the absolute wrapped-folder hint printed with the error.
 
 `update source does not exist: <path>` means the `--from` directory or zip path is wrong.
-Check the path, then run `node _system/bin/rpgvault.mjs update --from <directory-or-zip>` again.
+Check the path, then run `node _system/bin/gmvault.mjs update --from <directory-or-zip>` again.
 
-`update source has no _system directory: <path>` means the selected directory is not an unpacked RPGVault release.
+`update source has no _system directory: <path>` means the selected directory is not an unpacked GMVault release.
 Point `--from` at the release root that contains `_system/`, rather than at its parent or an unrelated folder.
 
 `release source is not configured` means neither the shipped manifest nor `_local/release.json` provides both a release repository and API base.
-Restore the shipped release block or set the missing local override; `RPGVAULT_RELEASE_API` can replace only the API base.
+Restore the shipped release block or set the missing local override; `GMVAULT_RELEASE_API` can replace only the API base.
 
 `release source has invalid api "<value>"` or `release source has invalid repo "<value>"` means a configured value cannot identify a release host.
 Use an absolute `http:` or `https:` API URL and an exact `owner/name` repository with no whitespace or extra slashes, then retry.
 
 `release check timed out` or `release download timed out: <asset>` means the release host did not answer before its deadline.
-Check the host and connection, then retry; set `RPGVAULT_RELEASE_TIMEOUT` to a positive millisecond value only when a longer deadline is appropriate.
+Check the host and connection, then retry; set `GMVAULT_RELEASE_TIMEOUT` to a positive millisecond value only when a longer deadline is appropriate.
 
 `release check failed: invalid release version "<value>"` means the latest tag is not numeric segments separated by dots.
 Publish a tag such as `v1.2.3`, `2026.01`, or `1.0.0.1`, then retry the update.
 
-`release archive validation failed: archive has no _system/VERSION file` means the downloaded archive is not a complete RPGVault release.
+`release archive validation failed: archive has no _system/VERSION file` means the downloaded archive is not a complete GMVault release.
 Publish a release archive with `_system/VERSION` matching its release tag; do not install that archive.
 
 `update accepts either --check or --from, not both` means a release check was given an offline source path.
@@ -147,14 +147,14 @@ Run `update --check` alone, or use `update --from <directory-or-zip>` for an off
 `release download failed: release lists no assets` means the release host answered with something other than a list of release files.
 Check that the release exists and carries its archive; a proxy or an error page in place of the release API also produces this.
 
-`_system was replaced but finalisation failed; backup is .rpgvault/backups/<timestamp>` means the new shipped layer and its state were installed, but a migration, managed artifact refresh, or doctor found a problem.
+`_system was replaced but finalisation failed; backup is .gmvault/backups/<timestamp>` means the new shipped layer and its state were installed, but a migration, managed artifact refresh, or doctor found a problem.
 Read the forwarded output, fix the reported violations and run `doctor`; restoring the named backup remains the owner's decision because migrations may already have run.
 
 An unreadable `community-plugins.json` is reported by doctor as the invalid community plugin list violation above.
 Update repairs malformed JSON, non-arrays, and non-string entries while preserving valid local plugin ids.
 
 A stale plugin build is reported by doctor as `plugin build is stale`.
-Run `node _system/bin/rpgvault.mjs init` to refresh the bundle and `.rpgvault/plugin-build.json`.
+Run `node _system/bin/gmvault.mjs init` to refresh the bundle and `.gmvault/plugin-build.json`.
 
 For the update procedure and backups, read [Keeping a vault up to date](UPDATING.md).
 For import-map failures, read [Adopting an existing vault](ADOPTING.md).

@@ -74,7 +74,7 @@ export function zipArchive(entries) {
 // `.git` and `node_modules` never belong in a release or a clone, and neither do earlier backups.
 // Matching whole path segments keeps `.github` — a shipped folder these tests must carry.
 const skipped = item => item.split(path.sep).some((segment, index, segments) =>
-  segment === '.git' || segment === 'node_modules' || (segment === 'backups' && segments[index - 1] === '.rpgvault'))
+  segment === '.git' || segment === 'node_modules' || (segment === 'backups' && segments[index - 1] === '.gmvault'))
 
 /** Every file under `directory` as zip entries, paths relative and slash-separated. */
 export async function archiveEntries(directory, prefix = "") {
@@ -95,14 +95,14 @@ export async function archiveEntries(directory, prefix = "") {
  * Fake releases host. `options`:
  *   release  the JSON body for /repos/<repo>/releases/latest, or null for 404
  *   asset    Buffer served for the asset download, or null for 404
- *   assetName  download path segment (default RPGVault.zip)
+ *   assetName  download path segment (default GMVault.zip)
  *   status   status code for the releases endpoint (default 200)
  *   body     raw string body for the releases endpoint, overriding `release`
  * Records every request path in `requests`.
  */
 export async function releaseHost(options = {}) {
   const requests = []
-  const assetName = options.assetName ?? "RPGVault.zip"
+  const assetName = options.assetName ?? "GMVault.zip"
   const server = createServer((request, response) => {
     requests.push(request.url)
     if (request.url.endsWith(`/download/${assetName}`)) {
@@ -126,7 +126,7 @@ export async function releaseHost(options = {}) {
 }
 
 /** A releases payload shaped like GitHub's, for tag `tag` with one named asset. */
-export const releaseBody = (tag, downloadUrl, assetName = "RPGVault.zip") => ({
+export const releaseBody = (tag, downloadUrl, assetName = "GMVault.zip") => ({
   tag_name: tag,
   name: tag,
   draft: false,
@@ -147,8 +147,8 @@ export async function cloneVault(prefix) {
   // The clone is pinned to a fixed baseline so releasing a new version cannot turn an
   // "install this newer release" test into an "already up to date" one.
   await writeFile(path.join(vault, "_system/VERSION"), `${CLONE_VERSION}\n`)
-  const state = JSON.parse(await readFile(path.join(vault, ".rpgvault/state.json"), "utf8"))
-  await writeFile(path.join(vault, ".rpgvault/state.json"), `${JSON.stringify({ ...state, installedVersion: CLONE_VERSION }, null, 2)}\n`)
+  const state = JSON.parse(await readFile(path.join(vault, ".gmvault/state.json"), "utf8"))
+  await writeFile(path.join(vault, ".gmvault/state.json"), `${JSON.stringify({ ...state, installedVersion: CLONE_VERSION }, null, 2)}\n`)
   await mkdir(path.join(vault, "Campaigns/User"), { recursive: true })
   await mkdir(path.join(vault, "_local/templates"), { recursive: true })
   await writeFile(path.join(vault, "Campaigns/User/Campaign.md"), "owner content\n")
@@ -159,7 +159,7 @@ export async function cloneVault(prefix) {
 /** Run the vault's own CLI. Resolves with the exit code and both streams. */
 export function cli(vault, args, env = {}, timeout = 120000) {
   return new Promise(resolve => {
-    execFile("node", [path.join(vault, "_system/bin/rpgvault.mjs"), ...args], { cwd: vault, timeout, env: { ...process.env, ...env } }, (error, stdout, stderr) => {
+    execFile("node", [path.join(vault, "_system/bin/gmvault.mjs"), ...args], { cwd: vault, timeout, env: { ...process.env, ...env } }, (error, stdout, stderr) => {
       resolve({ code: error ? (error.code ?? 1) : 0, stdout, stderr })
     })
   })
@@ -189,7 +189,7 @@ export async function hangingHost() {
   const base = `http://127.0.0.1:${server.address().port}`
   return {
     base,
-    downloadUrl: `${base}/download/RPGVault.zip`,
+    downloadUrl: `${base}/download/GMVault.zip`,
     close: () => new Promise(resolve => { for (const socket of sockets) socket.destroy(); server.close(resolve) }),
   }
 }

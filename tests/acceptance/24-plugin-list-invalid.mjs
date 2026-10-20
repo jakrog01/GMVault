@@ -12,7 +12,7 @@ const templatePlugins = JSON.parse(await readFile(path.join(repository, "_system
 const invalid = { "an object": "{}\n", "not JSON": "not json\n", "a list with a non-string": `${JSON.stringify([...templatePlugins, "dataview", 7])}\n` }
 
 function cli(vault, ...args) {
-  return new Promise(resolve => execFile("node", [path.join(vault, "_system/bin/rpgvault.mjs"), ...args], { cwd: vault, timeout: 120000 },
+  return new Promise(resolve => execFile("node", [path.join(vault, "_system/bin/gmvault.mjs"), ...args], { cwd: vault, timeout: 120000 },
     (error, stdout, stderr) => resolve({ code: error ? (error.code ?? 1) : 0, output: `${stdout}${stderr}` })))
 }
 
@@ -24,7 +24,7 @@ async function copy(prefix) {
 
 for (const [label, content] of Object.entries(invalid)) {
   test(`doctor reports ${label} in community-plugins.json as a violation naming the file`, async () => {
-    const vault = await copy("rpgvault-list24-")
+    const vault = await copy("gmvault-list24-")
     await writeFile(path.join(vault, ".obsidian/community-plugins.json"), content)
     const result = await cli(vault, "doctor")
     assert.notEqual(result.code, 0, result.output)
@@ -36,8 +36,8 @@ for (const [label, content] of Object.entries(invalid)) {
 
 test("update replaces an unreadable plugin list with the template list, keeping valid local ids, and finishes clean", async () => {
   for (const [label, content] of Object.entries(invalid)) {
-    const vault = await copy("rpgvault-list24-")
-    const from = await copy("rpgvault-list24-source-")
+    const vault = await copy("gmvault-list24-")
+    const from = await copy("gmvault-list24-source-")
     await writeFile(path.join(vault, ".obsidian/community-plugins.json"), content)
     const result = await cli(vault, "update", "--from", from)
     assert.equal(result.code, 0, `${label}: ${result.output}`)

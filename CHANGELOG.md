@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+## 2.0.0
+
+- RPGVault is now GMVault, with releases at `jakrog01/GMVault` and the `GMVault.zip` asset.
+- The CLI is `_system/bin/gmvault.mjs`; `_system/bin/rpgvault.mjs` remains a legacy alias so an RPGVault 1.2.0 update can finish.
+- Local state moves from `.rpgvault/` to `.gmvault/` on the first new CLI command, preserving install identity, backups, and cache.
+- The first migration renames `.rpgvault-keep` placeholders and enabled snippet names, while keeping user-edited old snippet files.
+- To upgrade an RPGVault 1.2.0 vault, set `_local/release.json` to `{"repo":"jakrog01/GMVault","asset":"GMVault.zip"}` and run `node _system/bin/rpgvault.mjs update --latest` once.
+
 ## 1.2.0
 
 - Fancy-a-Story is the default theme for new and updated vaults. The CLI installs it when the vault has none and selects it only when no theme was chosen; your own theme choice is never changed, and an installed Fancy-a-Story is never overwritten, so Obsidian's theme updates keep working.

@@ -12,11 +12,11 @@ function emptyVault() {
   env.files.clear()
   env.addFile("Active.md", readFileSync(path.join(root, "Active.md"), "utf8"), { run: "" })
   env.addFile("Home.md", readFileSync(path.join(root, "Home.md"), "utf8"))
-  for (const folder of ["Campaigns", "Parties", "Runs"]) env.adapterFiles.set(`${folder}/.rpgvault-keep`, "")
+  for (const folder of ["Campaigns", "Parties", "Runs"]) env.adapterFiles.set(`${folder}/.gmvault-keep`, "")
   for (const id of ["generic", "dnd5e", "coc7e"]) env.adapterFiles.set(`_system/systems/${id}/package.json`, readFileSync(path.join(root, `_system/systems/${id}/package.json`), "utf8"))
   env.adapterFiles.set("_system/templates/campaign.md", readFileSync(path.join(root, "_system/templates/campaign.md"), "utf8"))
   env.adapterFiles.set("_system/VERSION", "1.1.0\n")
-  env.adapterFiles.set(".rpgvault/state.json", JSON.stringify({ installedVersion: "1.1.0", appliedMigrations: [] }))
+  env.adapterFiles.set(".gmvault/state.json", JSON.stringify({ installedVersion: "1.1.0", appliedMigrations: [] }))
   return env
 }
 
@@ -69,7 +69,7 @@ test("a stalled first model and a superseded render keep the creation shell visi
   const view = plugin.viewFactories.get(HOME)(leaf)
   let release
   const read = env.app.vault.adapter.read
-  env.app.vault.adapter.read = filePath => filePath === ".rpgvault/state.json" ? new Promise(resolve => { release = resolve }) : read(filePath)
+  env.app.vault.adapter.read = filePath => filePath === ".gmvault/state.json" ? new Promise(resolve => { release = resolve }) : read(filePath)
   const pending = view.onOpen()
   shell(env, plugin, view)
   env.app.vault.adapter.read = read

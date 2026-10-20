@@ -1,6 +1,6 @@
 # Adopting an Existing Vault
 
-Run `node _system/bin/rpgvault.mjs adopt /path/to/source --map mapping.json` from the target vault.
+Run `node _system/bin/gmvault.mjs adopt /path/to/source --map mapping.json` from the target vault.
 
 The map names each folder import, plugin-data import, and calendar-definition import. Folder patterns use `*` for one path segment. Plugin settings are copied only into the target plugin `data.json`; the report lists setting names and never values.
 

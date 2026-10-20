@@ -1,4 +1,4 @@
-# RPGVault manual
+# GMVault manual
 
 This manual starts with a new vault and then moves from its model to daily operation.
 Read the first three pages in order if you are setting up a vault for the first time.
@@ -10,7 +10,7 @@ All command examples use the CLI shipped with this vault.
 - [Getting started](GETTING-STARTED.md) answers: how do I turn a clone into my first active game?
 - [Concepts](CONCEPTS.md) answers: which layer, content root, note, and state file owns this information?
 - [Architecture](ARCHITECTURE.md) answers: how do the shipped, local, content, system-package, and radar boundaries fit together?
-- [CLI reference](CLI.md) answers: what does each `rpgvault` command write, print, and require?
+- [CLI reference](CLI.md) answers: what does each `gmvault` command write, print, and require?
 - [Troubleshooting](TROUBLESHOOTING.md) answers: what does a `doctor` violation mean and how do I fix it?
 
 ## Working in the vault
@@ -22,7 +22,7 @@ All command examples use the CLI shipped with this vault.
 - [Customising Table Tools](CUSTOMISING.md) answers: how do I localise labels and keep my own plugins, themes, and snippets?
 - [Authoring systems](AUTHORING-SYSTEMS.md) answers: how do I describe note shapes without shipping published rules text?
 - [Adopting an existing vault](ADOPTING.md) answers: how do I import folders and selected plugin data through a map?
-- [Keeping a vault up to date](UPDATING.md) answers: how do I find, install, and recover from an RPGVault update?
+- [Keeping a vault up to date](UPDATING.md) answers: how do I find, install, and recover from an GMVault update?
 - [Maintaining releases](UPGRADING.md) answers: how do maintainers cut a release and preserve migration history?
 
 ## Design records
