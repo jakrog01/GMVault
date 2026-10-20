@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+## 2.0.1
+
+- The shipped documentation and release workflows run only in a GitHub repository marked as a template, so a vault kept in its own repository no longer builds the GMVault manual or tries to publish GMVault releases.
+- **Use this template** is the supported way to start a vault repository, including a private one; the README and the updating guide explain how to keep it current.
+- The updating guide has a new section on keeping a vault in your own repository: commit your notes there, take releases with **Install update** or `update --latest`, and never merge the template repository into the vault.
+
 ## 2.0.0
 
 - RPGVault is now GMVault, with releases at `jakrog01/GMVault` and the `GMVault.zip` asset.
