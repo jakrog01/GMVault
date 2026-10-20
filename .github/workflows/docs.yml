@@ -10,6 +10,7 @@ permissions:
 
 jobs:
   build:
+    if: github.event.repository.is_template
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4

@@ -10,7 +10,7 @@ Campaigns/ Parties/ Runs/ Library/ Calendar/ Archive/  your content
 
 Open a clone in Obsidian, then run `node _system/bin/gmvault.mjs doctor`. Install the example with `node _system/bin/gmvault.mjs demo install`; remove only its stamped notes with `demo remove`.
 
-For an offline update, download a release and run `node _system/bin/gmvault.mjs update --from /path/to/release`. Backups are written to `.gmvault/backups/`. GitHub's **Use this template** starts an independent vault; it does not preserve history and is not an upgrade mechanism.
+For an offline update, download a release and run `node _system/bin/gmvault.mjs update --from /path/to/release`. Backups are written to `.gmvault/backups/`. GitHub's **Use this template** starts your own vault repository, which can be private; keep it current with `update --latest`, not by merging the template. See [keeping a vault in your own repository](docs/UPDATING.md#keep-your-vault-in-your-own-repository).
 
 The Table Tools plugin adds a combat tracker and a Gemini assistant; translate or rename any of its labels through `_local/plugins/table-tools/strings.json`.
 

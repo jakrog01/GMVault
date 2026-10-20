@@ -12,6 +12,10 @@ node _system/bin/rpgvault.mjs update --latest
 
 The bridge points the old updater at the GMVault release. The update preserves your install identity and moves local state to `.gmvault/`. Afterward, use `_system/bin/gmvault.mjs`; the release bridge is needed only for this first update.
 
+## Keep your vault in your own repository
+
+Start your vault with **Use this template** on GitHub, or clone this repository and point `origin` at your own private repository. Commit your notes there as usual. Do not merge the template repository into your vault: take each release with **Install update** in Table home or `node _system/bin/gmvault.mjs update --latest`, then commit the result. The shipped GitHub workflows run only in a repository marked as a template, so a vault repository spends no Actions minutes on them.
+
 ## See whether a release exists
 
 In Table Tools settings, choose **Check for updates** to ask the configured release host without downloading anything. If you prefer automatic checks, enable **Check once a day**; after Obsidian restores its layout, it checks at most once every 24 hours and stays quiet when there is no newer version or the host cannot be reached.
