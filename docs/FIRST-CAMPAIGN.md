@@ -5,13 +5,13 @@ Follow these steps from an empty GMVault to a first played session. [Install](GE
 !!! tip "See a filled example first"
     Run `node _system/bin/gmvault.mjs demo install` from the vault root. Explore `Campaigns/Glassgate/`, its party, and its runs. Run `node _system/bin/gmvault.mjs demo remove` when you are ready for your own game.
 
-1. Open **Table Tools: Home** from the ribbon or command palette. Choose **New campaign**, enter a **Name**, select a **System**, then choose **Create**. Home opens `Campaigns/<name>/Campaign.md` and creates `NPCs/`, `Locations/`, `Quests/`, and `Factions/` beside it.
+1. Open **Table Tools: Home**. Choose **New world**, enter a **Name**, then choose **Create**. Home creates `Worlds/<name>/World.md` and folders for NPCs, locations, factions, lore, and events. Describe the setting in the world note.
 
-2. Fill in `Campaign.md`: write the **Premise**, list the main groups under **Factions**, and add a few places under **Locations**. You can link the faction and location notes you create next.
+2. Choose **New campaign**, enter a **Name**, choose the world in **World**, select a **System**, then choose **Create**. Home links the campaign to the world and creates `Quests/`, `Encounters/`, and `Handouts/`. Choosing **No world** instead creates the familiar NPC, location, quest, and faction folders as well.
 
-3. In the new `NPCs/` folder, create a Markdown note for one character. Do the same for a place in `Locations/` and a task in `Quests/`. Templater applies the matching NPC, location, and quest templates on file creation and fills their `campaign` link. Add a note in `Factions/` when a group needs its own goals, members, and relations.
+3. Add a character or place under the world's `NPCs/` or `Locations/` folder. Templater fills the `world` link. Add a quest under the campaign's `Quests/` folder; its template fills the `campaign` link.
 
-4. Return to **Table Tools: Home** and choose **New party**. Enter a **Name** and choose **Create**. In `Parties/<name>/Party.md`, list each character as a bullet under `## Members`.
+4. Choose **New party** and enter a **Name**. On the party card, choose **New character** for each player character. Each character note links to the party and supplies combat fields. Older party notes with a `## Members` list still show a member count.
 
 5. Choose **New run**. Select the **Campaign**, **Party**, and **Role**, give the run a **Name**, and leave **Make active after creating** on. Choose **Create**. The new `Runs/<name>/` folder contains `Run.md`, `State.md`, and `World Day.md`; `Active.md` points to this run.
 

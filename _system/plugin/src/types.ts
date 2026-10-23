@@ -68,8 +68,10 @@ export interface Scope {
   system: string;
   runFolder: string;
   campaignFolder: string;
+  worldFolder: string;
   partyFolder: string;
   campaignPath: string;
+  worldPath: string;
   roots: { path: string; kind: SourceKind }[];
   kinds: SourceKind[];
   exclude: string[];
@@ -102,6 +104,7 @@ export interface Chunk {
   gmOnly: boolean;
   excluded: boolean;
   campaignLink: string;
+  worldLink: string;
 }
 
 export interface Settings {

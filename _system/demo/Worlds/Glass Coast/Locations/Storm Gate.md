@@ -1,7 +1,7 @@
 ---
 type: location
 origin: demo
-campaign: "[[Campaigns/Glassgate/Campaign]]"
+world: "[[Worlds/Glass Coast/World]]"
 ---
 
 # Storm Gate

@@ -1,6 +1,7 @@
 ---
 type: campaign
 origin: demo
+world: "[[Worlds/Glass Coast/World]]"
 system: generic
 calendar: Calendar
 ---

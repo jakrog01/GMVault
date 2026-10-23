@@ -1,7 +1,7 @@
 ---
 type: faction
 origin: demo
-campaign: "[[Campaigns/Glassgate/Campaign]]"
+world: "[[Worlds/Glass Coast/World]]"
 ---
 
 # Gate Wardens

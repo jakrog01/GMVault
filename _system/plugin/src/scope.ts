@@ -42,19 +42,25 @@ export function resolveScope(plugin: TableTools): Scope {
   const system = String(campaign ? plugin.app.metadataCache.getFileCache(campaign)?.frontmatter?.system ?? "generic" : "generic");
   const runFolder = folderOf(context?.run);
   const campaignFolder = folderOf(campaign);
+  const worldLink = String(campaign ? plugin.app.metadataCache.getFileCache(campaign)?.frontmatter?.world ?? "" : "");
+  const worldTarget = worldLink && campaign ? plugin.app.metadataCache.getFirstLinkpathDest(worldLink.replace(/^\[\[/, "").replace(/\]\]$/, "").split("|")[0].split("#")[0], campaign.path) : null;
+  const world = worldTarget instanceof TFile ? worldTarget : campaign;
+  const worldFolder = folderOf(world);
   const partyFolder = folderOf(party);
   if (context) {
     add(roots, enabled, runFolder, "run");
     add(roots, enabled, partyFolder, "party");
     if (role === "gm") {
       add(roots, enabled, campaignFolder, "campaign");
+      add(roots, enabled, worldFolder, "campaign");
       add(roots, enabled, `${campaignFolder}/Mechanics`, "homebrew");
+      add(roots, enabled, `${worldFolder}/Mechanics`, "homebrew");
       add(roots, enabled, `Library/Mechanics/${system}`, "system");
     }
   } else {
     add(roots, enabled, campaignFolder, "campaign");
     add(roots, enabled, partyFolder, "party");
   }
-  const key = digest(JSON.stringify({ role, system, runFolder, campaignFolder, partyFolder, roots, enabled, exclude }));
-  return { role, system, runFolder, campaignFolder, partyFolder, campaignPath: campaign?.path ?? "", roots, kinds: enabled, exclude, key };
+  const key = digest(JSON.stringify({ role, system, runFolder, campaignFolder, worldFolder, worldPath: world?.path ?? "", partyFolder, roots, enabled, exclude }));
+  return { role, system, runFolder, campaignFolder, worldFolder, partyFolder, campaignPath: campaign?.path ?? "", worldPath: world?.path ?? "", roots, kinds: enabled, exclude, key };
 }

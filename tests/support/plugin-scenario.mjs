@@ -581,6 +581,8 @@ export async function runScenario({ override } = {}) {
   await buttonComponent(tab.containerEl, s.settingsLocalDeleteButton).click()
   assert.ok(notices.includes(s.localModelDeleted))
 
+  addFile("Worlds/Glass Coast/World.md", "# Glass Coast", { type: "world" })
+  env.files.get("Campaigns/Glass/Campaign.md").frontmatter.world = "[[Worlds/Glass Coast/World]]"
   for (const ribbon of plugin.ribbons) await ribbon.callback()
   await command(s.commandOpenHome).callback()
   const home = env.leaves.find(leaf => leaf.type === "tt-home").view
@@ -596,7 +598,7 @@ export async function runScenario({ override } = {}) {
   await byLabel(home.contentEl, s.homeUpdateInstall)[0].click()
   plugin.commandRunner = async () => { throw new Error("Scenario update error.") }
   await byLabel(home.contentEl, s.homeUpdateInstall)[0].click()
-  for (const filePath of ["Runs/Harbor/Run.md", "Runs/Player/Run.md", "Runs/Loose/Run.md", "Campaigns/Glass/Campaign.md", "Parties/Watch/Party.md"]) env.files.delete(filePath)
+  for (const filePath of ["Runs/Harbor/Run.md", "Runs/Player/Run.md", "Runs/Loose/Run.md", "Campaigns/Glass/Campaign.md", "Parties/Watch/Party.md", "Worlds/Glass Coast/World.md"]) env.files.delete(filePath)
   await home.render()
   addFile("Runs/Harbor/Run.md", "# Harbor run", { type: "run", campaign: "[[Campaigns/Glass/Campaign]]", party: "[[Parties/Watch/Party]]" })
   addFile("Runs/Harbor/State.md", "State: the gate is open.")

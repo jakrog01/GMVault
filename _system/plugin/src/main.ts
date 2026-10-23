@@ -123,7 +123,7 @@ export default class TableTools extends Plugin {
     if (this.homeRelevantPaths.has(path)) return true;
     const type = file ? this.app.metadataCache.getFileCache(file)?.frontmatter?.type : undefined;
     const partyMembers = /^Parties\/[^/]+\/Party\.md$/.test(path);
-    if (!["campaign", "run", "party", "world-day", "state"].includes(String(type)) && !partyMembers) return false;
+    if (!["world", "campaign", "run", "party", "pc", "world-day", "state"].includes(String(type)) && !(type === "npc" && this.app.metadataCache.getFileCache(file!)?.frontmatter?.subtype === "pc") && !partyMembers) return false;
     this.homeRelevantPaths.add(path);
     return true;
   }

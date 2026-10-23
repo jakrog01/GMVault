@@ -46,6 +46,14 @@ export function creatureFiles(app: App, folders: string[]): TFile[] {
 
 
 export function playerFiles(app: App, folder: string): TFile[] {
+  const party = app.vault.getMarkdownFiles().find(file => file.path === `${folder}/Party.md` || file.path === `${folder}/${folder.split("/").pop()}.md`);
+  const linked = party ? app.vault.getMarkdownFiles().filter(file => {
+    const fields = app.metadataCache.getFileCache(file)?.frontmatter;
+    if (fields?.type !== "pc" && !(fields?.type === "npc" && fields?.subtype === "pc")) return false;
+    const path = String(fields.party ?? "").replace(/^\[\[/, "").replace(/\]\]$/, "").split("|")[0].split("#")[0];
+    return !!path && app.metadataCache.getFirstLinkpathDest(path, file.path)?.path === party.path;
+  }) : [];
+  if (linked.length) return linked.sort(byName);
   const folderName = folder.split("/").pop() ?? "";
   return app.vault.getMarkdownFiles().filter(file => {
     const fields = app.metadataCache.getFileCache(file)?.frontmatter;

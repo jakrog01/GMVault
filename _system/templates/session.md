@@ -2,6 +2,7 @@
 type: session
 run: "[[<% tp.file.folder(true) %>/Run]]"
 date: <% tp.date.now("YYYY-MM-DD") %>
+world_date: ""
 ---
 
 # <% tp.file.title %>

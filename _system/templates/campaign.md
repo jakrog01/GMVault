@@ -1,5 +1,6 @@
 ---
 type: campaign
+world: ""
 system: generic
 calendar: Calendar
 ---

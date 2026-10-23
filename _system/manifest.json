@@ -1,11 +1,11 @@
 {
   "release": {"repo":"jakrog01/GMVault", "asset":"GMVault.zip", "api":"https://api.github.com"},
-  "releaseInclude": ["_system", "_local", ".obsidian", ".gmvault/plugin-build.json", "Campaigns", "Parties", "Runs", "Library", "Calendar", "Archive", "Active.md", "Home.md", ".gitignore"],
+  "releaseInclude": ["_system", "_local", ".obsidian", ".gmvault/plugin-build.json", "Worlds", "Campaigns", "Parties", "Runs", "Library", "Calendar", "Archive", "Active.md", "Home.md", ".gitignore"],
   "releaseExclude": [".obsidian/workspace.json", ".obsidian/workspace-mobile.json", ".obsidian/plugins/table-tools/data.json"],
-  "contentRoots": ["Campaigns", "Parties", "Runs", "Library", "Calendar", "Archive"],
+  "contentRoots": ["Worlds", "Campaigns", "Parties", "Runs", "Library", "Calendar", "Archive"],
   "ownedGlobs": ["_system/**", ".obsidian/**", ".gmvault/state.json", "Home.md"],
   "replaceOnUpdate": ["Home.md"],
-  "contractualNames": ["Active.md", "Campaign.md", "Party.md", "Run.md", "State.md", "Dashboard.md", "Radar.md", "World Day.md"],
+  "contractualNames": ["Active.md", "World.md", "Campaign.md", "Party.md", "Run.md", "State.md", "Dashboard.md", "Radar.md", "World Day.md"],
   "runtimeReadOnlyAllowlist": ["_system/"],
   "asciiAllowlist": ["_system/obsidian/plugins/calendarium/main.js", "_system/obsidian/themes/Fancy-a-Story/theme.css", "_system/obsidian/plugins/obsidian-style-settings/main.js", "_system/obsidian/plugins/obsidian-style-settings/styles.css"],
   "referenceFolders": ["Library/Mechanics/*/Spells", "Library/Mechanics/*/Bestiary", "Library/Mechanics/*/Items"],
@@ -29,7 +29,7 @@
     {"path":"plugins/table-tools/styles.css", "keys":[]}
   ],
   "folders": [
-    {"path":"Campaigns","noTemplate":true}, {"path":"Parties","noTemplate":true}, {"path":"Runs","noTemplate":true},
+    {"path":"Worlds","noTemplate":true}, {"path":"Campaigns","noTemplate":true}, {"path":"Parties","noTemplate":true}, {"path":"Runs","noTemplate":true},
     {"path":"Library/Mechanics","noTemplate":true}, {"path":"Library/Assets","noTemplate":true},
     {"path":"Calendar","noTemplate":true}, {"path":"Archive","noTemplate":true}, {"path":"_local/templates","noTemplate":true}, {"path":"_local/scripts","noTemplate":true}
   ],
