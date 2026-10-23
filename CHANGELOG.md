@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+## 2.3.0
+
+- GMVault semantic search can run locally inside Obsidian with a multilingual model (`Xenova/multilingual-e5-small`); choose **Local (on this device)** as the embedding provider. Nothing downloads until you confirm; the model (about 130 MB) is stored once in `.gmvault/cache/models/`, shows its download progress, leaves memory after five idle minutes, and can be deleted from the settings.
+- Test copies of the repository skip `node_modules`.
+- A test comparing large files no longer exhausts memory when they differ.
+
 ## 2.2.0
 
 - GMVault now gives new notes inside runs a session template.
