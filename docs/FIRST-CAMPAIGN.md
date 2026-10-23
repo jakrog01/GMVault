@@ -5,7 +5,7 @@ Follow these steps from an empty GMVault to a first played session. [Install](GE
 !!! tip "See a filled example first"
     Run `node _system/bin/gmvault.mjs demo install` from the vault root. Explore `Campaigns/Glassgate/`, its party, and its runs. Run `node _system/bin/gmvault.mjs demo remove` when you are ready for your own game.
 
-1. Open **Table Tools: Home**. Choose **New world**, enter a **Name**, then choose **Create**. Home creates `Worlds/<name>/World.md` and folders for NPCs, locations, factions, lore, and events. Describe the setting in the world note.
+1. Open **Open Home**. Choose **New world**, enter a **Name**, then choose **Create**. Home creates `Worlds/<name>/World.md` and folders for NPCs, locations, factions, lore, and events. Describe the setting in the world note.
 
 2. Choose **New campaign**, enter a **Name**, choose the world in **World**, select a **System**, then choose **Create**. Home links the campaign to the world and creates `Quests/`, `Encounters/`, and `Handouts/`. Choosing **No world** instead creates the familiar NPC, location, quest, and faction folders as well.
 
@@ -23,7 +23,7 @@ Follow these steps from an empty GMVault to a first played session. [Install](GE
 
         Select **Player** for a player record. Its assistant scope excludes GM campaign and system material; use a `claim` note for uncertain information.
 
-6. On the run card in **Table Tools: Home**, choose **New session**. It creates and opens a dated `Session YYYY-MM-DD.md` with a plan, events, loot, and threads. Add a few beats under **Plan** before play.
+6. On the run card in **Open Home**, choose **New session**. It creates and opens a dated `Session YYYY-MM-DD.md` with a plan, events, loot, and threads. Add a few beats under **Plan** before play.
 
 7. During play, open **Open combat tracker** to add **Players** and **Enemy**, roll **Initiative**, and use **Next** to advance turns. Click a roll in a statblock or use the assistant's `roll_dice` tool for dice. Open **Open assistant** to ask about the active run, search notes, or summarise a scene.
 

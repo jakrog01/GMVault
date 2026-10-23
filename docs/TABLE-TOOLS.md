@@ -1,12 +1,12 @@
 # Combat tracker and dice
 
 Table Tools adds the Home, Combat, and Assistant views to Obsidian.
-The active run selected in [Table home](HOME.md) supplies campaign, party, and system context to the other views.
+The active run selected in [Home](HOME.md) supplies campaign, party, and system context to the other views.
 Use the three ribbon icons or the command palette to open the views.
 
 ## Ribbons and commands
 
-The home ribbon is **Table Tools: Home** and opens the table home.
+The house ribbon icon is labelled **Open Home** and opens Home.
 The combat ribbon is **Table Tools: Combat** and opens the combat tracker.
 The assistant ribbon is **Table Tools: Assistant** and opens the assistant.
 
@@ -14,7 +14,7 @@ The assistant ribbon is **Table Tools: Assistant** and opens the assistant.
 | --- | --- | --- |
 | `open-combat` | **Open combat** | Opens the combat view. |
 | `open-assistant` | **Open assistant** | Opens the assistant view. |
-| `open-home` | **Open table home** | Opens the home view. |
+| `open-home` | **Open Home** | Opens the home view. |
 | `assistant-rebuild-index` | **Assistant: rebuild index** | Rebuilds the assistant index. |
 | `combat-next-turn` | **Combat: next turn** | Advances the active combat turn. |
 | `combat-previous-turn` | **Combat: previous turn** | Moves the active combat turn back. |
@@ -45,7 +45,7 @@ An invalid value shows **Enter a damage amount, +N to heal, or tN for temporary 
 
 Condition chips display the participant's conditions and can be clicked to remove them.
 Use the plus button labelled **Add condition** to choose more conditions.
-Each row also has **Edit participant**, a visibility toggle labelled **Hidden from the players** or **Visible to the players**, and **Remove**.
+Each row also has **Note, name, AC** (opens the **Edit** modal), a visibility toggle labelled **Hidden from the players** or **Visible to the players**, and **Remove**.
 Click a row outside an input or button to select it for the card below.
 
 ### Cards, log, sets, and export
@@ -81,6 +81,6 @@ See [Assistant](ASSISTANT.md) for how combat state can be attached to a request.
 
 ## GMVault updates
 
-When the table home has a recorded release newer than this vault, it shows an update banner with both versions and the CLI command. On desktop Obsidian, **Install update** runs the update through the shipped CLI; phones show the banner and command but cannot install it from Table Tools.
+When Home has a recorded release newer than this vault, it shows an update banner with both versions and the CLI command. On desktop Obsidian, **Install update** runs the update through the shipped CLI; phones show the banner and command but cannot install it from Table Tools.
 
 Follow [Keeping a vault up to date](UPDATING.md) for the full procedure, report, backup, recovery, and offline options.

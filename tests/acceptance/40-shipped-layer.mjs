@@ -46,7 +46,7 @@ test("the declared shipped files are replaced, and the release's own state and u
     "docs/CLI.md": "# CLI reference\n\nnew shipped page\n",
     "README.md": "# GMVault\n\nnew shipped readme\n",
     "CHANGELOG.md": "# Changelog\n\nnew shipped changelog\n",
-    "Home.md": "---\ntype: home\n---\n\n# GMVault\n\nnew shipped home\n",
+    "Home.md": "---\ntype: home\n---\n\n# Home\n\n```gmvault-home\n```\n\nnew shipped home\n",
     ".github/workflows/release.yml": "name: release\n",
     ".gmvault/state.json": '{"installedVersion":"1.1.0","appliedMigrations":[],"installId":"gmvault-template","adoptedFrom":null}\n',
     "package.json": '{"name":"gmvault-upstream"}\n',
@@ -69,7 +69,7 @@ test("the declared shipped files are replaced, and the release's own state and u
 test("what the update overwrote is in the backup and named in the report", async () => {
   const vault = await cloneVault("gmvault-layer31-backup-")
   await writeFile(path.join(vault, "Home.md"), "---\ntype: home\n---\n\n# My table\n\nmy own notes\n")
-  const host = await serve(release("1.1.0", { "Home.md": "---\ntype: home\n---\n\n# GMVault\n\nnew shipped home\n" }))
+  const host = await serve(release("1.1.0", { "Home.md": "---\ntype: home\n---\n\n# Home\n\n```gmvault-home\n```\n\nnew shipped home\n" }))
   const result = await cli(vault, ["update", "--latest"], { GMVAULT_RELEASE_API: host.answer.base })
   assert.equal(result.code, 0, `the update succeeds; stderr: ${result.stderr}`)
   const backup = await backupDirectory(vault)
@@ -127,7 +127,7 @@ test("the selectively managed Obsidian files keep their own handling", async () 
 test("a preview lists the shipped layer it would replace and changes nothing", async () => {
   const vault = await cloneVault("gmvault-layer31-dry-")
   const before = await read(vault, "Home.md")
-  const host = await serve(release("1.1.0", { "Home.md": "---\ntype: home\n---\n\n# GMVault\n\nnew shipped home\n" }))
+  const host = await serve(release("1.1.0", { "Home.md": "---\ntype: home\n---\n\n# Home\n\n```gmvault-home\n```\n\nnew shipped home\n" }))
   const result = await cli(vault, ["update", "--latest", "--dry-run"], { GMVAULT_RELEASE_API: host.answer.base })
   assert.equal(result.code, 0, `the preview succeeds; stderr: ${result.stderr}`)
   assert.ok(result.stdout.includes("Home.md"), `the preview names what it would replace: ${result.stdout}`)

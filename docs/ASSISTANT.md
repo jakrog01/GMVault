@@ -126,11 +126,11 @@ Choose a provider in **Settings → Table Tools → Embedding provider**, then p
 
     1. Set the **API key** (the same key the assistant uses).
     2. Set **Embedding provider** to `gemini`.
-    3. Press **Fetch models** and pick a model from the dropdown. The default is `gemini-embedding-001`.
+    3. Press **Fetch list** and pick a model from the dropdown. The default is `gemini-embedding-001`.
     4. Press **Test embedding provider**.
 
 !!! tip "If the test fails"
-    The notice names the cause returned by the provider. A 404 means the model id does not exist for your key: press **Fetch models** and choose one from the list. An unreachable Ollama host means the service is not running at the configured URL.
+    The notice names the cause returned by the provider. A 404 means the model id does not exist for your key: press **Fetch list** and choose one from the list. An unreachable Ollama host means the service is not running at the configured URL.
 
 Changing provider, model, URL, or dimensions discards stored vectors and queues new embeddings without rereading source notes. Removed or re-chunked notes lose their vectors on the next cache write.
 

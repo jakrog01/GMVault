@@ -54,7 +54,7 @@ Optional. Without it the assistant still searches your notes with local keyword 
 | **Ollama URL** | `ollamaUrl` | `http://127.0.0.1:11434` | Point at your Ollama service. Note text is sent there. |
 | **Ollama embedding model** | `ollamaModel` | `embeddinggemma` | Match the model you pulled into Ollama. |
 | **Gemini embedding model** | `geminiEmbeddingModel` | `gemini-embedding-001` | Pick the Gemini embedding model from the dropdown. |
-| **Fetch models** | `embeddingModels` | `gemini-embedding-001` | Fill that dropdown with the models your key can use for embeddings. |
+| **Fetch list** (embedding models) | `embeddingModels` | `gemini-embedding-001` | Fill that dropdown with the models your key can use for embeddings. |
 | **Embedding dimensions** | `embeddingDimensions` | `768` | Set the Gemini vector size; change only with a compatible model. |
 | **Test embedding provider** | button | — | Check the provider; it reports the returned dimensions or the exact error. |
 
@@ -68,13 +68,13 @@ Optional. Without it the assistant still searches your notes with local keyword 
 | **Check for updates** | button | — | Asks the release host in `_system/manifest.json` (or `_local/release.json`) whether a newer GMVault exists, records the answer in `.gmvault/state.json`, and downloads nothing. |
 | **Check once a day** | `checkForUpdatesOnStart` | `false` | Asks at most once every 24 hours after Obsidian restores the layout; speaks up only when a newer release exists and stays silent when the host is unreachable. |
 
-The table home shows the recorded result as its update banner. Installing and recovering are covered in [Keeping a vault up to date](UPDATING.md).
+Home shows the recorded result as its update banner. Installing and recovering are covered in [Keeping a vault up to date](UPDATING.md).
 
-## Table home
+## Home
 
 | Setting | Key | Default | What it does |
 | --- | --- | --- | --- |
-| **Open table home on startup** | `openHomeOnStartup` | `true` | Opens the home view after Obsidian restores the layout. |
+| **Open Home on startup** | `openHomeOnStartup` | `true` | Opens the home view after Obsidian restores the layout. |
 
 ## Combat
 

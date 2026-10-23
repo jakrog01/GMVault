@@ -22,7 +22,7 @@ function emptyVault() {
 
 function shell(env, plugin, view) {
   assert.equal(env.byText(view.contentEl, plugin.strings.homeTitle).filter(node => node.tag === "h2").length, 1)
-  for (const label of [plugin.strings.homeNewCampaign, plugin.strings.homeNewParty, plugin.strings.homeNewRun]) {
+  for (const label of [plugin.strings.homeNewWorld, plugin.strings.homeNewCampaign, plugin.strings.homeNewParty, plugin.strings.homeNewRun]) {
     assert.equal(env.byLabel(view.contentEl, label).length, 1, `create button ${label}`)
   }
 }
@@ -42,6 +42,30 @@ test("the exact post-demo-remove state shows the heading, create buttons, and em
   assert.ok(view.contentEl.textContent.includes(plugin.strings.homeEmpty))
   assert.equal(env.byClass(view.contentEl, "tt-home-active").length, 0)
   assert.equal(plugin.currentContext(), null)
+  await unload(plugin)
+})
+
+test("Home.md renders the Home screen and refreshes alongside the view", async () => {
+  const env = emptyVault()
+  const note = env.files.get("Home.md").content
+  assert.match(note, /```gmvault-home\s*```/)
+  const { plugin, view } = await ready(env)
+  const element = new env.MockElement("div")
+  const children = []
+  const context = { addChild(child) { children.push(child); child.load() } }
+  const processor = plugin.markdownCodeBlockProcessors.get("gmvault-home")
+  assert.ok(processor, "gmvault-home processor registered")
+  processor("", element, context)
+  await until(() => env.byLabel(element, plugin.strings.homeNewCampaign).length === 1, 2000, "note Home rendered")
+  assert.equal(env.byText(element, plugin.strings.homeTitle).some(node => node.tag === "h2"), false, "the note shows its own title, not a second Home heading")
+  for (const label of [plugin.strings.homeNewWorld, plugin.strings.homeNewCampaign, plugin.strings.homeNewParty, plugin.strings.homeNewRun]) assert.equal(env.byLabel(element, label).length, 1, label)
+  shell(env, plugin, view)
+  const file = env.addFile("Campaigns/New/Campaign.md", "", { type: "campaign", system: "generic" })
+  env.emit("create", file)
+  await until(() => env.byClass(element, "tt-home-campaign").length === 1 && env.byClass(view.contentEl, "tt-home-campaign").length === 1, 2000, "both Home screens refreshed")
+  assert.equal(plugin.homeViews.size, 2)
+  children.forEach(child => child.unload())
+  assert.equal(plugin.homeViews.size, 1)
   await unload(plugin)
 })
 

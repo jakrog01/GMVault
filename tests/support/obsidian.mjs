@@ -147,14 +147,20 @@ export function createEnvironment() {
     async open(containerEl) { this.containerEl = containerEl; await this.onOpen?.() }
   }
   class MarkdownView {}
+  class MarkdownRenderChild {
+    constructor(containerEl) { this.containerEl = containerEl }
+    load() { this.onload?.() }
+    unload() { this.onunload?.() }
+  }
   class PluginSettingTab { constructor(app) { this.app = app; this.containerEl = new MockElement("div") } }
 
   const storage = { data: null }
   class Plugin {
-    constructor(app, manifest) { this.app = app; this.manifest = manifest; this.viewFactories = new Map(); this.commands = []; this.ribbons = []; this.settingTabs = [] }
+    constructor(app, manifest) { this.app = app; this.manifest = manifest; this.viewFactories = new Map(); this.markdownCodeBlockProcessors = new Map(); this.commands = []; this.ribbons = []; this.settingTabs = [] }
     async loadData() { return storage.data ? JSON.parse(JSON.stringify(storage.data)) : null }
     async saveData(data) { storage.data = JSON.parse(JSON.stringify(data)) }
     registerView(type, factory) { this.viewFactories.set(type, factory) }
+    registerMarkdownCodeBlockProcessor(language, processor) { this.markdownCodeBlockProcessors.set(language, processor) }
     registerEvent() {}
     addRibbonIcon(icon, title, callback) { record(title); this.ribbons.push({ icon, title, callback }) }
     addCommand(command) { record(command.name); this.commands.push(command) }
@@ -230,7 +236,7 @@ export function createEnvironment() {
   const clipboard = []
   const platform = { isDesktopApp: true, isMobile: false }
   const obsidian = {
-    Plugin, ItemView, Modal, FuzzySuggestModal, PluginSettingTab, Setting, Notice, TFile, MarkdownView,
+    Plugin, ItemView, Modal, FuzzySuggestModal, PluginSettingTab, Setting, Notice, TFile, MarkdownView, MarkdownRenderChild,
     Platform: platform,
     MarkdownRenderer: { render: async (_app, markdown, element) => { element.appendText(markdown) } },
     requestUrl,

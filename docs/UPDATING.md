@@ -13,13 +13,13 @@ git add .
 git commit -m "Start GMVault vault"
 ```
 
-Commit your notes there as usual. Never merge the template repository into your vault. Take each release with **Install update** in Table home or `node _system/bin/gmvault.mjs update --latest`, then commit the result.
+Commit your notes there as usual. Never merge the template repository into your vault. Take each release with **Install update** in Home or `node _system/bin/gmvault.mjs update --latest`, then commit the result.
 
 ## See whether a release exists
 
 In Table Tools settings, choose **Check for updates** to ask the configured release host without downloading anything. If you prefer automatic checks, enable **Check once a day**; after Obsidian restores its layout, it checks at most once every 24 hours and stays quiet when there is no newer version or the host cannot be reached.
 
-When a newer release has been recorded, Table home shows a banner with the installed and available versions. From a terminal, run the explicit check at any time:
+When a newer release has been recorded, Home shows a banner with the installed and available versions. From a terminal, run the explicit check at any time:
 
 ```text
 node _system/bin/gmvault.mjs update --check
@@ -29,7 +29,7 @@ It reports either the available version and the install command or that the vaul
 
 ## Install the release
 
-On desktop Obsidian, choose **Install update** in the Table home banner. The button runs the same latest-release command and keeps its report visible if it fails. After a successful report, choose whether to reload Obsidian. On phones, copy the displayed command and run it on a machine that can open the vault.
+On desktop Obsidian, choose **Install update** in Home's banner. The button runs the same latest-release command and keeps its report visible if it fails. After a successful report, choose whether to reload Obsidian. On phones, copy the displayed command and run it on a machine that can open the vault.
 
 ```text
 node _system/bin/gmvault.mjs update --latest

@@ -14,7 +14,7 @@ To override selected Table Tools labels, create `_local/plugins/table-tools/stri
 }
 ```
 
-Use `_local/templates` for local versions of templates and `_local/scripts` for private scripts. Table home reads a local template before the shipped one when creating a campaign, party, run, or session. See [Sessions and runs](RUNS.md) for the session template and the templates inserted through Templater. The rest of the `_local` mirror can hold another shipped-path override when the resolver supports it. Keep normal table notes in the declared content roots rather than in any infrastructure layer.
+Use `_local/templates` for local versions of templates and `_local/scripts` for private scripts. Home reads a local template before the shipped one when creating a campaign, party, run, or session. See [Sessions and runs](RUNS.md) for the session template and the templates inserted through Templater. The rest of the `_local` mirror can hold another shipped-path override when the resolver supports it. Keep normal table notes in the declared content roots rather than in any infrastructure layer.
 
 ## Obsidian additions
 

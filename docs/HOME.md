@@ -1,8 +1,8 @@
-# Table home
+# Home
 
-Table home is your starting screen: it shows the game you are playing now and lets you create worlds, campaigns, characters, parties, runs, and sessions.
+Home is your starting screen: it shows the game you are playing now and lets you create worlds, campaigns, characters, parties, runs, and sessions. The screen is the same in the side panel and in the root `Home.md` note.
 
-Open **Table Tools: Home** from the home ribbon, the command palette, or the **Open table home** command. It opens by default after Obsidian restores the layout; turn that off with **Open table home on startup** in [Table Tools settings](SETTINGS.md).
+Open it with the house ribbon icon or the **Open Home** command, or open `Home.md` as a note. The panel opens by default after Obsidian restores the layout; turn that off with **Open Home on startup** in [Table Tools settings](SETTINGS.md).
 
 ## Active run card
 
@@ -64,11 +64,11 @@ Campaigns/<name>/
 └── Handouts/
 ```
 
-With **No world**, Home also creates `NPCs/`, `Locations/`, and `Factions/`. New notes in these folders get their template automatically; see [Where things go](WHERE-THINGS-GO.md). The created note opens and the home view refreshes.
+With **No world**, Home also creates `NPCs/`, `Locations/`, and `Factions/`. New notes in these folders get their template automatically; see [Where things go](WHERE-THINGS-GO.md). The created note opens and the Home screen refreshes.
 
 ### New party
 
-Asks only for **Name**. It creates `Parties/<name>/Party.md` with `type: party`, opens it, and refreshes the home view.
+Asks only for **Name**. It creates `Parties/<name>/Party.md` with `type: party`, opens it, and refreshes the Home screen.
 
 ### New character
 

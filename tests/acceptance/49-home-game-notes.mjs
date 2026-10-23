@@ -2,7 +2,7 @@ import { assert, boot, createVault, run, startObsidian, test, unload, until } fr
 
 const HOME = "tt-home"
 
-test("Table home lists only game notes, not shipped or local templates and demos", async () => {
+test("Home lists only game notes, not shipped or local templates and demos", async () => {
   const env = createVault()
   env.files.clear()
   env.addFile("Active.md", "", { run: "" })
