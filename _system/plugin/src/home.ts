@@ -25,9 +25,44 @@ const isGameNote = (file: TFile): boolean => !/^_(system|local)\//.test(file.pat
 
 const folderName = (file: TFile): string => file.parent?.path.split("/").at(-1) ?? file.basename;
 
+async function homeTemplate(app: HomeView["app"], kind: string): Promise<string> {
+  for (const root of ["_local/", "_system/"]) {
+    try { return await app.vault.adapter.read(`${root}templates/${kind}.md`); } catch { continue; }
+  }
+  return "";
+}
+
+function mergeHomeFrontmatter(frontmatter: string, values: Record<string, string>): string {
+  const lines = frontmatter ? frontmatter.split("\n") : [];
+  const output: string[] = [];
+  const replaced = new Set<string>();
+  for (let index = 0; index < lines.length;) {
+    const field = lines[index].match(/^([A-Za-z][\w-]*):/);
+    if (!field) { output.push(lines[index]); index++; continue; }
+    let end = index + 1;
+    while (end < lines.length && (/^[ \t]/.test(lines[end]) || /^\s*-/.test(lines[end]))) end++;
+    const value = values[field[1]];
+    if (value === undefined) output.push(...lines.slice(index, end));
+    else { output.push(`${field[1]}: ${value}`); replaced.add(field[1]); }
+    index = end;
+  }
+  for (const [key, value] of Object.entries(values)) if (!replaced.has(key)) output.push(`${key}: ${value}`);
+  return output.join("\n");
+}
+
+function mergeHomeTemplate(template: string, title: string, folder: string, values: Record<string, string>, date?: string): string {
+  const rendered = template.replace(/<%\s*tp\.file\.title\s*%>/g, title)
+    .replace(/<%\s*tp\.file\.folder\(true\)\s*%>/g, folder)
+    .replace(/<%\s*tp\.date\.now\([^%]*?\)\s*%>/g, date ?? "")
+    .replace(/<%[\s\S]*?%>/g, "");
+  const match = rendered.match(/^---\n([\s\S]*?)\n---\n?/);
+  const frontmatter = mergeHomeFrontmatter(match?.[1] ?? "", values);
+  const body = match ? rendered.slice(match[0].length) : rendered;
+  return `---\n${frontmatter}\n---\n\n${body}`;
+}
+
 export const linkPath = (value: unknown): string => String(value ?? "").trim().replace(/^\[\[/, "").replace(/\]\]$/, "").split("|")[0].split("#")[0].trim();
 
-/** The main-area overview of the active table and all campaign material. */
 export class HomeView extends ItemView {
   private readonly memberCounts = new Map<string, Promise<number>>();
   private readonly dayLines = new Map<string, Promise<string>>();
@@ -210,7 +245,22 @@ export class HomeView extends ItemView {
       const party = path ? this.app.metadataCache.getFirstLinkpathDest(path, run.file.path) : null;
       if (party) card.createDiv({ cls: "tt-muted", text: folderName(party) });
       this.button(card, this.plugin.strings.homeMakeActive, () => void this.plugin.setActiveRun(run.file.path));
+      this.button(card, this.plugin.strings.homeNewSession, () => void this.createSession(run.file));
     }
+  }
+
+  private async createSession(run: TFile): Promise<void> {
+    const folder = run.parent?.path ?? run.path.slice(0, run.path.lastIndexOf("/"));
+    const now = new Date();
+    const date = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
+    const base = `Session ${date}`;
+    let title = base;
+    for (let number = 2; this.app.vault.getAbstractFileByPath(`${folder}/${title}.md`); number++) title = `${base} ${number}`;
+    const content = mergeHomeTemplate(await homeTemplate(this.app, "session"), title, folder, {
+      type: "session", run: `"[[${folder}/Run]]"`, date,
+    }, date);
+    const file = await this.app.vault.create(`${folder}/${title}.md`, content);
+    await this.app.workspace.openLinkText(file.path, "");
   }
 
   private renderParty(parent: HTMLElement, party: NoteSummary, members: number): void {
@@ -295,44 +345,9 @@ abstract class HomeCreateModal extends Modal {
   }
 
   protected async createFromTemplate(kind: "campaign" | "party" | "run", folder: string, fileName: string, values: Record<string, string>): Promise<TFile> {
-    const content = this.mergeTemplate(await this.template(kind), folder, values);
+    const content = mergeHomeTemplate(await homeTemplate(this.app, kind), this.name.trim(), folder, values);
     await this.createFolder(folder);
     return this.app.vault.create(`${folder}/${fileName}`, content);
-  }
-
-  private async template(kind: "campaign" | "party" | "run"): Promise<string> {
-    for (const root of ["_local/", "_system/"]) {
-      try { return await this.app.vault.adapter.read(`${root}templates/${kind}.md`); } catch { /* Try the shipped template. */ }
-    }
-    return "";
-  }
-
-  private mergeTemplate(template: string, folder: string, values: Record<string, string>): string {
-    const rendered = template.replace(/<%\s*tp\.file\.title\s*%>/g, this.name.trim())
-      .replace(/<%\s*tp\.file\.folder\(true\)\s*%>/g, folder).replace(/<%[\s\S]*?%>/g, "");
-    const match = rendered.match(/^---\n([\s\S]*?)\n---\n?/);
-    const frontmatter = this.mergeFrontmatter(match?.[1] ?? "", values);
-    const body = match ? rendered.slice(match[0].length) : rendered;
-    return `---\n${frontmatter}\n---\n\n${body}`;
-  }
-
-  /** Keeps YAML blocks intact; only form-owned top-level fields are replaced. */
-  private mergeFrontmatter(frontmatter: string, values: Record<string, string>): string {
-    const lines = frontmatter ? frontmatter.split("\n") : [];
-    const output: string[] = [];
-    const replaced = new Set<string>();
-    for (let index = 0; index < lines.length;) {
-      const field = lines[index].match(/^([A-Za-z][\w-]*):/);
-      if (!field) { output.push(lines[index]); index++; continue; }
-      let end = index + 1;
-      while (end < lines.length && (/^[ \t]/.test(lines[end]) || /^\s*-/.test(lines[end]))) end++;
-      const value = values[field[1]];
-      if (value === undefined) output.push(...lines.slice(index, end));
-      else { output.push(`${field[1]}: ${value}`); replaced.add(field[1]); }
-      index = end;
-    }
-    for (const [key, value] of Object.entries(values)) if (!replaced.has(key)) output.push(`${key}: ${value}`);
-    return output.join("\n");
   }
 
   protected async complete(file: TFile): Promise<void> {
@@ -363,6 +378,7 @@ class CampaignModal extends HomeCreateModal {
     const folder = `Campaigns/${name}`;
     if (!this.folderAvailable(folder)) { new Notice(this.plugin.strings.homeExists); return; }
     const file = await this.createFromTemplate("campaign", folder, "Campaign.md", { type: "campaign", system: this.system });
+    for (const section of ["NPCs", "Locations", "Quests", "Factions"]) await this.createFolder(`${folder}/${section}`);
     await this.complete(file);
   }
 }
