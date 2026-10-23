@@ -1,4 +1,4 @@
-# Table Tools at the table
+# Combat tracker and dice
 
 Table Tools adds the Home, Combat, and Assistant views to Obsidian.
 The active run selected in [Table home](HOME.md) supplies campaign, party, and system context to the other views.
@@ -77,7 +77,7 @@ Use the row inputs and condition chips during play, and use **Next** or the comm
 Save an encounter set when a group should recur later.
 Export the combat to an open session note before clearing it.
 The Settings reference documents bestiary, party, hit-point, group-initiative, and attack-roll controls.
-See [Assistant retrieval](ASSISTANT.md) for how combat state can be attached to a request.
+See [Assistant](ASSISTANT.md) for how combat state can be attached to a request.
 
 ## GMVault updates
 

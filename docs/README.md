@@ -1,45 +1,60 @@
 # GMVault manual
 
-This manual starts with a new vault and then moves from its model to daily operation.
-Read the first three pages in order if you are setting up a vault for the first time.
-Use the later reference pages when you need a specific command or diagnosis.
-All command examples use the CLI shipped with this vault.
+GMVault is an Obsidian vault for running tabletop RPG campaigns. This manual takes you from download to your first session, then stays useful as a reference.
 
-## Start here
+!!! tip "New here?"
+    Read three pages in order: [Install](GETTING-STARTED.md), [Your first campaign](FIRST-CAMPAIGN.md), [Where things go](WHERE-THINGS-GO.md). That is all you need to start playing.
 
-- [Getting started](GETTING-STARTED.md) answers: how do I turn a downloaded vault into my first active game?
-- [Concepts](CONCEPTS.md) answers: which layer, content root, note, and state file owns this information?
-- [Architecture](ARCHITECTURE.md) answers: how do the shipped, local, content, system-package, and radar boundaries fit together?
-- [CLI reference](CLI.md) answers: what does each `gmvault` command write, print, and require?
-- [Troubleshooting](TROUBLESHOOTING.md) answers: what does a `doctor` violation mean and how do I fix it?
+## How the manual is organised
 
-## Working in the vault
+| Section | Read it when you want to... |
+| --- | --- |
+| Start here | install GMVault and prepare a first game |
+| At the table | prepare or run a session |
+| Make it yours | change settings, templates, or the game system |
+| Maintenance | update the vault or fix a problem |
+| For developers | understand the internals or cut a release |
 
-- [Table home](HOME.md) answers: how do I create campaigns, parties, runs, and choose the active run?
-- [Table Tools at the table](TABLE-TOOLS.md) answers: which ribbons, commands, combat controls, and tracker records do I use during play?
-- [Table Tools settings](SETTINGS.md) answers: what does every stored plugin setting change, and which choices send data outside the vault?
-- [Assistant retrieval](ASSISTANT.md) answers: which notes can the assistant search and how is local indexing handled?
-- [Customising Table Tools](CUSTOMISING.md) answers: how do I localise labels and keep my own plugins, themes, and snippets?
-- [Authoring systems](AUTHORING-SYSTEMS.md) answers: how do I describe note shapes without shipping published rules text?
-- [Adopting an existing vault](ADOPTING.md) answers: how do I import folders and selected plugin data through a map?
-- [Keeping a vault up to date](UPDATING.md) answers: how do I find, install, and recover from an GMVault update?
-- [Maintaining releases](UPGRADING.md) answers: how do maintainers cut a release and preserve migration history?
+<div class="grid cards" markdown>
 
-## Design records
+-   **Start here**
 
-- [ADR 0001: release zip plus migrations](adr/0001-update-mechanism.md) answers: why does update replace `_system` from an offline release?
-- [ADR 0002: active run pointer location](adr/0002-active-pointer-location.md) answers: why is `Active.md` root user state?
-- [ADR 0003: assistant retrieval](adr/0003-assistant-retrieval.md) answers: why is retrieval local, scoped, and lexical-first?
+    ---
 
-## Reading order
+    [Install](GETTING-STARTED.md) the vault, play [your first campaign](FIRST-CAMPAIGN.md), and learn [where things go](WHERE-THINGS-GO.md). [GMVault concepts](CONCEPTS.md) explains the ideas behind it.
 
-Start with Getting started before changing anything in a fresh vault.
-Read Concepts before deciding whether a file belongs in shipped or local state.
-Open the Table home page when you are ready to create your own records.
-Keep the CLI reference nearby when working from a terminal.
-Use Troubleshooting after every unexpected `doctor` result.
-The specialised pages explain one subsystem without replacing this shared model.
-The design records explain decisions rather than operational instructions.
-Updates preserve your content and local layer; read Keeping a vault up to date before running one.
-Adoption is for an existing vault and requires a map file, so read it only when importing.
-The assistant page explains privacy and scope before enabling optional semantic search.
+    [Section overview](start-here/index.md)
+
+-   **At the table**
+
+    ---
+
+    [Table home](HOME.md), [sessions and runs](RUNS.md), the [combat tracker and dice](TABLE-TOOLS.md), and the [assistant](ASSISTANT.md).
+
+    [Section overview](at-the-table/index.md)
+
+-   **Make it yours**
+
+    ---
+
+    [Settings](SETTINGS.md), [templates and overrides](CUSTOMISING.md), and [game systems](AUTHORING-SYSTEMS.md).
+
+    [Section overview](make-it-yours/index.md)
+
+-   **Maintenance**
+
+    ---
+
+    [Updating](UPDATING.md), [adopting an existing vault](ADOPTING.md), the [CLI reference](CLI.md), and [troubleshooting](TROUBLESHOOTING.md).
+
+    [Section overview](maintenance/index.md)
+
+-   **For developers**
+
+    ---
+
+    [Architecture](ARCHITECTURE.md), [maintaining releases](UPGRADING.md), and the design records [ADR 0001](adr/0001-update-mechanism.md), [ADR 0002](adr/0002-active-pointer-location.md), [ADR 0003](adr/0003-assistant-retrieval.md).
+
+    [Section overview](for-developers/index.md)
+
+</div>

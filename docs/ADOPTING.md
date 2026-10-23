@@ -1,4 +1,4 @@
-# Adopting an Existing Vault
+# Adopting an existing vault
 
 Run `node _system/bin/gmvault.mjs adopt /path/to/source --map mapping.json` from the target vault.
 

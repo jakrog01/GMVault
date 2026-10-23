@@ -1,4 +1,4 @@
-# Assistant retrieval
+# Assistant
 
 Table Tools Assistant is a GM-oriented chat view that combines a Gemini response with local vault context, local search, and read-only tools.
 Open it from **Table Tools: Assistant**, **Open assistant**, a home-card action, or **Assistant: ask about the selected text**.
@@ -80,23 +80,55 @@ The assistant may warn about blocked responses, an invalid key, unavailable mode
 
 ## Local index and semantic search
 
-The lexical index is always local and indexes visible Markdown using the scope rules above.
-Its cache is `.gmvault/cache/assistant/manifest.json`; vectors, when enabled, are `.gmvault/cache/assistant/vectors.bin` Float32 data.
-The view status reports indexing and indexed note and chunk counts.
-Run **Assistant: rebuild index** to force a rebuild after substantial note or provider changes.
+The assistant always keeps a local keyword (lexical) index of the Markdown it may see. Semantic search with embeddings is optional and finds notes by meaning, not only by words.
 
-`none` is the default embedding provider and keeps retrieval local; it sends no note text to an embedding provider.
-`ollama` sends batches of note chunks to the configured Ollama URL, which defaults to `http://127.0.0.1:11434`, using `embeddinggemma` by default.
-`gemini` sends note text to Google for embeddings with `gemini-embedding-001` by default; choose it only when that privacy trade-off is acceptable.
-Changing provider, model, URL, or dimensions discards stored vectors and queues new embeddings without rereading source notes.
-Removed or re-chunked notes lose their vectors on the next cache write.
+| Item | Where |
+| --- | --- |
+| Lexical index | `.gmvault/cache/assistant/manifest.json` |
+| Vectors, when enabled | `.gmvault/cache/assistant/vectors.bin` (Float32 data) |
+| Status | The assistant view shows indexing progress and note and chunk counts |
 
-During an embedding outage, the plugin pauses embedding work and shows **Embeddings are unavailable; using local lexical search.** once for the outage.
-Lexical retrieval continues to work.
-A note-index change, provider settings apply, or a successful query embedding resumes pending embedding work; a later outage is reported again only after success.
+Run **Assistant: rebuild index** after large note or provider changes.
+
+### Turn on semantic search
+
+Choose a provider in **Settings → Table Tools → Embedding provider**, then press **Test embedding provider**.
+
+=== "None (default)"
+
+    `none` keeps retrieval fully local and sends no note text anywhere. Nothing to set up.
+
+=== "Ollama (local)"
+
+    `ollama` sends note chunks to a service on your own machine.
+
+    1. Install [Ollama](https://ollama.com).
+    2. Pull the default model: `ollama pull embeddinggemma`.
+    3. Set **Embedding provider** to `ollama`. The default URL is `http://127.0.0.1:11434`.
+    4. Press **Test embedding provider**.
+
+=== "Gemini (Google)"
+
+    `gemini` sends note text to Google. Use it only when that privacy trade-off is acceptable.
+
+    1. Set the **API key** (the same key the assistant uses).
+    2. Set **Embedding provider** to `gemini`.
+    3. Press **Fetch models** and pick a model from the dropdown. The default is `gemini-embedding-001`.
+    4. Press **Test embedding provider**.
+
+!!! tip "If the test fails"
+    The notice names the cause returned by the provider. A 404 means the model id does not exist for your key: press **Fetch models** and choose one from the list. An unreachable Ollama host means the service is not running at the configured URL.
+
+Changing provider, model, URL, or dimensions discards stored vectors and queues new embeddings without rereading source notes. Removed or re-chunked notes lose their vectors on the next cache write.
+
+### When embeddings fail
+
+The plugin pauses embedding work and shows **Embeddings are unavailable (reason); using local lexical search.** once per outage. Keyword search keeps working.
+
+Embedding resumes after a note-index change, after provider settings are applied, or after a successful query embedding. A later outage is reported again only after a success.
 
 ## Related pages
 
 Use [Table Tools settings](SETTINGS.md) to control model, context, tool, and embedding settings.
-Use [Table Tools at the table](TABLE-TOOLS.md) for combat state that may be attached to a request.
-Use [Customising Table Tools](CUSTOMISING.md) for localised strings and local plugin guidance.
+Use [Combat tracker and dice](TABLE-TOOLS.md) for combat state that may be attached to a request.
+Use [Templates and overrides](CUSTOMISING.md) for localised strings and local plugin guidance.

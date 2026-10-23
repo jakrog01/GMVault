@@ -11,6 +11,9 @@ theme:
     - navigation.instant.progress
     - navigation.tracking
     - navigation.top
+    - navigation.tabs
+    - navigation.sections
+    - navigation.indexes
     - navigation.path
     - navigation.footer
     - search.highlight
@@ -34,6 +37,7 @@ theme:
 markdown_extensions:
   - admonition
   - attr_list
+  - md_in_html
   - def_list
   - tables
   - toc:
@@ -52,20 +56,34 @@ markdown_extensions:
 plugins:
   - search
 nav:
-  - Getting started: GETTING-STARTED.md
-  - GMVault concepts: CONCEPTS.md
-  - Architecture: ARCHITECTURE.md
-  - CLI reference: CLI.md
-  - Troubleshooting: TROUBLESHOOTING.md
-  - Table home: HOME.md
-  - Table Tools at the table: TABLE-TOOLS.md
-  - Table Tools settings: SETTINGS.md
-  - Assistant retrieval: ASSISTANT.md
-  - Customising Table Tools: CUSTOMISING.md
-  - Authoring systems: AUTHORING-SYSTEMS.md
-  - Adopting an Existing Vault: ADOPTING.md
-  - Keeping a vault up to date: UPDATING.md
-  - Maintaining releases: UPGRADING.md
-  - "ADR 0001: release zip plus migrations": adr/0001-update-mechanism.md
-  - "ADR 0002: active run pointer location": adr/0002-active-pointer-location.md
-  - "ADR 0003: assistant retrieval": adr/0003-assistant-retrieval.md
+  - GMVault manual: README.md
+  - Start here:
+      - Start here: start-here/index.md
+      - Install: GETTING-STARTED.md
+      - Your first campaign: FIRST-CAMPAIGN.md
+      - Where things go: WHERE-THINGS-GO.md
+      - GMVault concepts: CONCEPTS.md
+  - At the table:
+      - At the table: at-the-table/index.md
+      - Table home: HOME.md
+      - Sessions and runs: RUNS.md
+      - Combat tracker and dice: TABLE-TOOLS.md
+      - Assistant: ASSISTANT.md
+  - Make it yours:
+      - Make it yours: make-it-yours/index.md
+      - Table Tools settings: SETTINGS.md
+      - Templates and overrides: CUSTOMISING.md
+      - Game systems: AUTHORING-SYSTEMS.md
+  - Maintenance:
+      - Maintenance: maintenance/index.md
+      - Keeping a vault up to date: UPDATING.md
+      - Adopting an existing vault: ADOPTING.md
+      - CLI reference: CLI.md
+      - Troubleshooting: TROUBLESHOOTING.md
+  - For developers:
+      - For developers: for-developers/index.md
+      - Architecture: ARCHITECTURE.md
+      - Maintaining releases: UPGRADING.md
+      - "ADR 0001: release zip plus migrations": adr/0001-update-mechanism.md
+      - "ADR 0002: active run pointer location": adr/0002-active-pointer-location.md
+      - "ADR 0003: assistant retrieval": adr/0003-assistant-retrieval.md

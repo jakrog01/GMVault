@@ -1,61 +1,91 @@
 # Table Tools settings
 
-Open Obsidian settings, choose **Table Tools**, and edit the sections below.
-Values are stored in the Table Tools plugin `data.json` as the keys shown in code.
-An empty default means the stored default is an empty string, not a missing value.
-The assistant request itself uses Google Gemini when an API key is configured; attached and selected context is sent to Google for that request.
-Optional semantic search has separate provider settings and privacy choices below.
+Every Table Tools option, its stored key, and its default. Open **Settings → Table Tools** to change them.
+
+!!! note "How to read the tables"
+    The **Key** column is the name stored in the plugin's `data.json`. "empty" means an empty string, not a missing value. Rows marked "button" store nothing.
 
 ## Assistant (Google Gemini)
 
-- **API key** — `apiKey`; default: **empty**. Stores the Google AI key locally in plugin `data.json`; set it before asking the assistant, and do not commit it. It authenticates requests that send assistant context and questions to Google.
-- **Model** — `model`; default: `gemini-3.8-flash`. Selects the Gemini model used for assistant responses; change it after **Fetch list** confirms models available to the key.
-- **Fetch list** — `models`; default: `gemini-3.8-flash`, `gemini-3.7-flash`, `gemini-3.5-flash-lite`, `gemini-2.5-pro`, `gemini-2.5-flash`. This stored list feeds the Model dropdown; refresh it when the key can use different models.
-- **Temperature** — `temperature`; default: `0.8`. Controls response variation from 0 to 1.5; lower it for more predictable table answers.
-- **System prompt** — `systemPrompt`; default: the built-in **You co-run a tabletop RPG session** GM prompt. It sets the assistant's role, brevity, canon, suggestion, scene, NPC, mechanics, and read-aloud rules; change it only when you need a different standing instruction.
-- **Context limit (characters)** — `maxContext`; default: `24000`. Limits included note text for a question; lower it when a smaller request is needed.
-- **Retrieval budget (tokens)** — `contextBudgetTokens`; default: `6000`. Caps total pinned and retrieved context using the plugin's character-to-token estimate; lower it to constrain context.
-- **Maximum tool steps** — `maxToolSteps`; default: `5`. Caps read-only assistant tool rounds for one answer; raise it only when an answer needs more lookups.
-- **Active run pointer** — `activePointerPath`; default: `Active.md`. Names the note that points to the active run; change it only for a deliberately relocated pointer.
-- **Campaign note override** — `campaignPath`; default: **empty**. Overrides the campaign selected by the active run; leave it empty to use the current run.
-- **World-day note override** — `worldDayPath`; default: **empty**. Overrides the active run's world-day note; leave it empty to use the current run.
-- **Run** — `includeCampaign`; default: `true`. This assistant-view toggle includes campaign, run, and state context; turn it off for a deliberately narrower request.
-- **Today** — `includeWorldDay`; default: `true`. This assistant-view toggle includes the world date, moon, and season; turn it off when time context is irrelevant.
-- **Note** — `includeActiveNote`; default: `true`. This assistant-view toggle includes the active Markdown note; turn it off when that note should not be sent.
-- **Combat** — `includeCombat`; default: `true`. This assistant-view toggle includes the tracker summary; turn it off outside combat.
-- **Search** — `contextRetrieval`; default: `true`. This assistant-view toggle retrieves relevant scoped notes; turn it off to use only pinned context and attachments.
-- **Embedding provider** — `embeddingProvider`; default: `none`. **None** keeps retrieval local; choose `ollama` for a local embedding service or `gemini` only when sending note text to Google is acceptable.
-- **Ollama URL** — `ollamaUrl`; default: `http://127.0.0.1:11434`. Names the local Ollama endpoint for embeddings; change it when your local service uses another address. Note text is sent to that configured endpoint.
-- **Ollama embedding model** — `ollamaModel`; default: `embeddinggemma`. Selects the Ollama embedding model; change it to match the local model you installed.
-- **Gemini embedding model** — `geminiEmbeddingModel`; default: `gemini-embedding-001`. Selects the Gemini embedding model; this provider sends note text to Google.
-- **Embedding dimensions** — `embeddingDimensions`; default: `768`. Sets the requested Gemini vector size and stored vector format; change it only with a compatible embedding model.
-- **Test embedding provider** — no stored key. It tests the selected provider and reports returned dimensions; use it after changing provider, URL, model, or dimensions.
+The assistant sends your question and the selected context to Google Gemini when an API key is set.
 
-The **API key**, Model, and assistant request flow use Google Gemini when you send a question.
-`embeddingProvider: none` sends no note text to an embedding provider; `ollama` sends it to the configured Ollama URL; `gemini` sends it to Google.
+| Setting | Key | Default | Use it to |
+| --- | --- | --- | --- |
+| **API key** | `apiKey` | empty | Authenticate requests to Google. Stored locally in `data.json`; never commit it. |
+| **Model** | `model` | `gemini-3.8-flash` | Pick the model for answers, after **Fetch list** confirms what the key can use. |
+| **Fetch list** | `models` | `gemini-3.8-flash`, `gemini-3.7-flash`, `gemini-3.5-flash-lite`, `gemini-2.5-pro`, `gemini-2.5-flash` | Refresh the Model dropdown from the models available to the key. |
+| **Temperature** | `temperature` | `0.8` | Vary answers from 0 to 1.5; lower is more predictable. |
+| **System prompt** | `systemPrompt` | the built-in **You co-run a tabletop RPG session** GM prompt | Set the assistant's standing role, brevity, canon, scene, NPC, mechanics, and read-aloud rules. |
+| **Context limit (characters)** | `maxContext` | `24000` | Limit the note text included in one question. |
+| **Retrieval budget (tokens)** | `contextBudgetTokens` | `6000` | Cap pinned plus retrieved context, using a character-to-token estimate. |
+| **Maximum tool steps** | `maxToolSteps` | `5` | Cap read-only tool rounds for one answer. |
+
+### Active run paths
+
+Leave these alone unless your vault layout differs from the defaults.
+
+| Setting | Key | Default | Use it to |
+| --- | --- | --- | --- |
+| **Active run pointer** | `activePointerPath` | `Active.md` | Name the note that points to the active run. |
+| **Campaign note override** | `campaignPath` | empty | Use another campaign than the active run's. Empty uses the current run. |
+| **World-day note override** | `worldDayPath` | empty | Use another world-day note. Empty uses the current run. |
+
+### Assistant view toggles
+
+These switches sit in the assistant view and decide what each request includes.
+
+| Toggle | Key | Default | Includes |
+| --- | --- | --- | --- |
+| **Run** | `includeCampaign` | `true` | Campaign, run, and state context |
+| **Today** | `includeWorldDay` | `true` | World date, moon, and season |
+| **Note** | `includeActiveNote` | `true` | The active Markdown note |
+| **Combat** | `includeCombat` | `true` | The combat tracker summary |
+| **Search** | `contextRetrieval` | `true` | Relevant notes found in scope; off means only pinned context and attachments |
+
+### Semantic search (embeddings)
+
+Optional. Without it the assistant still searches your notes with local keyword search.
+
+| Setting | Key | Default | Use it to |
+| --- | --- | --- | --- |
+| **Embedding provider** | `embeddingProvider` | `none` | Choose `none` (fully local), `ollama` (local service), or `gemini` (sends note text to Google). |
+| **Ollama URL** | `ollamaUrl` | `http://127.0.0.1:11434` | Point at your Ollama service. Note text is sent there. |
+| **Ollama embedding model** | `ollamaModel` | `embeddinggemma` | Match the model you pulled into Ollama. |
+| **Gemini embedding model** | `geminiEmbeddingModel` | `gemini-embedding-001` | Pick the Gemini embedding model from the dropdown. |
+| **Fetch models** | `embeddingModels` | `gemini-embedding-001` | Fill that dropdown with the models your key can use for embeddings. |
+| **Embedding dimensions** | `embeddingDimensions` | `768` | Set the Gemini vector size; change only with a compatible model. |
+| **Test embedding provider** | button | — | Check the provider; it reports the returned dimensions or the exact error. |
+
+!!! tip
+    After changing provider, URL, model, or dimensions, press **Test embedding provider**. The index is rebuilt automatically for the new model. [Assistant](ASSISTANT.md) explains the setup step by step.
 
 ## Updates
 
-- **Check for updates** — a button, not a stored setting. It asks the release host named in `_system/manifest.json` (or `_local/release.json`) whether a newer GMVault exists, records the answer in `.gmvault/state.json`, and downloads nothing.
-- **Check once a day** — `checkForUpdatesOnStart`; default: `false`. Asks at most once every 24 hours after Obsidian restores the layout, says so only when a newer release exists, and stays silent when the host cannot be reached.
-- The table home uses that recorded result for its update banner. See [Keeping a vault up to date](UPDATING.md) for the installation and recovery procedure.
+| Setting | Key | Default | What it does |
+| --- | --- | --- | --- |
+| **Check for updates** | button | — | Asks the release host in `_system/manifest.json` (or `_local/release.json`) whether a newer GMVault exists, records the answer in `.gmvault/state.json`, and downloads nothing. |
+| **Check once a day** | `checkForUpdatesOnStart` | `false` | Asks at most once every 24 hours after Obsidian restores the layout; speaks up only when a newer release exists and stays silent when the host is unreachable. |
+
+The table home shows the recorded result as its update banner. Installing and recovering are covered in [Keeping a vault up to date](UPDATING.md).
 
 ## Table home
 
-- **Open table home on startup** — `openHomeOnStartup`; default: `true`. Opens the home view after Obsidian restores the layout; turn it off when you prefer to open it manually.
+| Setting | Key | Default | What it does |
+| --- | --- | --- | --- |
+| **Open table home on startup** | `openHomeOnStartup` | `true` | Opens the home view after Obsidian restores the layout. |
 
 ## Combat
 
-- **Bestiary folder override** — `bestiaryPath`; default: **empty**. Replaces the shared and campaign homebrew bestiary folders; set it for a custom creature location.
-- **Party folder override** — `partyPath`; default: **empty**. Replaces the party folder derived from the active run; leave it empty to use the current run.
-- **Average enemy hit points** — `useAverageHitPoints`; default: `true`. Uses statblock HP instead of rolling `hit_dice`; turn it off to roll enemy hit points.
-- **Shared initiative for groups** — `groupInitiative`; default: `true`. Lets identical added creatures act together; turn it off when every creature needs an independent initiative.
-- **Attack bonus phrases** — `attackBonusPhrases`; default: `to hit`. Supplies comma-separated phrases following attack bonuses in statblocks, so those bonuses become clickable rolls; change it for another statblock wording.
+| Setting | Key | Default | What it does |
+| --- | --- | --- | --- |
+| **Bestiary folder override** | `bestiaryPath` | empty | Replaces the shared and campaign homebrew bestiary folders. |
+| **Party folder override** | `partyPath` | empty | Replaces the party folder taken from the active run. |
+| **Average enemy hit points** | `useAverageHitPoints` | `true` | Uses statblock HP; off rolls `hit_dice`. |
+| **Shared initiative for groups** | `groupInitiative` | `true` | Lets identical creatures act together. |
+| **Attack bonus phrases** | `attackBonusPhrases` | `to hit` | Comma-separated phrases after attack bonuses that turn them into clickable rolls. |
 
-## Choosing safely
+## Related pages
 
-Leave pointer, path, and empty override settings alone until the active-run defaults do not match your vault layout.
-Use the assistant toggles per request to control what context is included.
-Use **Assistant: rebuild index** after changing source material or embedding configuration substantially.
-See [Table Tools at the table](TABLE-TOOLS.md) for the controls these settings affect.
-See [Assistant retrieval](ASSISTANT.md) for scope, requests, tools, local indexing, and provider behavior.
+- [Combat tracker and dice](TABLE-TOOLS.md): the controls these settings affect
+- [Assistant](ASSISTANT.md): scope, requests, tools, indexing, and providers
+- Use **Assistant: rebuild index** after large changes to your notes or embedding setup.

@@ -1,58 +1,71 @@
 # GMVault concepts
 
-GMVault is an Obsidian vault with a shipped layer, a local layer, and content roots.
-The boundary lets the template evolve without treating game notes as generated files.
-Use the layer and root names below when deciding where to place a file.
+Four ideas explain how GMVault is organised: layers, content roots, the campaign–party–run trio, and the active run.
 
-## Layers and the resolver
+## Layers: what updates touch
 
-`_system/` is the shipped implementation: templates, plugin source, scripts, bases, demo material, and systems.
-An update backs up and replaces `_system/`, so never put private notes or local edits there.
-`_local/` is the vault-owned override layer and is not replaced by update.
-The Table Tools resolver checks `_local/<path>` before `_system/<path>` for overrideable material.
-For example, a local template with the same name takes precedence over the shipped template.
-Keep private scripts, template changes, and local assistant policy in `_local/`.
-The `.obsidian/` directory is Obsidian application configuration, not a content root.
+GMVault separates files it ships from files you own, so updates never overwrite your game.
+
+| Layer | Who owns it | Replaced on update? |
+| --- | --- | --- |
+| `_system/` | GMVault: templates, plugin source, scripts, bases, demo, systems | Yes, after a backup |
+| `_local/` | You: template overrides, scripts, assistant policy | No |
+| Content roots | You: all game notes | No |
+| `.obsidian/` | Obsidian settings and plugins | Managed entries only |
+
+!!! warning
+    Never put private notes or edits in `_system/`. An update backs it up and replaces it.
+
+**The resolver.** Table Tools looks for `_local/<path>` before `_system/<path>`. A local template with the same name wins over the shipped one. See [Templates and overrides](CUSTOMISING.md).
 
 ## Content roots
 
-The manifest declares six content roots: `Campaigns`, `Parties`, `Runs`, `Library`, `Calendar`, and `Archive`.
-`Campaigns/` holds reusable world and campaign material.
-`Parties/` holds rosters and party records.
-`Runs/` holds table-specific session and run records.
-`Library/` holds mechanics and assets, including reference material under its declared folders.
-`Calendar/` holds calendar-oriented vault content used with the table workflow.
-`Archive/` keeps retired material and is excluded from automation and assistant indexing.
-Content roots are user content: update does not replace them.
-The manifest also creates supporting local template and script folders, but they are not content roots.
+The manifest declares six content roots. Your notes live here; updates never replace them.
+
+| Folder | Holds |
+| --- | --- |
+| `Campaigns/` | Worlds and campaign material: NPCs, locations, quests, factions |
+| `Parties/` | Party records and rosters |
+| `Runs/` | Table-specific records: sessions, state, world day |
+| `Library/` | Mechanics and assets: bestiary, spells, items, rules |
+| `Calendar/` | Calendar content for the table |
+| `Archive/` | Retired material, ignored by automation and assistant indexing |
+
+The manifest also creates `_local/templates/` and `_local/scripts/`; those are not content roots. [Where things go](WHERE-THINGS-GO.md) shows the full map.
 
 ## Campaigns, parties, and runs
 
-A campaign is the reusable setting and world context for a game.
-A party is the group of characters participating in that game.
-A run is the table-specific record that connects a role, campaign, and party.
-Make a run active when it is the game currently being played.
-The active run controls the assistant and combat context used by Table Tools.
-`Active.md` at the vault root is the pointer to that active run.
-It is user state rather than shipped `_system` state, so it survives updates.
+- A **campaign** is the reusable setting: the world and its story.
+- A **party** is the group of characters playing it.
+- A **run** is one table's game: it connects a campaign, a party, and a role (game master or player).
 
-## Names, systems, and state
+One campaign can have many runs, for example two groups playing the same world.
 
-Contractual names are allowed to repeat when their paths disambiguate them.
-The manifest lists `Active.md`, `Campaign.md`, `Party.md`, `Run.md`, `State.md`, `Dashboard.md`, `Radar.md`, and `World Day.md` as contractual names.
-Generated references to those repeated names should be path-qualified.
-System packages in `_system/systems/` describe supported note shapes and radar requirements.
-They do not contain published rules text or statblocks.
-Use a local package while experimenting; see [Authoring systems](AUTHORING-SYSTEMS.md) for that workflow.
-`.gmvault/state.json` records install identity, installed version, applied migrations, and adoption state after the first state write. A fresh release vault has no state file.
-`.gmvault/cache/` holds local derived caches, including assistant indexing data.
-`.gmvault/backups/` receives a timestamped copy of `_system/` before an update replaces it and a named backup of repository files moved by the lean-vault migration.
-An update may replace `_system/`, reconcile manifest-managed Obsidian artifacts, refresh the bundled plugin, and write state.
-An update does not replace `_local/`, the six content roots, or the root active pointer.
+## The active run
 
-## Useful next pages
+Make a run active when it is the game you are playing now. The active run decides which campaign, party, and state the assistant and combat tracker use.
 
-Follow [Getting started](GETTING-STARTED.md) to create the first campaign, party, and run.
-Use the [Table home](HOME.md) page for the Table Tools creation controls.
-Use the [CLI reference](CLI.md) before operating the vault from a terminal.
-Use [Troubleshooting](TROUBLESHOOTING.md) whenever `doctor` reports a violation.
+`Active.md` at the vault root points to it. It is your state, not shipped state, so it survives updates.
+
+## Contractual names
+
+These note names may repeat across folders because their paths tell them apart: `Active.md`, `Campaign.md`, `Party.md`, `Run.md`, `State.md`, `Dashboard.md`, `Radar.md`, `World Day.md`. Generated links to them are path-qualified.
+
+## Systems
+
+System packages in `_system/systems/` describe note shapes and radar requirements for a game system. They contain no published rules text or statblocks. Experiment with a local package first; see [Game systems](AUTHORING-SYSTEMS.md).
+
+## Vault state
+
+??? info "What lives in `.gmvault/`"
+    - `.gmvault/state.json` records install identity, installed version, applied migrations, and adoption state after the first state write. A fresh release vault has no state file.
+    - `.gmvault/cache/` holds local derived caches, including assistant indexing data.
+    - `.gmvault/backups/` receives a timestamped copy of `_system/` before an update replaces it, and a named backup of repository files moved by the lean-vault migration.
+
+An update may replace `_system/`, reconcile manifest-managed Obsidian artifacts, refresh the bundled plugin, and write state. It does not replace `_local/`, the six content roots, or the root active pointer.
+
+## Next
+
+- [Your first campaign](FIRST-CAMPAIGN.md): create a campaign, party, and run
+- [Table home](HOME.md): the creation controls
+- [Troubleshooting](TROUBLESHOOTING.md): when `doctor` reports a violation
