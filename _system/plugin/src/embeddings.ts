@@ -1,4 +1,6 @@
 import { requestUrl } from "obsidian";
+import { describeError } from "./gemini";
+import { Strings } from "./strings";
 
 export interface EmbeddingProvider {
   id: string;
@@ -31,8 +33,10 @@ export class OllamaEmbeddingProvider implements EmbeddingProvider {
     return this.model.startsWith("embeddinggemma") ? `title: ${body === undefined ? "document" : title} | text: ${body ?? title}` : body ?? title;
   }
   private async embed(input: string[], signal?: AbortSignal): Promise<Float32Array[]> {
-    const response = await requestUrl({ url: `${this.baseUrl.replace(/\/$/, "")}/api/embed`, method: "POST", contentType: "application/json", body: JSON.stringify({ model: this.model, input }), throw: false });
-    if (response.status >= 400) throw new Error("Ollama embedding request failed.");
+    let response;
+    try { response = await requestUrl({ url: `${this.baseUrl.replace(/\/$/, "")}/api/embed`, method: "POST", contentType: "application/json", body: JSON.stringify({ model: this.model, input }), throw: false }); }
+    catch (error) { throw new Error(`Ollama host is unreachable: ${error instanceof Error ? error.message : String(error)}`); }
+    if (response.status >= 400) throw new Error(`Ollama embedding request failed (${response.status}).`);
     const payload = response.json as { embeddings?: number[][] };
     const values = (payload.embeddings ?? []).map(normalise); this.dimensions = values[0]?.length ?? this.dimensions; return values;
   }
@@ -40,14 +44,14 @@ export class OllamaEmbeddingProvider implements EmbeddingProvider {
 
 export class GeminiEmbeddingProvider implements EmbeddingProvider {
   readonly id: string;
-  constructor(private readonly apiKey: string, readonly dimensions = 768, private readonly model = "gemini-embedding-001") { this.id = `gemini:${model}@${dimensions}`; }
+  constructor(private readonly apiKey: string, private readonly strings: Strings, readonly dimensions = 768, private readonly model = "gemini-embedding-001") { this.id = `gemini:${model}@${dimensions}`; }
   async embedDocuments(texts: string[]): Promise<Float32Array[]> { return this.embed(texts, "RETRIEVAL_DOCUMENT"); }
   async embedQuery(text: string): Promise<Float32Array> { return (await this.embed([text], "RETRIEVAL_QUERY"))[0]; }
   private async embed(texts: string[], taskType: string): Promise<Float32Array[]> {
     for (let attempt = 0; attempt < 3; attempt++) {
       const response = await requestUrl({ url: `https://generativelanguage.googleapis.com/v1beta/models/${this.model}:batchEmbedContents?key=${encodeURIComponent(this.apiKey)}`, method: "POST", contentType: "application/json", body: JSON.stringify({ requests: texts.map(text => ({ model: `models/${this.model}`, content: { parts: [{ text }] }, taskType, outputDimensionality: this.dimensions })) }), throw: false });
       if (response.status === 429 && attempt < 2) { await new Promise(resolve => setTimeout(resolve, 500 * (attempt + 1))); continue; }
-      if (response.status >= 400) throw new Error("Gemini embedding request failed.");
+      if (response.status >= 400) { let payload = null; try { payload = response.json; } catch {} throw new Error(describeError(payload, response.status, this.strings)); }
       const payload = response.json as { embeddings?: { values?: number[] }[] };
       return (payload.embeddings ?? []).map(item => normalise(item.values ?? []));
     }

@@ -1,7 +1,7 @@
 import { App, Notice, Platform, Plugin, PluginSettingTab, Setting, TFile } from "obsidian";
 import { AssistantView, ASSISTANT_VIEW } from "./assistant";
 import { CombatTracker, CombatView, COMBAT_VIEW, newCombat } from "./combat";
-import { listModels } from "./gemini";
+import { listEmbeddingModels, listModels } from "./gemini";
 import { createStrings, englishStrings, format, Strings } from "./strings";
 import { Combat, DEFAULTS, EncounterSet, ScopePolicy, Settings, SourceKind } from "./types";
 import { AssistantIndex } from "./indexer";
@@ -23,9 +23,9 @@ export default class TableTools extends Plugin {
   encounterSets: EncounterSet[] = [];
   strings: Strings = { ...englishStrings };
   tracker = new CombatTracker(this);
-  /** Open combat views, re-rendered after every combat change. */
+
   views = new Set<CombatView>();
-  /** Open home views, refreshed after vault and active-run changes. */
+
   homeViews = new Set<HomeView>();
   index!: AssistantIndex;
   skills = new Map<string, Skill>();
@@ -193,7 +193,6 @@ export default class TableTools extends Plugin {
     return checkLatestRelease(this.app.vault.adapter);
   }
 
-  /** Starts the shipped CLI only when Obsidian has the desktop Node runtime. */
   private async runDesktopCommand(file: string, args: string[], onOutput: (chunk: string) => void): Promise<number> {
     if (!Platform.isDesktopApp) throw new Error("The desktop runtime is unavailable");
     const adapter = this.app.vault.adapter as typeof this.app.vault.adapter & {
@@ -204,7 +203,6 @@ export default class TableTools extends Plugin {
     if (!cwd) throw new Error("The vault folder is unavailable");
     const { spawn } = await import("node:child_process");
     return new Promise((resolve, reject) => {
-      // In Obsidian `process.execPath` is the Electron binary; this flag makes it run as Node.
       const child = spawn(process.execPath, [file, ...args], { cwd, env: { ...process.env, ELECTRON_RUN_AS_NODE: "1" } });
       child.stdout.on("data", chunk => onOutput(String(chunk)));
       child.stderr.on("data", chunk => onOutput(String(chunk)));
@@ -213,14 +211,13 @@ export default class TableTools extends Plugin {
     });
   }
 
-  /** The opt-in startup check: at most once a day, and silent when it fails or finds nothing new. */
   private async checkForUpdatesOnStart(): Promise<void> {
     if (!this.settings.checkForUpdatesOnStart) return;
     if (await checkedRecently(this.app.vault.adapter, 24 * 60 * 60 * 1000)) return;
     try {
       const result = await this.checkForUpdates();
       if (result.newer) new Notice(format(this.strings.settingsUpdateAvailable, { version: result.latestVersion, installed: result.installedVersion }));
-    } catch { /* A startup check never interrupts the table. */ }
+    } catch {}
   }
 
   refreshViews(): void {
@@ -236,7 +233,6 @@ export default class TableTools extends Plugin {
     await this.app.workspace.revealLeaf(leaf);
   }
 
-  /** Opens the overview in the main workspace area, reusing an existing home leaf. */
   async openHome(): Promise<void> {
     const existing = this.app.workspace.getLeavesOfType(HOME_VIEW)[0];
     if (existing) { await existing.loadIfDeferred?.(); await this.app.workspace.revealLeaf(existing); return; }
@@ -247,7 +243,6 @@ export default class TableTools extends Plugin {
     await this.app.workspace.revealLeaf(leaf);
   }
 
-  /** Changes the single active-run pointer while preserving the ADR-0002 pointer semantics. */
   async setActiveRun(runPath: string): Promise<void> {
     const target = runPath.replace(/\.md$/, "");
     let pointer = this.app.vault.getAbstractFileByPath(this.settings.activePointerPath);
@@ -259,18 +254,16 @@ export default class TableTools extends Plugin {
     this.scheduleHomeRefresh(this.settings.activePointerPath);
   }
 
-  /** Reads the display name for a system, preferring a vault-local package. */
   async systemName(id: string): Promise<string> {
     for (const root of ["_local/", "_system/"]) {
       try {
         const value = JSON.parse(await this.app.vault.adapter.read(`${root}systems/${id}/package.json`)) as { name?: unknown };
         if (typeof value.name === "string" && value.name) return value.name;
-      } catch { /* Try the next layer. */ }
+      } catch {}
     }
     return id;
   }
 
-  /** Lists installed system packages with local packages taking precedence. */
   async systemPackages(): Promise<{ id: string; name: string }[]> {
     const packages = new Map<string, string>();
     const adapter = this.app.vault.adapter as typeof this.app.vault.adapter & { list?: (path: string) => Promise<{ folders: string[] }> };
@@ -281,7 +274,7 @@ export default class TableTools extends Plugin {
           const id = folder.split("/").at(-1) ?? "";
           if (id) packages.set(id, await this.systemName(id));
         }
-      } catch { /* A layer without a systems folder is optional. */ }
+      } catch {}
     }
     if (!packages.size) packages.set("generic", await this.systemName("generic"));
     return [...packages].map(([id, name]) => ({ id, name })).sort((left, right) => left.name.localeCompare(right.name));
@@ -296,7 +289,6 @@ export default class TableTools extends Plugin {
     return path ? this.app.metadataCache.getFirstLinkpathDest(path, source.path) : null;
   }
 
-  /** Resolves the active run from the pointer note, then its campaign, party, state, and world day. */
   currentContext(): RunContext | null {
     const pointer = this.app.vault.getAbstractFileByPath(this.settings.activePointerPath);
     if (!(pointer instanceof TFile)) return null;
@@ -316,7 +308,6 @@ export default class TableTools extends Plugin {
     return this.settings.partyPath || this.currentContext()?.party.parent?.path || "";
   }
 
-  /** The campaign system's shared bestiary plus the campaign's own homebrew bestiary. */
   bestiaryPaths(): string[] {
     if (this.settings.bestiaryPath) return [this.settings.bestiaryPath];
     const context = this.currentContext();
@@ -383,7 +374,28 @@ class TableToolsSettingTab extends PluginSettingTab {
     });
     new Setting(containerEl).setName(s.settingsOllamaUrl).addText(text => text.setValue(settings.ollamaUrl).onChange(value => { settings.ollamaUrl = value.trim(); void this.plugin.applyEmbeddingSettings(); }));
     new Setting(containerEl).setName(s.settingsOllamaModel).addText(text => text.setValue(settings.ollamaModel).onChange(value => { settings.ollamaModel = value.trim(); void this.plugin.applyEmbeddingSettings(); }));
-    new Setting(containerEl).setName(s.settingsGeminiEmbeddingModel).setDesc(s.settingsGeminiEmbeddingDescription).addText(text => text.setValue(settings.geminiEmbeddingModel).onChange(value => { settings.geminiEmbeddingModel = value.trim(); void this.plugin.applyEmbeddingSettings(); }));
+    const embeddingModel = new Setting(containerEl).setName(s.settingsGeminiEmbeddingModel).setDesc(s.settingsGeminiEmbeddingDescription);
+    const renderEmbeddingModel = (): void => {
+      embeddingModel.controlEl.empty();
+      embeddingModel.addDropdown(dropdown => {
+        for (const name of settings.embeddingModels) dropdown.addOption(name, name);
+        if (!settings.embeddingModels.includes(settings.geminiEmbeddingModel)) dropdown.addOption(settings.geminiEmbeddingModel, settings.geminiEmbeddingModel);
+        dropdown.setValue(settings.geminiEmbeddingModel).onChange(value => { settings.geminiEmbeddingModel = value; void this.plugin.applyEmbeddingSettings(); });
+      });
+      embeddingModel.addButton(button => button.setButtonText(s.settingsFetchModels).onClick(async () => {
+        if (!settings.apiKey) { new Notice(s.settingsNeedApiKey); return; }
+        try {
+          const models = await listEmbeddingModels(settings.apiKey, s);
+          if (!models.length) { new Notice(s.settingsModelListEmpty); return; }
+          settings.embeddingModels = models;
+          if (!models.includes(settings.geminiEmbeddingModel)) settings.geminiEmbeddingModel = models.includes("gemini-embedding-001") ? "gemini-embedding-001" : models[0];
+          await this.plugin.applyEmbeddingSettings();
+          renderEmbeddingModel();
+          new Notice(format(s.settingsModelCount, { count: models.length }));
+        } catch (error) { new Notice(error instanceof Error ? error.message : String(error)); }
+      }));
+    };
+    renderEmbeddingModel();
     new Setting(containerEl).setName(s.settingsEmbeddingDimensions).addText(text => text.setValue(String(settings.embeddingDimensions)).onChange(value => { settings.embeddingDimensions = Number(value) || DEFAULTS.embeddingDimensions; void this.plugin.applyEmbeddingSettings(); }));
     new Setting(containerEl).setName(s.settingsEmbeddingTest).addButton(button => button.setButtonText(s.settingsEmbeddingTest).onClick(async () => {
       try {

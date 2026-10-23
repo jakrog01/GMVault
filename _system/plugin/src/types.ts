@@ -28,14 +28,14 @@ export interface Participant {
   hpMax: number;
   hp: number;
   temporaryHp: number;
-  /** Condition keys from CONDITIONS, stored independently of the display language. */
+
   conditions: string[];
   note: string;
-  /** Hidden from the players, for example during an ambush. */
+
   hidden: boolean;
-  /** Shared-initiative group, for example several identical creatures. */
+
   group?: string;
-  /** Vault path of the note the participant came from. */
+
   source?: string;
   statblock?: Statblock;
   cr?: string;
@@ -47,11 +47,11 @@ export interface Combat {
   name: string;
   active: boolean;
   round: number;
-  /** Index into the sorted participant list. */
+
   turn: number;
   participants: Participant[];
   log: string[];
-  /** Id of the participant whose card is shown. */
+
   selected?: string;
 }
 
@@ -122,18 +122,19 @@ export interface Settings {
   includeCombat: boolean;
   bestiaryPath: string;
   partyPath: string;
-  /** Enemies get average hit points instead of rolled hit dice. */
+
   useAverageHitPoints: boolean;
   groupInitiative: boolean;
   models: string[];
-  /** Comma-separated phrases that follow an attack bonus in statblock text, such as "to hit". */
+
   attackBonusPhrases: string;
   embeddingProvider: "none" | "ollama" | "gemini";
   ollamaUrl: string;
   ollamaModel: string;
   geminiEmbeddingModel: string;
+  embeddingModels: string[];
   embeddingDimensions: number;
-  /** Open the table home after Obsidian has finished restoring its layout. */
+
   openHomeOnStartup: boolean;
   checkForUpdatesOnStart: boolean;
 }
@@ -172,6 +173,7 @@ Rules:
   ollamaUrl: "http://127.0.0.1:11434",
   ollamaModel: "embeddinggemma",
   geminiEmbeddingModel: "gemini-embedding-001",
+  embeddingModels: ["gemini-embedding-001"],
   embeddingDimensions: 768,
   openHomeOnStartup: true,
   checkForUpdatesOnStart: false,

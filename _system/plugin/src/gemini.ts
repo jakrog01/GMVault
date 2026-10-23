@@ -55,7 +55,7 @@ export function describeError(payload: Payload | null, status: number, strings: 
   return format(strings.errorGeneric, { status, message: message || strings.errorUnknown });
 }
 
-/** Streaming response (server-sent events). Calls onFragment for every piece of text and returns the full text. */
+
 export async function streamResponse(
   options: GeminiOptions,
   messages: ChatMessage[],
@@ -79,12 +79,11 @@ export async function streamTurn(
     response = await fetch(url, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(requestBody(options, messages)), signal });
   } catch (error) {
     if ((error as { name?: string })?.name === "AbortError") throw error;
-    // fetch can be blocked (CORS, mobile); fall back to a non-streaming request.
     return requestTurn(options, messages, strings, onFragment);
   }
   if (!response.ok) {
     let payload: Payload | null = null;
-    try { payload = await response.json() as Payload; } catch { /* no JSON body */ }
+    try { payload = await response.json() as Payload; } catch {}
     throw new Error(describeError(payload, response.status, strings));
   }
   if (!response.body) return requestTurn(options, messages, strings, onFragment);
@@ -133,7 +132,6 @@ export async function requestTurn(options: GeminiOptions, messages: ChatMessage[
   return turn;
 }
 
-/** Models available to the key that support generateContent. */
 export async function listModels(apiKey: string, strings: Strings): Promise<string[]> {
   const response = await requestUrl({ url: `${ENDPOINT}/models?pageSize=200&key=${encodeURIComponent(apiKey)}`, throw: false });
   if (response.status >= 400) throw new Error(describeError(response.json as Payload, response.status, strings));
@@ -141,5 +139,14 @@ export async function listModels(apiKey: string, strings: Strings): Promise<stri
     .filter(model => (model.supportedGenerationMethods ?? []).includes("generateContent"))
     .map(model => String(model.name).replace(/^models\//, ""))
     .filter(name => /gemini/i.test(name) && !/embedding|tts|image|audio|live|transcribe|omni|lyria|veo/i.test(name))
+    .sort();
+}
+
+export async function listEmbeddingModels(apiKey: string, strings: Strings): Promise<string[]> {
+  const response = await requestUrl({ url: `${ENDPOINT}/models?pageSize=200&key=${encodeURIComponent(apiKey)}`, throw: false });
+  if (response.status >= 400) throw new Error(describeError(response.json as Payload, response.status, strings));
+  return ((response.json as Payload)?.models ?? [])
+    .filter(model => (model.supportedGenerationMethods ?? []).some(method => method === "embedContent" || method === "batchEmbedContents"))
+    .map(model => String(model.name).replace(/^models\//, ""))
     .sort();
 }

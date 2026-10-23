@@ -1,9 +1,6 @@
-/**
- * Every user-facing text in Table Tools. Values may contain {placeholders}.
- * A vault can override any key through _local/plugins/table-tools/strings.json.
- */
+
 export const englishStrings = {
-  // Plugin
+
   ribbonCombat: "Table Tools: Combat",
   ribbonAssistant: "Table Tools: Assistant",
   ribbonHome: "Table Tools: Home",
@@ -18,7 +15,7 @@ export const englishStrings = {
   selectTextFirst: "Select some text first.",
   stringsOverrideInvalid: "Table Tools could not read _local/plugins/table-tools/strings.json; the English strings are in use.",
 
-  // Table home
+
   homeTitle: "Table home",
   homeActiveRun: "Active run",
   homeCampaigns: "Campaigns",
@@ -36,6 +33,7 @@ export const englishStrings = {
   homeOpenAssistant: "Open assistant",
   homeOpenCombat: "Open combat tracker",
   homeMakeActive: "Make active",
+  homeNewSession: "New session",
   homeNewCampaign: "New campaign",
   homeNewParty: "New party",
   homeNewRun: "New run",
@@ -55,7 +53,7 @@ export const englishStrings = {
   homeUpdateReload: "Update complete. Reload Obsidian to use the new version.",
   homeUpdateFailed: "GMVault update failed.",
 
-  // Settings
+
   settingsAssistantHeading: "Assistant (Google Gemini)",
   settingsApiKey: "API key",
   settingsApiKeyDescription: "From Google AI Studio (aistudio.google.com, Get API key). Stored locally in this plugin's data.json; do not commit it to Git.",
@@ -101,7 +99,7 @@ export const englishStrings = {
   settingsAttackBonusPhrases: "Attack bonus phrases",
   settingsAttackBonusPhrasesDescription: "Comma-separated phrases that follow an attack bonus in statblocks, so the bonus can be clicked to roll.",
 
-  // Combat view
+
   combatTitle: "Combat",
   defaultCombatName: "Encounter",
   toolbarPlayers: "Players",
@@ -149,7 +147,7 @@ export const englishStrings = {
   selectRowHint: "Click a row to see its card.",
   logTitle: "Log",
 
-  // Combat log and notices
+
   logAdded: "Added: {name} \u00d7{quantity}",
   logInitiative: "Initiative rolled.",
   logRound: "\u2014 Round {round} \u2014",
@@ -166,7 +164,7 @@ export const englishStrings = {
   invalidStatblock: "Invalid statblock YAML in {path}.",
   noteMissing: "Note not found: {path}",
 
-  // Statblock card
+
   cardNoteLink: "note",
   cardAc: "AC",
   cardHp: "HP",
@@ -197,7 +195,7 @@ export const englishStrings = {
   sectionLairActions: "Lair actions",
   sectionHomebrew: "GM notes (homebrew)",
 
-  // Combat modals
+
   searchBestiary: "Search the bestiary\u2026",
   creatureOption: "{name} (CR {cr})",
   quantity: "How many?",
@@ -235,14 +233,14 @@ export const englishStrings = {
   defaultSetName: "Encounter set",
   encounterSetSaved: "Encounter set saved.",
 
-  // Export
+
   exportHeading: "Combat: {name} (round {round})",
   exportDifficulty: " \u00b7 {level}, {xp} XP",
   exportColumns: "| Init | Who | AC | HP | Conditions |",
   exportSaved: "Saved the combat to {note}.",
   exportCopied: "No open note; the combat was copied to the clipboard.",
 
-  // Conditions
+
   conditionBlinded: "Blinded",
   conditionBlindedDescription: "Cannot see. Attacks against it have advantage; its attacks have disadvantage.",
   conditionCharmed: "Charmed",
@@ -278,7 +276,7 @@ export const englishStrings = {
   conditionDying: "Dying",
   conditionDyingDescription: "0 HP. Death saving throws.",
 
-  // Assistant view
+
   assistantTitle: "Table Tools assistant",
   modelChipTitle: "Model; change it in the settings",
   contextRun: "Run",
@@ -300,7 +298,7 @@ export const englishStrings = {
   assistantIndexed: "Indexed {notes} notes and {chunks} chunks.",
   assistantScopePolicyInvalid: "Assistant scope policy is invalid; the shipped policy is in use.",
   assistantSkillInvalid: "Skipped invalid assistant skills: {paths}",
-  assistantEmbeddingUnavailable: "Embeddings are unavailable; using local lexical search.",
+  assistantEmbeddingUnavailable: "Embeddings are unavailable ({reason}); using local lexical search.",
   assistantEmbedding: "Embedding {count} chunks...",
   settingsEmbeddingProvider: "Embedding provider",
   settingsEmbeddingProviderDescription: "Optional semantic search. None keeps all retrieval local.",
@@ -345,7 +343,7 @@ export const englishStrings = {
   quickMechanicsLabel: "Mechanics",
   quickMechanicsPrompt: "A player wants to do what I describe below. Suggest a check (ability, skill, DC) and what happens on a success, a failure, and a failure by 5 or more.\n\n",
 
-  // Gemini errors
+
   errorInvalidKey: "Invalid API key. Check the Table Tools settings.",
   errorForbidden: "Access denied (403). The key has no permission for this model, or the API is not enabled.",
   errorModelMissing: "The model does not exist (404). Fetch the model list in the settings. {message}",
@@ -358,7 +356,7 @@ export const englishStrings = {
 export type StringKey = keyof typeof englishStrings;
 export type Strings = Record<StringKey, string>;
 
-/** Merges a local override over the English strings; unknown keys and non-string values are ignored. */
+
 export function createStrings(override: unknown): Strings {
   const result: Strings = { ...englishStrings };
   if (!override || typeof override !== "object" || Array.isArray(override)) return result;
@@ -369,7 +367,7 @@ export function createStrings(override: unknown): Strings {
   return result;
 }
 
-/** Replaces {placeholders} with values; unknown placeholders are left as they are. */
+
 export function format(template: string, values: Record<string, string | number>): string {
   return template.replace(/\{(\w+)\}/g, (match, key: string) => key in values ? String(values[key]) : match);
 }
