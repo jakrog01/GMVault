@@ -2,6 +2,16 @@
 
 ## Unreleased
 
+## 2.2.0
+
+- GMVault now gives new notes inside runs a session template.
+- Table home creates dated session notes from shipped or local templates.
+- Added quest, NPC, location, and claim templates with a run folder guide.
+- Cleaned up GMVault tests, generated artifacts, and obsolete upgrade code.
+- Gemini embeddings now show API errors and offer a fetched embedding model picker.
+- New campaign creates `NPCs/`, `Locations/`, `Quests/` and `Factions/`; notes created there get their template and campaign link automatically.
+- The manual is reorganised into sections, with a first-campaign walkthrough and a map of where things go.
+
 ## 2.1.1
 
 - Table home opens with its title, create buttons and lists again. Its note-opening helper was named `open`, which replaced the `open` method Obsidian uses to show a view, so the view stayed blank and the console reported `e.startsWith is not a function`.
