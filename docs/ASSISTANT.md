@@ -98,6 +98,19 @@ Choose a provider in **Settings → Table Tools → Embedding provider**, then p
 
     `none` keeps retrieval fully local and sends no note text anywhere. Nothing to set up.
 
+=== "Local (built in)"
+
+    `local` runs a multilingual model inside Obsidian. Note text never leaves your computer, and you need no account or extra program.
+
+    1. Set **Embedding provider** to **Local (on this device)**, or press **Download model**.
+    2. Confirm the download. Nothing is downloaded before you confirm; **Cancel** keeps the previous provider.
+    3. A notice shows the download progress: about 130 MB for the model and 11 MB for its runtime, stored once in `.gmvault/cache/models/` (ignored by git).
+    4. When the notice says the model is ready, indexing continues in the background.
+
+    The model loads into memory only while notes are indexed or searched, and is released after five idle minutes. **Delete downloaded model** removes the files and turns local search off.
+
+    The default `Xenova/multilingual-e5-small` matches questions and notes across languages, so a Polish question finds an English note. The runtime download is checked against a pinned SHA-256 hash before use. Use it on desktop; a phone may run out of memory.
+
 === "Ollama (local)"
 
     `ollama` sends note chunks to a service on your own machine.

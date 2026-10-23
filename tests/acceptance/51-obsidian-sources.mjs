@@ -26,6 +26,6 @@ for (const entry of manifest.managedObsidian) {
     const sourceJson = JSON.parse(expected)
     const targetJson = JSON.parse(actual)
     for (const key of entry.keys) assert.deepEqual(targetJson[key], sourceJson[key], `${target}:${key}`)
-  } else assert.deepEqual(actual, expected, `${target} matches ${source}`)
+  } else assert.ok(actual.equals(expected), `${target} matches ${source}`)
 }
 console.log(`managed Obsidian sources: clean (${manifest.managedObsidian.length} files)`)

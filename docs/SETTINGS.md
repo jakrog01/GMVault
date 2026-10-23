@@ -48,7 +48,9 @@ Optional. Without it the assistant still searches your notes with local keyword 
 
 | Setting | Key | Default | Use it to |
 | --- | --- | --- | --- |
-| **Embedding provider** | `embeddingProvider` | `none` | Choose `none` (fully local), `ollama` (local service), or `gemini` (sends note text to Google). |
+| **Embedding provider** | `embeddingProvider` | `none` | Choose `none` (keyword search only), `local` (a model running inside Obsidian), `ollama` (local service), or `gemini` (sends note text to Google). |
+| **Local embedding model** | `localModel` | `Xenova/multilingual-e5-small` | The Hugging Face model used by `local`. The default understands Polish, English and about 100 other languages. |
+| **Local model** | `localModelApproved` | empty | Shows whether the model is downloaded. **Download model** asks first and records the approved model; **Delete downloaded model** removes it and turns local search off. |
 | **Ollama URL** | `ollamaUrl` | `http://127.0.0.1:11434` | Point at your Ollama service. Note text is sent there. |
 | **Ollama embedding model** | `ollamaModel` | `embeddinggemma` | Match the model you pulled into Ollama. |
 | **Gemini embedding model** | `geminiEmbeddingModel` | `gemini-embedding-001` | Pick the Gemini embedding model from the dropdown. |

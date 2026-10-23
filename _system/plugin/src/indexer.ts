@@ -6,6 +6,7 @@ import { isBuiltInExcluded, resolveScope, sourceKind } from "./scope";
 import { Chunk, Scope } from "./types";
 import { format } from "./strings";
 import { cosine, EmbeddingProvider, GeminiEmbeddingProvider, NoneEmbeddingProvider, OllamaEmbeddingProvider } from "./embeddings";
+import { Extractor, loadExtractor, LocalEmbeddingProvider, LocalHooks } from "./local-embeddings";
 
 const cachePath = ".gmvault/cache/assistant/manifest.json";
 const vectorsPath = ".gmvault/cache/assistant/vectors.bin";
@@ -38,6 +39,19 @@ export class AssistantIndex {
   private embeddingPaused = false;
   private embeddingWaiters: (() => void)[] = [];
   private embeddingOutage = false;
+  private downloadNotice?: Notice;
+  readonly localHooks: LocalHooks = {
+    onProgress: percent => {
+      const message = format(this.plugin.strings.localEmbeddingProgress, { percent });
+      if (this.downloadNotice) this.downloadNotice.setMessage(message); else this.downloadNotice = new Notice(message, 0);
+    },
+    onReady: () => { this.downloadNotice?.hide(); this.downloadNotice = undefined; new Notice(this.plugin.strings.localEmbeddingReady); },
+  };
+  loadLocalExtractor = async (model: string): Promise<Extractor> => {
+    if (this.plugin.settings.localModelApproved !== model) throw new Error(this.plugin.strings.localEmbeddingNotApproved);
+    try { return await loadExtractor(this.plugin.app.vault.adapter, model, this.localHooks); }
+    finally { this.downloadNotice?.hide(); this.downloadNotice = undefined; }
+  };
 
   constructor(private readonly plugin: TableTools) { this.restored = this.restore(); }
 
@@ -60,6 +74,7 @@ export class AssistantIndex {
   }
 
   async dispose(): Promise<void> {
+    await this.provider.dispose?.();
     for (const timer of this.timers.values()) clearTimeout(timer);
     this.timers.clear();
     if (this.notifyTimer) clearTimeout(this.notifyTimer);
@@ -96,7 +111,7 @@ export class AssistantIndex {
 
   async applyEmbeddingSettings(): Promise<void> {
     const settings = this.plugin.settings;
-    const key = settings.embeddingProvider === "ollama" ? `ollama:${settings.ollamaUrl}:${settings.ollamaModel}` : settings.embeddingProvider === "gemini" ? `gemini:${settings.geminiEmbeddingModel}:${settings.embeddingDimensions}` : "none";
+    const key = settings.embeddingProvider === "local" ? `local:${settings.localModel}` : settings.embeddingProvider === "ollama" ? `ollama:${settings.ollamaUrl}:${settings.ollamaModel}` : settings.embeddingProvider === "gemini" ? `gemini:${settings.geminiEmbeddingModel}:${settings.embeddingDimensions}` : "none";
     const changed = key !== this.providerKey;
     if (changed) {
       this.providerKey = key;
@@ -104,7 +119,10 @@ export class AssistantIndex {
       this.embeddingOutage = false;
       this.queuePersist();
     }
-    this.provider = settings.embeddingProvider === "ollama"
+    void this.provider.dispose?.();
+    this.provider = settings.embeddingProvider === "local"
+      ? new LocalEmbeddingProvider(() => this.loadLocalExtractor(settings.localModel), settings.localModel)
+      : settings.embeddingProvider === "ollama"
       ? new OllamaEmbeddingProvider(settings.ollamaUrl, settings.ollamaModel)
       : settings.embeddingProvider === "gemini"
         ? new GeminiEmbeddingProvider(settings.apiKey, this.plugin.strings, settings.embeddingDimensions, settings.geminiEmbeddingModel)
