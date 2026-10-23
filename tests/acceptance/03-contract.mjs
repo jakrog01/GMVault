@@ -9,7 +9,7 @@ import { fileURLToPath } from "node:url"
 const exec = promisify(execFile)
 const source = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..")
 const clone = await mkdtemp(path.join(os.tmpdir(), "gmvault-contract-"))
-await cp(source, clone, { recursive: true, filter: item => !item.includes(`${path.sep}.git`) && !item.includes(`${path.sep}.gmvault${path.sep}backups`) })
+await cp(source, clone, { recursive: true, filter: item => !item.includes(`${path.sep}.git`) && !item.includes(`${path.sep}node_modules`) && !item.includes(`${path.sep}.gmvault${path.sep}backups`) })
 const cli = path.join(clone, "_system/bin/gmvault.mjs")
 const run = (...args) => exec("node", [cli, ...args], { cwd: clone })
 const snapshot = async directory => new Map((await exec("find", [directory, "-type", "f", "-print0"])).stdout.split("\0").filter(Boolean).sort().map(async item => [path.relative(directory, item), await readFile(item)]))
