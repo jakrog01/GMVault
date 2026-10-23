@@ -65,7 +65,7 @@ nav:
       - GMVault concepts: CONCEPTS.md
   - At the table:
       - At the table: at-the-table/index.md
-      - Table home: HOME.md
+      - Home: HOME.md
       - Sessions and runs: RUNS.md
       - Combat tracker and dice: TABLE-TOOLS.md
       - Assistant: ASSISTANT.md

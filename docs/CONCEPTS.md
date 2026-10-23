@@ -71,5 +71,5 @@ An update may replace `_system/`, reconcile manifest-managed Obsidian artifacts,
 ## Next
 
 - [Your first campaign](FIRST-CAMPAIGN.md): create a campaign, party, and run
-- [Table home](HOME.md): the creation controls
+- [Home](HOME.md): the creation controls
 - [Troubleshooting](TROUBLESHOOTING.md): when `doctor` reports a violation

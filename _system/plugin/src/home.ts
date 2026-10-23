@@ -1,4 +1,4 @@
-import { ItemView, Modal, Notice, Platform, Setting, TFile, WorkspaceLeaf } from "obsidian";
+import { App, ItemView, MarkdownRenderChild, Modal, Notice, Platform, Setting, TFile, WorkspaceLeaf } from "obsidian";
 import type TableTools from "./main";
 import { format } from "./strings";
 import { RecordedUpdate, recordedUpdate, shippedPath } from "./update";
@@ -26,7 +26,7 @@ const isGameNote = (file: TFile): boolean => !/^_(system|local)\//.test(file.pat
 
 const folderName = (file: TFile): string => file.parent?.path.split("/").at(-1) ?? file.basename;
 
-async function homeTemplate(app: HomeView["app"], kind: string): Promise<string> {
+async function homeTemplate(app: App, kind: string): Promise<string> {
   for (const root of ["_local/", "_system/"]) {
     try { return await app.vault.adapter.read(`${root}templates/${kind}.md`); } catch { continue; }
   }
@@ -64,23 +64,12 @@ function mergeHomeTemplate(template: string, title: string, folder: string, valu
 
 export const linkPath = (value: unknown): string => String(value ?? "").trim().replace(/^\[\[/, "").replace(/\]\]$/, "").split("|")[0].split("#")[0].trim();
 
-export class HomeView extends ItemView {
+export class HomePanel {
   private readonly memberCounts = new Map<string, Promise<number>>();
   private readonly dayLines = new Map<string, Promise<string>>();
   private renderGeneration = 0;
   private renderedPaths = new Set<string>();
-  constructor(leaf: WorkspaceLeaf, readonly plugin: TableTools) { super(leaf); }
-
-  getViewType(): string { return HOME_VIEW; }
-  getDisplayText(): string { return this.plugin.strings.homeTitle; }
-  getIcon(): string { return "home"; }
-
-  async onOpen(): Promise<void> {
-    this.plugin.homeViews.add(this);
-    await this.render();
-  }
-
-  async onClose(): Promise<void> { this.plugin.homeViews.delete(this); }
+  constructor(readonly app: App, readonly plugin: TableTools, readonly contentEl: HTMLElement, private readonly showTitle = true) {}
 
   invalidate(path: string): void {
     this.memberCounts.clear();
@@ -95,7 +84,7 @@ export class HomeView extends ItemView {
     const s = this.plugin.strings;
     root.empty();
     root.addClass("tt-home");
-    root.createEl("h2", { text: s.homeTitle });
+    if (this.showTitle) root.createEl("h2", { text: s.homeTitle });
     const create = root.createDiv("tt-home-actions");
     this.button(create, s.homeNewWorld, () => new WorldModal(this.app, this.plugin, this).open());
     this.button(create, s.homeNewCampaign, () => new CampaignModal(this.app, this.plugin, this).open());
@@ -105,7 +94,7 @@ export class HomeView extends ItemView {
     try { model = await this.model(); }
     catch (error) {
       if (generation !== this.renderGeneration) return;
-      console.error("Table home could not load", error);
+      console.error("Home could not load", error);
       root.createDiv({ cls: "tt-empty", text: s.homeLoadError });
       return;
     }
@@ -187,7 +176,7 @@ export class HomeView extends ItemView {
     }));
   }
 
-  private resolvesTo(value: unknown, source: TFile, target: TFile): boolean {
+  resolvesTo(value: unknown, source: TFile, target: TFile): boolean {
     const path = linkPath(value);
     return !!path && this.app.metadataCache.getFirstLinkpathDest(path, source.path)?.path === target.path;
   }
@@ -313,8 +302,35 @@ export class HomeView extends ItemView {
   }
 }
 
+export class HomeView extends ItemView {
+  readonly panel: HomePanel;
+  constructor(leaf: WorkspaceLeaf, readonly plugin: TableTools) {
+    super(leaf);
+    this.panel = new HomePanel(this.app, plugin, this.contentEl);
+  }
+
+  getViewType(): string { return HOME_VIEW; }
+  getDisplayText(): string { return this.plugin.strings.homeTitle; }
+  getIcon(): string { return "home"; }
+  async onOpen(): Promise<void> { this.plugin.homeViews.add(this.panel); await this.panel.render(); }
+  async onClose(): Promise<void> { this.plugin.homeViews.delete(this.panel); }
+  render(): Promise<void> { return this.panel.render(); }
+  invalidate(path: string): void { this.panel.invalidate(path); }
+  resolvesTo(value: unknown, source: TFile, target: TFile): boolean { return this.panel.resolvesTo(value, source, target); }
+}
+
+export class HomeBlock extends MarkdownRenderChild {
+  readonly panel: HomePanel;
+  constructor(container: HTMLElement, app: App, plugin: TableTools) {
+    super(container);
+    this.panel = new HomePanel(app, plugin, container, false);
+  }
+  onload(): void { this.panel.plugin.homeViews.add(this.panel); void this.panel.render(); }
+  onunload(): void { this.panel.plugin.homeViews.delete(this.panel); }
+}
+
 class UpdateModal extends Modal {
-  constructor(app: HomeView["app"], private readonly plugin: TableTools) { super(app); }
+  constructor(app: App, private readonly plugin: TableTools) { super(app); }
 
   async onOpen(): Promise<void> {
     const s = this.plugin.strings;
@@ -332,7 +348,7 @@ class UpdateModal extends Modal {
 abstract class HomeCreateModal extends Modal {
   protected name = "";
 
-  constructor(app: HomeView["app"], protected readonly plugin: TableTools, protected readonly view: HomeView) { super(app); }
+  constructor(app: App, protected readonly plugin: TableTools, protected readonly view: HomePanel) { super(app); }
 
   protected nameField(): void {
     new Setting(this.contentEl).setName(this.plugin.strings.homeFieldName).addText(text => {
@@ -395,7 +411,7 @@ class WorldModal extends HomeCreateModal {
 }
 
 class CharacterModal extends HomeCreateModal {
-  constructor(app: HomeView["app"], plugin: TableTools, view: HomeView, private readonly party: TFile) { super(app, plugin, view); }
+  constructor(app: App, plugin: TableTools, view: HomePanel, private readonly party: TFile) { super(app, plugin, view); }
 
   onOpen(): void {
     this.contentEl.createEl("h3", { text: this.plugin.strings.homeNewCharacter });

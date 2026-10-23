@@ -28,7 +28,7 @@ Open **Settings → Community plugins**, turn community plugins on, and enable:
 
 | Plugin | What it does |
 | --- | --- |
-| `table-tools` | Table home, combat tracker, dice, assistant |
+| `table-tools` | Home, combat tracker, dice, assistant |
 | `templater-obsidian` | Fills new notes from templates |
 | `calendarium` | In-world calendar |
 | `obsidian-style-settings` | Appearance options |
@@ -63,6 +63,6 @@ Campaigns, parties, and runs are created in Obsidian, not from the command line.
 
 ??? info "Where to read more"
     - [GMVault concepts](CONCEPTS.md): layers, content folders, and the active run
-    - [Table home](HOME.md): every creation form and button
+    - [Home](HOME.md): every creation form and button
     - [CLI reference](CLI.md): all maintenance commands
     - [Assistant](ASSISTANT.md): optional AI assistant setup

@@ -8,7 +8,7 @@ import { AssistantIndex } from "./indexer";
 import { LOCAL_CACHE } from "./local-embeddings";
 import { Skill, loadSkills } from "./tools";
 import { assistantLayerPaths, defaultScopePolicy } from "./scope";
-import { HomeView, HOME_VIEW, linkPath } from "./home";
+import { HomeBlock, HomePanel, HomeView, HOME_VIEW, linkPath } from "./home";
 import { checkLatestRelease, checkedRecently, ReleaseCheck } from "./update";
 
 interface PluginData { settings: Settings; combat: Combat; encounterSets: EncounterSet[] }
@@ -27,7 +27,7 @@ export default class TableTools extends Plugin {
 
   views = new Set<CombatView>();
 
-  homeViews = new Set<HomeView>();
+  homeViews = new Set<HomePanel>();
   index!: AssistantIndex;
   skills = new Map<string, Skill>();
   invalidSkillsKey = "";
@@ -68,6 +68,9 @@ export default class TableTools extends Plugin {
     this.registerView(COMBAT_VIEW, leaf => new CombatView(leaf, this));
     this.registerView(ASSISTANT_VIEW, leaf => new AssistantView(leaf, this));
     this.registerView(HOME_VIEW, leaf => new HomeView(leaf, this));
+    this.registerMarkdownCodeBlockProcessor("gmvault-home", (_source, element, context) => {
+      context.addChild(new HomeBlock(element, this.app, this));
+    });
 
     this.addRibbonIcon("home", s.ribbonHome, () => this.openHome());
     this.addRibbonIcon("swords", s.ribbonCombat, () => void this.openView(COMBAT_VIEW));

@@ -68,7 +68,7 @@ test("an update that changes nothing in the shipped layer says so and writes no 
 test("a preview reads as a plan, in grammatical English", async () => {
   const vault = await cloneVault("gmvault-report32-preview-")
   await writeFile(path.join(vault, "docs/MY-NOTES.md"), "# mine\n")
-  const host = await serve(release("1.1.0", { "Home.md": "---\ntype: home\n---\n\n# GMVault\n\nnew shipped home\n" }))
+  const host = await serve(release("1.1.0", { "Home.md": "---\ntype: home\n---\n\n# Home\n\n```gmvault-home\n```\n\nnew shipped home\n" }))
   const result = await cli(vault, ["update", "--latest", "--dry-run"], { GMVAULT_RELEASE_API: host.answer.base })
   assert.equal(result.code, 0, `the preview succeeds; stderr: ${result.stderr}`)
   assert.equal(/would replaced|would removed|would kept/.test(result.stdout), false, `the preview is grammatical: ${result.stdout}`)

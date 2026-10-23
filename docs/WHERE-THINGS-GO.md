@@ -5,7 +5,7 @@ Use this map when deciding where to create a note. Names in angle brackets stand
 ```text
 GMVault/
 ├── Active.md                    active run pointer
-├── Home.md                      shipped home note
+├── Home.md                      the Home screen as a note
 ├── Worlds/
 │   └── <world>/
 │       ├── World.md             setting and calendar

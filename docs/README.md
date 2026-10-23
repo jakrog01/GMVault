@@ -29,7 +29,7 @@ GMVault is an Obsidian vault for running tabletop RPG campaigns. This manual tak
 
     ---
 
-    [Table home](HOME.md), [sessions and runs](RUNS.md), the [combat tracker and dice](TABLE-TOOLS.md), and the [assistant](ASSISTANT.md).
+    [Home](HOME.md), [sessions and runs](RUNS.md), the [combat tracker and dice](TABLE-TOOLS.md), and the [assistant](ASSISTANT.md).
 
     [Section overview](at-the-table/index.md)
 

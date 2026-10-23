@@ -1,6 +1,6 @@
 # Sessions and runs
 
-Each `Runs/<run>/` folder keeps the run record, current state, world day, and session notes together. [Table home](HOME.md) can create a dated session with **New session**. Creating any other Markdown note in the run folder also starts with the session template when Templater is enabled.
+Each `Runs/<run>/` folder keeps the run record, current state, world day, and session notes together. [Home](HOME.md) can create a dated session with **New session**. Creating any other Markdown note in the run folder also starts with the session template when Templater is enabled.
 
 ## Run record
 
