@@ -7,6 +7,7 @@ export interface EmbeddingProvider {
   dimensions: number;
   embedDocuments(texts: string[], signal?: AbortSignal): Promise<Float32Array[]>;
   embedQuery(text: string, signal?: AbortSignal): Promise<Float32Array>;
+  dispose?(): Promise<void>;
 }
 
 const normalise = (values: number[]): Float32Array => {

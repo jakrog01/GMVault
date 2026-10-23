@@ -1,10 +1,11 @@
 import { App, Notice, Platform, Plugin, PluginSettingTab, Setting, TFile } from "obsidian";
 import { AssistantView, ASSISTANT_VIEW } from "./assistant";
-import { CombatTracker, CombatView, COMBAT_VIEW, newCombat } from "./combat";
+import { CombatTracker, CombatView, COMBAT_VIEW, ConfirmModal, newCombat } from "./combat";
 import { listEmbeddingModels, listModels } from "./gemini";
 import { createStrings, englishStrings, format, Strings } from "./strings";
 import { Combat, DEFAULTS, EncounterSet, ScopePolicy, Settings, SourceKind } from "./types";
 import { AssistantIndex } from "./indexer";
+import { LOCAL_CACHE } from "./local-embeddings";
 import { Skill, loadSkills } from "./tools";
 import { assistantLayerPaths, defaultScopePolicy } from "./scope";
 import { HomeView, HOME_VIEW, linkPath } from "./home";
@@ -319,6 +320,28 @@ export default class TableTools extends Plugin {
 class TableToolsSettingTab extends PluginSettingTab {
   constructor(app: App, private readonly plugin: TableTools) { super(app, plugin); }
 
+  private confirmLocalDownload(then?: () => void): void {
+    const settings = this.plugin.settings;
+    const s = this.plugin.strings;
+    new ConfirmModal(this.app, s, format(s.localDownloadConfirm, { model: settings.localModel }), s.settingsLocalDownloadButton, () => {
+      settings.localModelApproved = settings.localModel;
+      then?.();
+      void this.plugin.applyEmbeddingSettings();
+      this.display();
+    }).open();
+  }
+
+  private async deleteLocalModel(): Promise<void> {
+    const settings = this.plugin.settings;
+    const adapter = this.app.vault.adapter;
+    if (await adapter.exists(LOCAL_CACHE)) await adapter.rmdir(LOCAL_CACHE, true);
+    settings.localModelApproved = "";
+    if (settings.embeddingProvider === "local") settings.embeddingProvider = "none";
+    await this.plugin.applyEmbeddingSettings();
+    new Notice(this.plugin.strings.localModelDeleted);
+    this.display();
+  }
+
   display(): void {
     const { containerEl } = this;
     containerEl.empty();
@@ -369,9 +392,22 @@ class TableToolsSettingTab extends PluginSettingTab {
     new Setting(containerEl).setName(s.settingsToolSteps).setDesc(s.settingsToolStepsDescription)
       .addText(text => text.setValue(String(settings.maxToolSteps)).onChange(value => { settings.maxToolSteps = Number(value) || DEFAULTS.maxToolSteps; save(); }));
     new Setting(containerEl).setName(s.settingsEmbeddingProvider).setDesc(s.settingsEmbeddingProviderDescription).addDropdown(dropdown => {
-      dropdown.addOption("none", "None").addOption("ollama", "Ollama").addOption("gemini", "Gemini");
-      dropdown.setValue(settings.embeddingProvider).onChange(value => { settings.embeddingProvider = value as Settings["embeddingProvider"]; void this.plugin.applyEmbeddingSettings(); });
+      dropdown.addOption("none", "None").addOption("local", s.settingsLocalProvider).addOption("ollama", "Ollama").addOption("gemini", "Gemini");
+      dropdown.setValue(settings.embeddingProvider).onChange(value => {
+        if (value === "local" && settings.localModelApproved !== settings.localModel) {
+          dropdown.setValue(settings.embeddingProvider);
+          this.confirmLocalDownload(() => { settings.embeddingProvider = "local"; });
+          return;
+        }
+        settings.embeddingProvider = value as Settings["embeddingProvider"];
+        void this.plugin.applyEmbeddingSettings();
+      });
     });
+    new Setting(containerEl).setName(s.settingsLocalModel).setDesc(s.settingsLocalModelDescription).addText(text => text.setValue(settings.localModel).onChange(value => { settings.localModel = value.trim() || DEFAULTS.localModel; void this.plugin.applyEmbeddingSettings(); }));
+    const approved = settings.localModelApproved === settings.localModel;
+    new Setting(containerEl).setName(s.settingsLocalDownload).setDesc(approved ? s.settingsLocalDownloaded : s.settingsLocalNotDownloaded).addButton(button => approved
+      ? button.setButtonText(s.settingsLocalDeleteButton).onClick(() => this.deleteLocalModel())
+      : button.setButtonText(s.settingsLocalDownloadButton).onClick(() => this.confirmLocalDownload()));
     new Setting(containerEl).setName(s.settingsOllamaUrl).addText(text => text.setValue(settings.ollamaUrl).onChange(value => { settings.ollamaUrl = value.trim(); void this.plugin.applyEmbeddingSettings(); }));
     new Setting(containerEl).setName(s.settingsOllamaModel).addText(text => text.setValue(settings.ollamaModel).onChange(value => { settings.ollamaModel = value.trim(); void this.plugin.applyEmbeddingSettings(); }));
     const embeddingModel = new Setting(containerEl).setName(s.settingsGeminiEmbeddingModel).setDesc(s.settingsGeminiEmbeddingDescription);

@@ -128,7 +128,9 @@ export interface Settings {
   models: string[];
 
   attackBonusPhrases: string;
-  embeddingProvider: "none" | "ollama" | "gemini";
+  embeddingProvider: "none" | "local" | "ollama" | "gemini";
+  localModel: string;
+  localModelApproved: string;
   ollamaUrl: string;
   ollamaModel: string;
   geminiEmbeddingModel: string;
@@ -171,6 +173,8 @@ Rules:
   attackBonusPhrases: "to hit",
   embeddingProvider: "none",
   ollamaUrl: "http://127.0.0.1:11434",
+  localModel: "Xenova/multilingual-e5-small",
+  localModelApproved: "",
   ollamaModel: "embeddinggemma",
   geminiEmbeddingModel: "gemini-embedding-001",
   embeddingModels: ["gemini-embedding-001"],

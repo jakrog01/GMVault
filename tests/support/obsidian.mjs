@@ -141,7 +141,7 @@ export function createEnvironment() {
   const settingByName = (container, name) => container.settings.find(setting => setting.name === name)
   const buttonComponent = (container, text) => container.settings.flatMap(setting => setting.components).find(component => component.kind === "button" && component.text === text)
 
-  class Notice { constructor(message) { notices.push(String(message)); record(message) } }
+  class Notice { constructor(message) { notices.push(String(message)); record(message) } setMessage(message) { notices.push(String(message)); record(message); return this } hide() {} }
   class ItemView {
     constructor(leaf) { this.leaf = leaf; this.app = leaf.app; this.containerEl = new MockElement("div"); this.contentEl = new MockElement("div") }
     async open(containerEl) { this.containerEl = containerEl; await this.onOpen?.() }
@@ -207,7 +207,7 @@ export function createEnvironment() {
       getAbstractFileByPath: filePath => files.get(filePath)?.file ?? null,
       cachedRead: async file => files.get(file.path)?.content ?? "",
       append: async (file, text) => { files.get(file.path).content += text; appended.push(text); record(text) },
-      adapter: { read: async filePath => { if (!adapterFiles.has(filePath)) throw new Error("missing"); return adapterFiles.get(filePath) }, write: async (filePath, value) => adapterFiles.set(filePath, value), mkdir: async () => {}, exists: async filePath => adapterFiles.has(filePath), rename: async (from, to) => { adapterFiles.set(to, adapterFiles.get(from)); adapterFiles.delete(from) } },
+      adapter: { read: async filePath => { if (!adapterFiles.has(filePath)) throw new Error("missing"); return adapterFiles.get(filePath) }, write: async (filePath, value) => adapterFiles.set(filePath, value), mkdir: async () => {}, rmdir: async folder => { for (const key of [...adapterFiles.keys()]) if (key.startsWith(`${folder}/`)) adapterFiles.delete(key) }, exists: async filePath => adapterFiles.has(filePath) || [...adapterFiles.keys()].some(key => key.startsWith(`${filePath}/`)), rename: async (from, to) => { adapterFiles.set(to, adapterFiles.get(from)); adapterFiles.delete(from) } },
       on,
     },
     metadataCache: {

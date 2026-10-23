@@ -11,6 +11,7 @@
   "author": "",
   "license": "ISC",
   "devDependencies": {
+    "@huggingface/transformers": "^3.8.1",
     "@types/node": "^26.5.0",
     "esbuild": "^0.24.2",
     "js-yaml": "^5.4.1",
