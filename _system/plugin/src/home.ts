@@ -11,6 +11,7 @@ interface NoteSummary {
 }
 
 interface HomeModel {
+  worlds: NoteSummary[];
   campaigns: NoteSummary[];
   runs: NoteSummary[];
   parties: NoteSummary[];
@@ -82,7 +83,7 @@ export class HomeView extends ItemView {
   async onClose(): Promise<void> { this.plugin.homeViews.delete(this); }
 
   invalidate(path: string): void {
-    this.memberCounts.delete(path);
+    this.memberCounts.clear();
     this.dayLines.delete(path);
   }
 
@@ -96,6 +97,7 @@ export class HomeView extends ItemView {
     root.addClass("tt-home");
     root.createEl("h2", { text: s.homeTitle });
     const create = root.createDiv("tt-home-actions");
+    this.button(create, s.homeNewWorld, () => new WorldModal(this.app, this.plugin, this).open());
     this.button(create, s.homeNewCampaign, () => new CampaignModal(this.app, this.plugin, this).open());
     this.button(create, s.homeNewParty, () => new PartyModal(this.app, this.plugin, this).open());
     this.button(create, s.homeNewRun, () => new RunModal(this.app, this.plugin, this).open());
@@ -110,9 +112,18 @@ export class HomeView extends ItemView {
     if (generation !== this.renderGeneration) return;
     if (model.update) this.renderUpdate(root, model.update);
 
-    const { campaigns, runs, parties, context, worldDay, systems, members } = model;
+    const { worlds, campaigns, runs, parties, context, worldDay, systems, members } = model;
     if (context) this.renderActive(root, context, worldDay, systems.get(context.campaign.path) ?? "generic");
-    if (!campaigns.length && !runs.length && !parties.length) root.createDiv({ cls: "tt-empty", text: s.homeEmpty });
+    if (!worlds.length && !campaigns.length && !runs.length && !parties.length) root.createDiv({ cls: "tt-empty", text: s.homeEmpty });
+
+    const worldSection = root.createDiv("tt-home-section");
+    worldSection.createEl("h3", { text: s.homeWorlds });
+    for (const world of worlds) {
+      const card = worldSection.createDiv({ cls: "tt-home-world", attr: { "data-path": world.file.path } });
+      card.createDiv({ cls: "tt-home-name", text: folderName(world.file) });
+      card.createDiv({ cls: "tt-muted", text: format(s.homeCampaignCount, { count: campaigns.filter(campaign => this.resolvesTo(campaign.fields.world, campaign.file, world.file)).length }) });
+      this.button(card, s.homeOpenWorld, () => this.openNote(world.file.path));
+    }
 
     const campaignSection = root.createDiv("tt-home-section");
     campaignSection.createEl("h3", { text: s.homeCampaigns });
@@ -135,6 +146,7 @@ export class HomeView extends ItemView {
     partySection.createEl("h3", { text: s.homeParties });
     for (const party of parties) this.renderParty(partySection, party, members.get(party.file.path) ?? 0);
     this.renderedPaths = new Set([
+      ...worlds.map(note => note.file.path),
       ...campaigns.map(note => note.file.path),
       ...runs.map(note => note.file.path),
       ...parties.map(note => note.file.path),
@@ -145,6 +157,7 @@ export class HomeView extends ItemView {
   private async model(): Promise<HomeModel> {
     const updatePromise = recordedUpdate(this.app.vault.adapter);
     const notes = this.notes();
+    const worlds = notes.filter(note => note.fields.type === "world");
     const campaigns = notes.filter(note => note.fields.type === "campaign");
     const runs = notes.filter(note => note.fields.type === "run");
     const parties = notes.filter(note => note.fields.type === "party");
@@ -155,7 +168,7 @@ export class HomeView extends ItemView {
     const memberEntries = await Promise.all(parties.map(async party => [party.file.path, await this.memberCountFor(party.file)] as const));
     const worldDay = context?.day ? await this.dayLine(context.day) : "";
     const update = await updatePromise;
-    return { campaigns, runs, parties, context, worldDay, systems: new Map(entries), members: new Map(memberEntries), update };
+    return { worlds, campaigns, runs, parties, context, worldDay, systems: new Map(entries), members: new Map(memberEntries), update };
   }
 
   private renderUpdate(root: HTMLElement, update: RecordedUpdate): void {
@@ -269,9 +282,15 @@ export class HomeView extends ItemView {
     card.createDiv({ cls: "tt-home-name", text: folderName(party.file) });
     card.createDiv({ cls: "tt-muted", text: format(s.homePartyMembers, { count: members }) });
     this.button(card, s.homeOpenParty, () => this.openNote(party.file.path));
+    this.button(card, s.homeNewCharacter, () => new CharacterModal(this.app, this.plugin, this, party.file).open());
   }
 
   private async memberCount(file: TFile): Promise<number> {
+    const linked = this.app.vault.getMarkdownFiles().filter(candidate => {
+      const fields = this.app.metadataCache.getFileCache(candidate)?.frontmatter ?? {};
+      return (fields.type === "pc" || fields.type === "npc" && fields.subtype === "pc") && this.resolvesTo(fields.party, candidate, file);
+    });
+    if (linked.length) return linked.length;
     const content = await this.app.vault.cachedRead(file);
     const lines = content.split("\n");
     const start = lines.findIndex(line => line.trim() === "## Members");
@@ -344,7 +363,7 @@ abstract class HomeCreateModal extends Modal {
     await vault.createFolder?.(folder);
   }
 
-  protected async createFromTemplate(kind: "campaign" | "party" | "run", folder: string, fileName: string, values: Record<string, string>): Promise<TFile> {
+  protected async createFromTemplate(kind: "world" | "campaign" | "party" | "pc" | "run", folder: string, fileName: string, values: Record<string, string>): Promise<TFile> {
     const content = mergeHomeTemplate(await homeTemplate(this.app, kind), this.name.trim(), folder, values);
     await this.createFolder(folder);
     return this.app.vault.create(`${folder}/${fileName}`, content);
@@ -357,8 +376,46 @@ abstract class HomeCreateModal extends Modal {
   }
 }
 
+class WorldModal extends HomeCreateModal {
+  onOpen(): void {
+    this.contentEl.createEl("h3", { text: this.plugin.strings.homeNewWorld });
+    this.nameField();
+    this.submit(() => this.create());
+  }
+
+  private async create(): Promise<void> {
+    const name = this.validName();
+    if (!name) return;
+    const folder = `Worlds/${name}`;
+    if (!this.folderAvailable(folder)) { new Notice(this.plugin.strings.homeExists); return; }
+    const file = await this.createFromTemplate("world", folder, "World.md", { type: "world" });
+    for (const section of ["NPCs", "Locations", "Factions", "Lore", "Events"]) await this.createFolder(`${folder}/${section}`);
+    await this.complete(file);
+  }
+}
+
+class CharacterModal extends HomeCreateModal {
+  constructor(app: HomeView["app"], plugin: TableTools, view: HomeView, private readonly party: TFile) { super(app, plugin, view); }
+
+  onOpen(): void {
+    this.contentEl.createEl("h3", { text: this.plugin.strings.homeNewCharacter });
+    this.nameField();
+    this.submit(() => this.create());
+  }
+
+  private async create(): Promise<void> {
+    const name = this.validName();
+    if (!name) return;
+    const folder = this.party.parent?.path ?? "";
+    if (this.app.vault.getAbstractFileByPath(`${folder}/${name}.md`)) { new Notice(this.plugin.strings.homeExists); return; }
+    const file = await this.createFromTemplate("pc", folder, `${name}.md`, { type: "pc", party: `"[[${this.party.path.replace(/\.md$/, "")}]]"` });
+    await this.complete(file);
+  }
+}
+
 class CampaignModal extends HomeCreateModal {
   private system = "generic";
+  private world = "";
 
   async onOpen(): Promise<void> {
     this.contentEl.createEl("h3", { text: this.plugin.strings.homeNewCampaign });
@@ -369,6 +426,12 @@ class CampaignModal extends HomeCreateModal {
       systems.forEach(system => dropdown.addOption(system.id, system.name));
       dropdown.setValue(this.system).onChange(value => { this.system = value; });
     });
+    new Setting(this.contentEl).setName(this.plugin.strings.homeFieldWorld).addDropdown(dropdown => {
+      dropdown.addOption("", this.plugin.strings.homeNoWorld);
+      this.app.vault.getMarkdownFiles().filter(file => isGameNote(file) && this.app.metadataCache.getFileCache(file)?.frontmatter?.type === "world")
+        .forEach(file => dropdown.addOption(file.path, folderName(file)));
+      dropdown.setValue(this.world).onChange(value => { this.world = value; });
+    });
     this.submit(() => this.create());
   }
 
@@ -377,8 +440,9 @@ class CampaignModal extends HomeCreateModal {
     if (!name) return;
     const folder = `Campaigns/${name}`;
     if (!this.folderAvailable(folder)) { new Notice(this.plugin.strings.homeExists); return; }
-    const file = await this.createFromTemplate("campaign", folder, "Campaign.md", { type: "campaign", system: this.system });
-    for (const section of ["NPCs", "Locations", "Quests", "Factions"]) await this.createFolder(`${folder}/${section}`);
+    const world = this.world ? `"[[${this.world.replace(/\.md$/, "")}]]"` : '""';
+    const file = await this.createFromTemplate("campaign", folder, "Campaign.md", { type: "campaign", system: this.system, world });
+    for (const section of this.world ? ["Quests", "Encounters", "Handouts"] : ["NPCs", "Locations", "Quests", "Factions", "Encounters", "Handouts"]) await this.createFolder(`${folder}/${section}`);
     await this.complete(file);
   }
 }

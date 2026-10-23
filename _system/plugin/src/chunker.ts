@@ -70,11 +70,11 @@ export async function chunkFile(plugin: TableTools, file: TFile, kind: SourceKin
     }
     if (current) pieces.push({ heading: section.heading, body: current });
   }
-  const metadata = JSON.stringify({ type, system, status: frontmatter.status, aliases, tags: frontmatter.tags, gmOnly: frontmatter["gm-only"], assistant: frontmatter.assistant, campaign: frontmatter.campaign, subtype: frontmatter.subtype });
+  const metadata = JSON.stringify({ type, system, status: frontmatter.status, aliases, tags: frontmatter.tags, gmOnly: frontmatter["gm-only"], assistant: frontmatter.assistant, campaign: frontmatter.campaign, world: frontmatter.world, subtype: frontmatter.subtype });
   return pieces.map((piece, ordinal) => {
     const breadcrumb = piece.heading || title;
     const text = piece.body;
     const indexedText = `${file.path} > ${breadcrumb} | type: ${type}${system ? ` | system: ${system}` : ""}\n${text}`;
-    return { id: `${file.path}#${breadcrumb}#${ordinal}`, path: file.path, breadcrumb, ordinal, text, indexedText, hash: hash(`${text}\n${metadata}`), title, aliases, type, system, status: String(frontmatter.status ?? ""), tags: stringList(frontmatter.tags), links: stringList(frontmatter.links), kind, gmOnly: frontmatter["gm-only"] === true, excluded: frontmatter.assistant === "exclude", campaignLink: String(frontmatter.campaign ?? "") };
+    return { id: `${file.path}#${breadcrumb}#${ordinal}`, path: file.path, breadcrumb, ordinal, text, indexedText, hash: hash(`${text}\n${metadata}`), title, aliases, type, system, status: String(frontmatter.status ?? ""), tags: stringList(frontmatter.tags), links: stringList(frontmatter.links), kind, gmOnly: frontmatter["gm-only"] === true, excluded: frontmatter.assistant === "exclude", campaignLink: String(frontmatter.campaign ?? ""), worldLink: String(frontmatter.world ?? "") };
   });
 }

@@ -44,6 +44,7 @@ type: world-day
 type: session
 run: "[[Runs/Harbor/Run]]"
 date: 2026-10-21
+world_date: ""
 ---
 ```
 

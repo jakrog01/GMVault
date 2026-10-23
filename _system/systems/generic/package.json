@@ -1,6 +1,6 @@
 {
   "id": "generic",
   "name": "Generic",
-  "noteTypes": ["campaign", "party", "run", "spell", "creature", "item", "rules"],
-  "requiredFrontmatter": {"campaign":["system"], "run":["role", "campaign"], "spell":["system"], "creature":["system"]}
+  "noteTypes": ["world", "campaign", "party", "pc", "run", "session", "state", "world-day", "npc", "location", "faction", "lore", "event", "quest", "encounter", "handout", "item", "creature", "spell", "rules", "claim"],
+  "requiredFrontmatter": {"campaign":["system"], "run":["role","campaign"], "spell":["system"], "creature":["system"]}
 }

@@ -1,6 +1,6 @@
 # Table home
 
-Table home is your starting screen: it shows the game you are playing now and lets you create campaigns, parties, runs, and sessions.
+Table home is your starting screen: it shows the game you are playing now and lets you create worlds, campaigns, characters, parties, runs, and sessions.
 
 Open **Table Tools: Home** from the home ribbon, the command palette, or the **Open table home** command. It opens by default after Obsidian restores the layout; turn that off with **Open table home on startup** in [Table Tools settings](SETTINGS.md).
 
@@ -22,6 +22,8 @@ When `Active.md` points to a complete run, the **Active run** card shows:
 
 ## Lists
 
+**Worlds** lists notes with `type: world`, a campaign count, and **Open world**.
+
 **Campaigns** lists every note with `type: campaign`, its system, and **Runs: <count>**. Each card has **Open campaign**.
 
 Runs appear under their campaign. Runs whose campaign link does not resolve appear under **Runs without a campaign**. Each run card shows its folder name, role, and party, plus two buttons:
@@ -29,14 +31,14 @@ Runs appear under their campaign. Runs whose campaign link does not resolve appe
 - **Make active** rewrites the root active-run pointer and refreshes home, assistant, and combat.
 - **New session** creates and opens a dated session note; see [Sessions and runs](RUNS.md).
 
-**Parties** lists every note with `type: party` and **Members: <count>**, counting the list items under the party's `## Members` heading. Each card has **Open party**.
+**Parties** lists every note with `type: party` and **Members: <count>**, counting linked `pc` notes (including legacy `npc` with `subtype: pc`). If none link to the party, Home counts list items under `## Members`. Each card has **Open party** and **New character**.
 
 !!! info "Empty or unreadable vault"
     An empty vault shows **No campaigns, runs, or parties yet.** If a note cannot be read while the lists load, Home keeps its title and create buttons and shows **Home data could not be read.**; the original error goes to the developer console.
 
 ## Create buttons
 
-The top of the view has **New campaign**, **New party**, and **New run**. Every form ends with **Create** and checks **Name** before writing anything.
+The top of the view has **New world**, **New campaign**, **New party**, and **New run**. Every form ends with **Create** and checks **Name** before writing anything.
 
 ??? warning "Name rules and errors"
     A name cannot be blank or contain `\\`, `/`, `:`, `*`, `?`, `"`, `<`, `>`, `|`, `#`, `^`, `[` or `]`.
@@ -44,26 +46,33 @@ The top of the view has **New campaign**, **New party**, and **New run**. Every 
     - Invalid input reports **Enter a valid name.**
     - An existing destination reports **That folder already contains a note.**
 
+### New world
+
+Asks for **Name**. It creates `Worlds/<name>/World.md` and `NPCs/`, `Locations/`, `Factions/`, `Lore/`, and `Events/`.
+
 ### New campaign
 
-Asks for **Name** and **System**. The System dropdown lists installed system packages and starts with `generic` when available.
+Asks for **Name**, **System**, and **World**. Choose a world note or **No world**. The System dropdown lists installed system packages and starts with `generic` when available.
 
 It creates:
 
 ```text
 Campaigns/<name>/
-├── Campaign.md     type: campaign, with the chosen system
-├── NPCs/
-├── Locations/
+├── Campaign.md     type: campaign, with the chosen system and world link
 ├── Quests/
-└── Factions/
+├── Encounters/
+└── Handouts/
 ```
 
-New notes in the four folders get their template automatically; see [Where things go](WHERE-THINGS-GO.md). The created note opens and the home view refreshes.
+With **No world**, Home also creates `NPCs/`, `Locations/`, and `Factions/`. New notes in these folders get their template automatically; see [Where things go](WHERE-THINGS-GO.md). The created note opens and the home view refreshes.
 
 ### New party
 
 Asks only for **Name**. It creates `Parties/<name>/Party.md` with `type: party`, opens it, and refreshes the home view.
+
+### New character
+
+On a party card, choose **New character** and enter **Name**. Home creates `Parties/<party>/<name>.md` from `pc.md` with a link to the party.
 
 ### New run
 
@@ -87,7 +96,7 @@ On a phone the banner names the command, but there is no install button.
 
 ## Templates used by the forms
 
-The forms and **New session** read `_local/templates/campaign.md`, `_local/templates/party.md`, `_local/templates/run.md`, or `_local/templates/session.md` first, and fall back to the matching file in `_system/templates/`.
+The forms and **New session** read the matching `_local/templates/<kind>.md` first, and fall back to the matching file in `_system/templates/`.
 
 They replace the title and folder Templater values, remove other Templater commands, keep non-form frontmatter, and write a complete note. Put vault-specific changes in `_local/templates/`; updates replace `_system` but leave `_local` alone.
 

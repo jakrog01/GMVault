@@ -4,6 +4,30 @@
   "folder_templates": [],
   "file_templates": [
     {
+      "regex": "^Worlds/[^/]+/World\\.md$",
+      "template": "_system/templates/world.md"
+    },
+    {
+      "regex": "^Worlds/[^/]+/NPCs/",
+      "template": "_system/templates/npc.md"
+    },
+    {
+      "regex": "^Worlds/[^/]+/Locations/",
+      "template": "_system/templates/location.md"
+    },
+    {
+      "regex": "^Worlds/[^/]+/Factions/",
+      "template": "_system/templates/faction.md"
+    },
+    {
+      "regex": "^Worlds/[^/]+/Lore/",
+      "template": "_system/templates/lore.md"
+    },
+    {
+      "regex": "^Worlds/[^/]+/Events/",
+      "template": "_system/templates/event.md"
+    },
+    {
       "regex": "^Campaigns/[^/]+/NPCs/",
       "template": "_system/templates/npc.md"
     },
@@ -18,6 +42,22 @@
     {
       "regex": "^Campaigns/[^/]+/Factions/",
       "template": "_system/templates/faction.md"
+    },
+    {
+      "regex": "^Campaigns/[^/]+/Lore/",
+      "template": "_system/templates/lore.md"
+    },
+    {
+      "regex": "^Campaigns/[^/]+/Events/",
+      "template": "_system/templates/event.md"
+    },
+    {
+      "regex": "^Campaigns/[^/]+/Encounters/",
+      "template": "_system/templates/encounter.md"
+    },
+    {
+      "regex": "^Campaigns/[^/]+/Handouts/",
+      "template": "_system/templates/handout.md"
     },
     {
       "regex": "^Runs/[^/]+/Run\\.md$",
@@ -36,6 +76,10 @@
       "template": "_system/templates/party.md"
     },
     {
+      "regex": "^Parties/[^/]+/(?!Party\\.md$)[^/]+\\.md$",
+      "template": "_system/templates/pc.md"
+    },
+    {
       "regex": "^Library/Mechanics/[^/]+/Spells/",
       "template": "_system/templates/spell.md"
     },
@@ -46,6 +90,10 @@
     {
       "regex": "^Library/Mechanics/[^/]+/Items/",
       "template": "_system/templates/item.md"
+    },
+    {
+      "regex": "^Library/Mechanics/[^/]+/Rules/",
+      "template": "_system/templates/rules.md"
     }
   ],
   "trigger_on_file_creation": true,

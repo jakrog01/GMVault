@@ -1,6 +1,6 @@
 # GMVault concepts
 
-Four ideas explain how GMVault is organised: layers, content roots, the campaign–party–run trio, and the active run.
+Four ideas explain how GMVault is organised: layers, content roots, worlds and runs, and the active run.
 
 ## Layers: what updates touch
 
@@ -20,11 +20,12 @@ GMVault separates files it ships from files you own, so updates never overwrite 
 
 ## Content roots
 
-The manifest declares six content roots. Your notes live here; updates never replace them.
+The manifest declares seven content roots. Your notes live here; updates never replace them.
 
 | Folder | Holds |
 | --- | --- |
-| `Campaigns/` | Worlds and campaign material: NPCs, locations, quests, factions |
+| `Worlds/` | Settings shared by campaigns: NPCs, locations, factions, lore, events |
+| `Campaigns/` | Campaign stories: quests, encounters, handouts, and campaign specific notes |
 | `Parties/` | Party records and rosters |
 | `Runs/` | Table-specific records: sessions, state, world day |
 | `Library/` | Mechanics and assets: bestiary, spells, items, rules |
@@ -33,11 +34,14 @@ The manifest declares six content roots. Your notes live here; updates never rep
 
 The manifest also creates `_local/templates/` and `_local/scripts/`; those are not content roots. [Where things go](WHERE-THINGS-GO.md) shows the full map.
 
-## Campaigns, parties, and runs
+## Worlds, campaigns, parties, and runs
 
-- A **campaign** is the reusable setting: the world and its story.
+- A **world** is a setting that several campaigns can share.
+- A **campaign** is one story in a world. A campaign without a world link acts as its own world.
 - A **party** is the group of characters playing it.
 - A **run** is one table's game: it connects a campaign, a party, and a role (game master or player).
+
+A note's `type` frontmatter defines its identity. The folders are a suggested layout; links such as `world`, `campaign`, and `party` connect notes wherever they live.
 
 One campaign can have many runs, for example two groups playing the same world.
 
@@ -49,7 +53,7 @@ Make a run active when it is the game you are playing now. The active run decide
 
 ## Contractual names
 
-These note names may repeat across folders because their paths tell them apart: `Active.md`, `Campaign.md`, `Party.md`, `Run.md`, `State.md`, `Dashboard.md`, `Radar.md`, `World Day.md`. Generated links to them are path-qualified.
+These note names may repeat across folders because their paths tell them apart: `Active.md`, `World.md`, `Campaign.md`, `Party.md`, `Run.md`, `State.md`, `Dashboard.md`, `Radar.md`, `World Day.md`. Generated links to them are path-qualified.
 
 ## Systems
 
@@ -62,7 +66,7 @@ System packages in `_system/systems/` describe note shapes and radar requirement
     - `.gmvault/cache/` holds local derived caches, including assistant indexing data.
     - `.gmvault/backups/` receives a timestamped copy of `_system/` before an update replaces it, and a named backup of repository files moved by the lean-vault migration.
 
-An update may replace `_system/`, reconcile manifest-managed Obsidian artifacts, refresh the bundled plugin, and write state. It does not replace `_local/`, the six content roots, or the root active pointer.
+An update may replace `_system/`, reconcile manifest-managed Obsidian artifacts, refresh the bundled plugin, and write state. It does not replace `_local/`, the seven content roots, or the root active pointer.
 
 ## Next
 

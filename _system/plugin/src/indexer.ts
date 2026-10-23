@@ -10,7 +10,7 @@ import { Extractor, loadExtractor, LocalEmbeddingProvider, LocalHooks } from "./
 
 const cachePath = ".gmvault/cache/assistant/manifest.json";
 const vectorsPath = ".gmvault/cache/assistant/vectors.bin";
-const version = 5;
+const version = 6;
 
 export type ScoredChunk = { chunk: Chunk; score: number };
 const rulePriority = (kind: Chunk["kind"]): number => kind === "house-rule" ? 3 : kind === "homebrew" ? 2 : kind === "system" ? 1 : 0;
@@ -237,11 +237,19 @@ export class AssistantIndex {
     if (/^(?:Archive|_system|_local|\.obsidian|\.gmvault)(?:\/|$)/.test(file.path)) return null;
     const frontmatter = this.plugin.app.metadataCache.getFileCache(file)?.frontmatter ?? {};
     if (frontmatter.assistant === "exclude") return null;
+    const type = String(frontmatter.type ?? "");
+    if (type === "npc" && frontmatter.subtype === "pc" || ["pc", "party"].includes(type)) return "party";
+    if (["run", "session", "world-day"].includes(type)) return "run";
+    if (type === "state") return "state";
+    if (type === "rules" && frontmatter.subtype === "house-rule") return "house-rule";
+    if (["creature", "item", "spell", "rules"].includes(type)) return frontmatter.campaign || frontmatter.world || /^Campaigns\/[^/]+\/Mechanics\//.test(file.path) ? "homebrew" : frontmatter.system ? "system" : "note";
+    if (["world", "campaign", "npc", "location", "faction", "lore", "event", "quest", "encounter", "handout"].includes(type)) return "campaign";
+    if (type) return "note";
     if (/^Runs\//.test(file.path)) return file.basename === "State" ? "state" : "run";
     if (/^Campaigns\//.test(file.path)) return file.path.includes("/Mechanics/") ? "homebrew" : "campaign";
+    if (/^Worlds\//.test(file.path)) return file.path.includes("/Mechanics/") ? "homebrew" : "campaign";
     if (/^Parties\//.test(file.path)) return "party";
     if (/^Library\/Mechanics\//.test(file.path)) return "system";
-    if (frontmatter.type === "rules" && frontmatter.subtype === "house-rule") return "house-rule";
     return "note";
   }
 
@@ -261,6 +269,19 @@ export class AssistantIndex {
   }
   private allowed(scope: Scope, chunk: Chunk): boolean {
     if (chunk.excluded || isBuiltInExcluded(chunk.path) || scope.exclude.some(prefix => chunk.path === prefix.replace(/\/$/, "") || chunk.path.startsWith(prefix)) || !scope.kinds.includes(chunk.kind) || (scope.role === "player" && chunk.gmOnly)) return false;
+    if (scope.role === "gm" && scope.runFolder && ["campaign", "homebrew", "house-rule"].includes(chunk.kind)) {
+      const file = this.plugin.app.vault.getAbstractFileByPath(chunk.path);
+      const resolve = (value: string): string => file instanceof TFile && value ? this.plugin.app.metadataCache.getFirstLinkpathDest(this.linkPath(value), file.path)?.path ?? "" : "";
+      if (chunk.path === scope.campaignPath || chunk.path === scope.worldPath) return true;
+      if (chunk.type === "campaign" || chunk.type === "world") return false;
+      if (chunk.campaignLink) return resolve(chunk.campaignLink) === scope.campaignPath;
+      if (chunk.worldLink) return resolve(chunk.worldLink) === scope.worldPath;
+      const inFolder = (folder: string): boolean => !!folder && chunk.path.startsWith(`${folder}/`);
+      if (chunk.kind === "campaign") return inFolder(scope.campaignFolder) || inFolder(scope.worldFolder);
+      if (inFolder(`${scope.campaignFolder}/Mechanics`) || inFolder(`${scope.worldFolder}/Mechanics`)) return true;
+      if (chunk.kind === "house-rule") return chunk.system === scope.system || !chunk.system;
+      return false;
+    }
     const rooted = sourceKind(scope, chunk.path);
     if (rooted) return true;
     if (!scope.runFolder || scope.role !== "gm" || chunk.type !== "rules") return false;

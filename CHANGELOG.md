@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+## 2.4.0
+
+- GMVault notes now use `type` and links for assistant scope, party counts, and combat players, while old campaign folders and party lists continue to work.
+- Added worlds, player characters, lore, events, encounters, and handouts with templates, Home creation controls, and a shared-world demo.
+- Updating an existing vault creates the new `Worlds/` folder through a migration; no existing note is moved or rewritten.
+- ADR 0004 records the note contract: identity by `type`, fixed relation fields, and additive-only changes.
+
 ## 2.3.0
 
 - GMVault semantic search can run locally inside Obsidian with a multilingual model (`Xenova/multilingual-e5-small`); choose **Local (on this device)** as the embedding provider. Nothing downloads until you confirm; the model (about 130 MB) is stored once in `.gmvault/cache/models/`, shows its download progress, leaves memory after five idle minutes, and can be deleted from the settings.

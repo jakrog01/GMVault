@@ -9,7 +9,7 @@ const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..")
 function creationVault() {
   const env = createVault()
   for (const id of ["generic", "dnd5e", "coc7e"]) env.adapterFiles.set(`_system/systems/${id}/package.json`, readFileSync(path.join(root, `_system/systems/${id}/package.json`), "utf8"))
-  for (const name of ["campaign", "party", "run"]) env.adapterFiles.set(`_system/templates/${name}.md`, readFileSync(path.join(root, `_system/templates/${name}.md`), "utf8"))
+  for (const name of ["world", "campaign", "party", "pc", "run"]) env.adapterFiles.set(`_system/templates/${name}.md`, readFileSync(path.join(root, `_system/templates/${name}.md`), "utf8"))
   return env
 }
 
@@ -70,8 +70,50 @@ test("a new campaign is created with its system and rendered title", async () =>
   assert.ok(entry.content.includes("# Sunken Crown"), "title rendered from the template")
   assert.ok(entry.content.includes("## Factions"), "template body kept")
   assert.ok(!entry.content.includes("<%"), "no Templater syntax left for Templater to execute")
-  for (const section of ["NPCs", "Locations", "Quests", "Factions"]) assert.ok(env.folders.has(`Campaigns/Sunken Crown/${section}`), `${section} folder created`)
+  for (const section of ["NPCs", "Locations", "Quests", "Factions", "Encounters", "Handouts"]) assert.ok(env.folders.has(`Campaigns/Sunken Crown/${section}`), `${section} folder created`)
   await until(() => find(view.contentEl, node => node.classes?.has("tt-home-campaign") && node.attributes["data-path"] === "Campaigns/Sunken Crown/Campaign.md").length === 1, 2000, "listed")
+  await unload(plugin)
+})
+
+test("a new world is listed and a campaign in it links the world", async () => {
+  const env = creationVault()
+  const { plugin, view } = await ready(env)
+  const worldModal = await openForm(env, view, plugin.strings.homeNewWorld)
+  setting(env, worldModal, plugin.strings.homeFieldName).change("Glass Coast")
+  await submit(env, plugin, worldModal)
+  await until(() => env.files.has("Worlds/Glass Coast/World.md"), 2000, "world created")
+  assert.equal(env.files.get("Worlds/Glass Coast/World.md").frontmatter.type, "world")
+  for (const section of ["NPCs", "Locations", "Factions", "Lore", "Events"]) assert.ok(env.folders.has(`Worlds/Glass Coast/${section}`), section)
+  const card = find(view.contentEl, node => node.classes?.has("tt-home-world"))[0]
+  assert.ok(card.textContent.includes("Campaigns: 0"))
+  assert.ok(find(card, node => node.attributes?.["aria-label"] === plugin.strings.homeOpenWorld).length)
+  const campaignModal = await openForm(env, view, plugin.strings.homeNewCampaign)
+  setting(env, campaignModal, plugin.strings.homeFieldName).change("Tides")
+  setting(env, campaignModal, plugin.strings.homeFieldWorld).change("Worlds/Glass Coast/World.md")
+  await submit(env, plugin, campaignModal)
+  await until(() => env.files.has("Campaigns/Tides/Campaign.md"), 2000, "campaign created")
+  assert.equal(env.files.get("Campaigns/Tides/Campaign.md").frontmatter.world, "[[Worlds/Glass Coast/World]]")
+  for (const section of ["Quests", "Encounters", "Handouts"]) assert.ok(env.folders.has(`Campaigns/Tides/${section}`), section)
+  for (const section of ["NPCs", "Locations", "Factions"]) assert.ok(!env.folders.has(`Campaigns/Tides/${section}`), section)
+  assert.ok(find(view.contentEl, node => node.classes?.has("tt-home-world"))[0].textContent.includes("Campaigns: 1"))
+  await unload(plugin)
+})
+
+test("a party card creates a linked character", async () => {
+  const env = creationVault()
+  const { plugin, view } = await ready(env)
+  const party = find(view.contentEl, node => node.classes?.has("tt-home-party") && node.attributes?.["data-path"] === "Parties/Watch/Party.md")[0]
+  const button = find(party, node => node.attributes?.["aria-label"] === plugin.strings.homeNewCharacter)[0]
+  assert.ok(button)
+  await button.click()
+  const modal = env.modals.at(-1)
+  setting(env, modal, plugin.strings.homeFieldName).change("Mira")
+  await submit(env, plugin, modal)
+  await until(() => env.files.has("Parties/Watch/Mira.md"), 2000, "character created")
+  const note = env.files.get("Parties/Watch/Mira.md")
+  assert.equal(note.frontmatter.type, "pc")
+  assert.equal(note.frontmatter.party, "[[Parties/Watch/Party]]")
+  assert.ok(note.content.includes("# Mira"))
   await unload(plugin)
 })
 

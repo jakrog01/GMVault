@@ -1,7 +1,7 @@
 ---
 type: npc
 origin: demo
-campaign: "[[Campaigns/Glassgate/Campaign]]"
+world: "[[Worlds/Glass Coast/World]]"
 ---
 
 # Ilyra

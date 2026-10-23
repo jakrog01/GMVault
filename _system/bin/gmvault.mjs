@@ -279,7 +279,7 @@ const doctor = async () => {
   for (const item of systemFiles) {
     const body = await readFile(item, 'utf8')
     for (const match of body.matchAll(/(["'`])(_system\/[^"'`$]*)\1/g)) if (!manifest.runtimeReadOnlyAllowlist.includes(match[2])) failures.push(`runtime state path inside shipped layer in ${rel(item)}: ${match[2]}`)
-    for (const match of body.matchAll(/(["'`])((?:_Shared|Library|Campaigns|Parties|Runs|Calendar)\/[A-Za-z0-9_.*${}/ -]+)\1/g)) {
+    for (const match of body.matchAll(/(["'`])((?:_Shared|Library|Worlds|Campaigns|Parties|Runs|Calendar)\/[A-Za-z0-9_.*${}/ -]+)\1/g)) {
       const literal = match[2].replace(/\$\{[^}]+\}/g, '*')
       if (!literal.includes('*') && !(await exists(path.join(root, literal)))) failures.push(`unresolved literal path in ${rel(item)}: ${literal}`)
     }
@@ -307,7 +307,7 @@ const doctor = async () => {
   } else console.log(`GMVault doctor: clean (${version})`)
 }
 
-const demoRoots = ['Campaigns', 'Parties', 'Runs', 'Library', 'Calendar']
+const demoRoots = ['Worlds', 'Campaigns', 'Parties', 'Runs', 'Library', 'Calendar']
 const demoInstall = async () => {
   const source = path.join(system, 'demo')
   for (const item of await files(source)) {

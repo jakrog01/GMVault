@@ -30,7 +30,7 @@ test("New session creates dated, linked notes without Templater commands", async
   const first = `Runs/Harbor/Session ${today()}.md`
   await until(() => env.files.has(first), 2000, "first session")
   const content = env.files.get(first).content
-  assert.match(content, /^---\ntype: session\nrun: "\[\[Runs\/Harbor\/Run\]\]"\ndate: \d{4}-\d{2}-\d{2}\n---/)
+  assert.match(content, /^---\ntype: session\nrun: "\[\[Runs\/Harbor\/Run\]\]"\ndate: \d{4}-\d{2}-\d{2}\nworld_date: ""\n---/)
   assert.ok(content.includes("![[Runs/Harbor/World Day]]"))
   assert.equal(content.includes("<%"), false)
   await button.click()
