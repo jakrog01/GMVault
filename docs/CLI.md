@@ -4,8 +4,6 @@ Run the CLI from the vault root. Every command uses the shipped path below.
 The top-level usage is printed as an error for an unknown command.
 Commands report failures as `gmvault: <message>` and set a non-zero exit code.
 
-`_system/bin/rpgvault.mjs` is a permanent legacy alias that forwards the same arguments and exit status to `gmvault.mjs`. It lets the RPGVault 1.2.0 updater complete its hand-off after installing GMVault.
-
 ## `init`
 
 ```text
@@ -26,7 +24,7 @@ Run it when preparing a template copy that has not yet been initialised.
 node _system/bin/gmvault.mjs doctor
 ```
 
-Check content roots, root declarations, managed Obsidian artifacts, plugin freshness, templates, bases, shipped paths, ASCII, and scaffold declarations.
+Check content roots, root declarations, managed Obsidian artifacts, plugin freshness, templates, shipped paths, ASCII, and scaffold declarations.
 It reads the vault and writes no repair files.
 Success prints `GMVault doctor: clean (<version>)`.
 Violations print `GMVault doctor found <count> violation(s):` followed by one line per violation and return non-zero.

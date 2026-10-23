@@ -82,12 +82,6 @@ Meaning: two content notes share a basename that is not declared contractual.
 Usual cause: copied notes retained the same filename in separate content locations.
 Fix: rename one note or move it so the basename is unique; use path-qualified links after renaming.
 
-## `template type has no base: <type>`
-
-Meaning: a shipped template frontmatter type has no matching base definition.
-Usual cause: a shipped template changed without its accompanying base file.
-Fix: update from a complete release; system authors must add a base that selects the declared type.
-
 ## `runtime state path inside shipped layer in <file>: <path>`
 
 Meaning: shipped script or plugin source uses an unapproved `_system/` runtime-state path.

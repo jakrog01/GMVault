@@ -1,4 +1,4 @@
-/** Condition keys in display order. Labels and descriptions live in the string table. */
+
 export const CONDITIONS = [
   "blinded", "charmed", "deafened", "frightened", "grappled", "incapacitated", "invisible", "paralyzed",
   "petrified", "poisoned", "prone", "restrained", "stunned", "unconscious", "concentration", "exhaustion", "dying",
@@ -13,7 +13,7 @@ export const EXPERIENCE_BY_CHALLENGE: Record<string, number> = {
   "21": 33000, "22": 41000, "23": 50000, "24": 62000, "25": 75000, "26": 90000, "27": 105000, "28": 120000, "29": 135000, "30": 155000,
 };
 
-/** D&D 5e (2014) per-character XP thresholds by level: [easy, medium, hard, deadly]. */
+
 export const THRESHOLDS: number[][] = [
   [], [25, 50, 75, 100], [50, 100, 150, 200], [75, 150, 225, 400], [125, 250, 375, 500], [250, 500, 750, 1100],
   [300, 600, 900, 1400], [350, 750, 1100, 1700], [450, 900, 1400, 2100], [550, 1100, 1600, 2400], [600, 1200, 1900, 2800],
@@ -23,6 +23,6 @@ export const THRESHOLDS: number[][] = [
 
 export type DifficultyLevel = "trivial" | "easy" | "medium" | "hard" | "deadly";
 
-/** Encounter multiplier by number of enemies. */
+
 export const encounterMultiplier = (enemies: number): number =>
   enemies <= 1 ? 1 : enemies === 2 ? 1.5 : enemies <= 6 ? 2 : enemies <= 10 ? 2.5 : enemies <= 14 ? 3 : 4;

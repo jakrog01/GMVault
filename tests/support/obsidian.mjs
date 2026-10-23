@@ -1,6 +1,6 @@
-// A small, faithful-enough Obsidian API mock for driving the built Table Tools bundle.
-// Every text that would reach the screen (element text, titles, placeholders, labels,
-// notices, setting names, command names, suggestion items, note appends) is recorded.
+
+
+
 import { createRequire } from "node:module"
 import path from "node:path"
 import { fileURLToPath } from "node:url"
@@ -161,7 +161,7 @@ export function createEnvironment() {
     addSettingTab(tab) { this.settingTabs.push(tab) }
   }
 
-  // Vault
+
   const files = new Map()
   const addFile = (filePath, content = "", frontmatter = null) => { files.set(filePath, { file: new TFile(filePath), content, frontmatter }); return files.get(filePath).file }
   const adapterFiles = new Map()
@@ -223,13 +223,11 @@ export function createEnvironment() {
     setting: { open() { this.opened = true } },
   }
 
-  // Network
   const requests = []
   const network = { requestUrl: async () => ({ status: 200, json: {} }), fetch: null }
   const requestUrl = async options => { requests.push(options); return network.requestUrl(options) }
 
   const clipboard = []
-  // Obsidian reports the host it runs on; a phone has no desktop APIs and no Node.
   const platform = { isDesktopApp: true, isMobile: false }
   const obsidian = {
     Plugin, ItemView, Modal, FuzzySuggestModal, PluginSettingTab, Setting, Notice, TFile, MarkdownView,
@@ -259,7 +257,6 @@ export function createEnvironment() {
   }
 }
 
-/** Server-sent-event response built from JSON payloads. */
 export function sseResponse(payloads, { signal, hold = false } = {}) {
   const encoder = new TextEncoder()
   const stream = new ReadableStream({

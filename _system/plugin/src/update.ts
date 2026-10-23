@@ -9,13 +9,13 @@ export interface ReleaseSource { repo: string; asset: string; api: string }
 export interface ReleaseCheck { source: ReleaseSource; latestVersion: string; installedVersion: string; newer: boolean }
 export interface RecordedUpdate { latestVersion: string; installedVersion: string }
 
-/** The shipped layer is read-only at runtime; the manifest allows this prefix and nothing deeper. */
+
 const SHIPPED = "_system/";
 const STATE = ".gmvault/state.json";
 
 const readJson = async (adapter: VaultAdapter, path: string): Promise<unknown> => JSON.parse(await adapter.read(path));
 
-/** Builds a path in the manifest-allowlisted shipped prefix. */
+
 export const shippedPath = (path: string): string => `${SHIPPED}${path}`;
 
 export const releaseVersion = (tag: unknown): string | null => {
@@ -39,7 +39,7 @@ export const releaseSource = async (adapter: VaultAdapter): Promise<ReleaseSourc
   let local: Partial<ReleaseSource> = {};
   try {
     local = await readJson(adapter, "_local/release.json") as Partial<ReleaseSource>;
-  } catch { /* The local release override is optional. */ }
+  } catch {}
   const source: Partial<ReleaseSource> = { ...manifest.release };
   for (const key of ["repo", "asset", "api"] as const) {
     const value = local?.[key];
@@ -69,7 +69,6 @@ export const checkLatestRelease = async (adapter: VaultAdapter): Promise<Release
   return { source, latestVersion, installedVersion, newer: compareReleaseVersions(latestVersion, installedVersion) > 0 };
 };
 
-/** Reads a valid, newer recorded release without contacting the release host. */
 export const recordedUpdate = async (adapter: VaultAdapter): Promise<RecordedUpdate | null> => {
   try {
     const state = await readJson(adapter, STATE) as { updateCheck?: { latestVersion?: unknown } };

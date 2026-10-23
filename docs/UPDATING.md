@@ -2,16 +2,6 @@
 
 This page is the owner procedure for moving a vault to a released version. The command reference documents every flag; maintainers cutting releases should read [Maintaining releases](UPGRADING.md).
 
-## Coming from RPGVault
-
-In an RPGVault 1.2.0 vault, create `_local/release.json` with `{"repo":"jakrog01/GMVault","asset":"GMVault.zip"}`. Then run the old CLI once:
-
-```text
-node _system/bin/rpgvault.mjs update --latest
-```
-
-The bridge points the old updater at the GMVault release. The update preserves your install identity and moves local state to `.gmvault/`. Afterward, use `_system/bin/gmvault.mjs`; the release bridge is needed only for this first update.
-
 ## Keep your vault in your own repository
 
 Start with the [release zip](https://github.com/jakrog01/GMVault/releases/latest/download/GMVault.zip) and unzip it. In the vault folder, create your own repository and add its private remote:

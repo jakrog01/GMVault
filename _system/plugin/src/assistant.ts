@@ -8,7 +8,7 @@ import { compareRuleHits } from "./indexer";
 
 export const ASSISTANT_VIEW = "tt-assistant";
 
-/** Quick prompts. A prompt ending with a blank line is placed in the input for the GM to complete. */
+
 const QUICK_PROMPTS: { label: StringKey; prompt: StringKey; icon: string; skill?: string }[] = [
   { label: "quickSceneLabel", prompt: "quickScenePrompt", icon: "eye", skill: "scene-description" },
   { label: "quickNpcLabel", prompt: "quickNpcPrompt", icon: "user", skill: "npc-improvisation" },
@@ -321,7 +321,6 @@ export class AssistantView extends ItemView {
     this.statusEl.createSpan({ text: s.writing });
     const stop = this.statusEl.createEl("button", { cls: "tt-btn-mini tt-as-stop", text: s.stop });
     stop.onclick = () => controller.abort();
-    // The model receives the history plus the context injected into the latest question.
     const messages = this.history.slice(0, -1).map(message => ({ ...message }));
     messages.push({ role: "user", text: context ? `<context>\n${context}\n</context>\n\nGM question: ${text}` : text, time: question.time });
     let buffer = "", lastRender = 0;

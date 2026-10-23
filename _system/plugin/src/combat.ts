@@ -30,7 +30,6 @@ export interface Difficulty { xp: number; adjustedXp: number; level: DifficultyL
 
 export interface PlayerInput { name: string; ac: number; hp: number; modifier: number; level: number; source?: string }
 
-/** Combat rules and state changes, independent of any open view. */
 export class CombatTracker {
   constructor(private readonly plugin: TableTools) {}
 
@@ -117,7 +116,6 @@ export class CombatTracker {
     this.changed();
   }
 
-  /** Moves to the next or previous turn, skipping defeated non-players. */
   advance(step = 1): void {
     if (!this.combat.active) return;
     const order = sortedParticipants(this.combat);
@@ -134,7 +132,6 @@ export class CombatTracker {
     this.changed();
   }
 
-  /** Positive amounts are damage, negative amounts are healing. Temporary hit points absorb damage first. */
   applyDamage(participant: Participant, amount: number): void {
     if (amount > 0) {
       let remaining = amount;
@@ -163,10 +160,6 @@ export class CombatTracker {
     this.changed();
   }
 
-  /**
-   * Row input: "12" deals damage, "+5" heals, "t5" sets temporary hit points.
-   * With `heal` set (Shift+Enter) a plain number heals. Returns false for invalid input.
-   */
   applyRowInput(participant: Participant, raw: string, heal = false): boolean {
     const value = raw.trim().toLowerCase();
     if (!value) return true;
@@ -250,7 +243,6 @@ export class CombatTracker {
     return { trivial: this.strings.difficultyTrivial, easy: this.strings.difficultyEasy, medium: this.strings.difficultyMedium, hard: this.strings.difficultyHard, deadly: this.strings.difficultyDeadly }[level];
   }
 
-  /** Plain-English combat summary sent to the assistant as context. */
   summary(): string {
     if (!this.combat.participants.length) return "";
     const lines = sortedParticipants(this.combat).map((participant, index) => {
@@ -264,7 +256,6 @@ export class CombatTracker {
     return `Combat "${this.combat.name}", round ${this.combat.round}${status}:\n${lines.join("\n")}\nRecent events:\n${this.combat.log.slice(-8).join("\n")}`;
   }
 
-  /** Markdown callout with the initiative table and the recent log. */
   exportMarkdown(): string {
     const rows = sortedParticipants(this.combat).map(participant => {
       const name = participant.source ? `[[${(participant.source.split("/").pop() ?? "").replace(/\.md$/, "")}\\|${participant.name}]]` : participant.name;
@@ -321,7 +312,6 @@ export class CombatTracker {
   }
 }
 
-/** Appends a log entry, rendering **text** as bold without using innerHTML. */
 function appendLogEntry(list: HTMLElement, entry: string): void {
   const item = list.createEl("li");
   entry.split(/(\*\*.+?\*\*)/g).forEach(part => {
@@ -632,7 +622,7 @@ class AddPlayersModal extends Modal {
     try {
       const raw = await this.app.vault.adapter.read(this.app.vault.configDir + "/plugins/initiative-tracker/data.json");
       trackerPlayers = (JSON.parse(raw) as { players?: TrackerPlayer[] }).players ?? [];
-    } catch { /* Initiative Tracker is not installed. */ }
+    } catch {}
     const selectedTracker = new Set<string>();
     if (trackerPlayers.length) {
       contentEl.createEl("p", { cls: "tt-muted", text: s.fromInitiativeTracker });

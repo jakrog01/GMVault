@@ -1,6 +1,6 @@
-// Offline stand-in for the GitHub releases API: a loopback HTTP server that answers the
-// releases endpoint and serves a release archive built here, a dependency-free store-only
-// zip writer so no test needs the `zip` binary or the network, and an installed-vault clone.
+
+
+
 import { createServer } from "node:http"
 import { crc32 } from "node:zlib"
 import { cp, mkdir, mkdtemp, readFile, readdir, stat, writeFile } from "node:fs/promises"
@@ -20,7 +20,7 @@ const dosStamp = () => {
   return { time, date }
 }
 
-/** A store-only zip of `entries` ([{name, data}]), readable by `unzip`. */
+
 export function zipArchive(entries) {
   const { time, date } = dosStamp()
   const locals = []
@@ -71,12 +71,12 @@ export function zipArchive(entries) {
   return Buffer.concat([body, directory, end])
 }
 
-// `.git` and `node_modules` never belong in a release or a clone, and neither do earlier backups.
-// Matching whole path segments keeps `.github` — a shipped folder these tests must carry.
+
+
 const skipped = item => item.split(path.sep).some((segment, index, segments) =>
   segment === '.git' || segment === 'node_modules' || (segment === 'backups' && segments[index - 1] === '.gmvault'))
 
-/** Every file under `directory` as zip entries, paths relative and slash-separated. */
+
 export async function archiveEntries(directory, prefix = "") {
   const entries = []
   const walk = async current => {
@@ -91,15 +91,7 @@ export async function archiveEntries(directory, prefix = "") {
   return entries
 }
 
-/**
- * Fake releases host. `options`:
- *   release  the JSON body for /repos/<repo>/releases/latest, or null for 404
- *   asset    Buffer served for the asset download, or null for 404
- *   assetName  download path segment (default GMVault.zip)
- *   status   status code for the releases endpoint (default 200)
- *   body     raw string body for the releases endpoint, overriding `release`
- * Records every request path in `requests`.
- */
+
 export async function releaseHost(options = {}) {
   const requests = []
   const assetName = options.assetName ?? "GMVault.zip"
@@ -125,7 +117,6 @@ export async function releaseHost(options = {}) {
   return { base, requests, downloadUrl: `${base}/download/${assetName}`, close: () => new Promise(resolve => server.close(resolve)) }
 }
 
-/** A releases payload shaped like GitHub's, for tag `tag` with one named asset. */
 export const releaseBody = (tag, downloadUrl, assetName = "GMVault.zip") => ({
   tag_name: tag,
   name: tag,
@@ -134,18 +125,11 @@ export const releaseBody = (tag, downloadUrl, assetName = "GMVault.zip") => ({
   assets: [{ name: assetName, browser_download_url: downloadUrl, size: 1 }],
 })
 
-/** The version every cloned test vault reports, whatever this checkout is at. */
 export const CLONE_VERSION = "1.0.0"
 
-/**
- * A temporary vault that looks like an installed clone of this repository: shipped layer,
- * managed Obsidian files, one note of owner content and one `_local` override.
- */
 export async function cloneVault(prefix) {
   const vault = await mkdtemp(path.join(os.tmpdir(), prefix))
   await cp(repository, vault, { recursive: true, filter: item => !skipped(item) })
-  // The clone is pinned to a fixed baseline so releasing a new version cannot turn an
-  // "install this newer release" test into an "already up to date" one.
   await writeFile(path.join(vault, "_system/VERSION"), `${CLONE_VERSION}\n`)
   const state = JSON.parse(await readFile(path.join(vault, ".gmvault/state.json"), "utf8"))
   await writeFile(path.join(vault, ".gmvault/state.json"), `${JSON.stringify({ ...state, installedVersion: CLONE_VERSION }, null, 2)}\n`)
@@ -156,7 +140,6 @@ export async function cloneVault(prefix) {
   return vault
 }
 
-/** Run the vault's own CLI. Resolves with the exit code and both streams. */
 export function cli(vault, args, env = {}, timeout = 120000) {
   return new Promise(resolve => {
     execFile("node", [path.join(vault, "_system/bin/gmvault.mjs"), ...args], { cwd: vault, timeout, env: { ...process.env, ...env } }, (error, stdout, stderr) => {
@@ -165,7 +148,6 @@ export function cli(vault, args, env = {}, timeout = 120000) {
   })
 }
 
-/** Every file under `directory` with its hash, for proving a failed command wrote nothing. */
 export async function snapshot(directory) {
   const lines = []
   const walk = async current => {
@@ -180,7 +162,6 @@ export async function snapshot(directory) {
   return lines.sort().join("\n")
 }
 
-/** A host that accepts the connection and never answers, for proving a request gives up. */
 export async function hangingHost() {
   const sockets = []
   const server = createServer(() => {})

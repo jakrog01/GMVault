@@ -1,5 +1,5 @@
-// Shared harness for locked acceptance tests. Every test drives the built bundle through the
-// Obsidian mock, gets a fresh environment, and fails fast on a hard timeout.
+
+
 import assert from "node:assert/strict"
 import { createEnvironment, sseResponse } from "../support/obsidian.mjs"
 
@@ -28,10 +28,6 @@ export async function until(condition, milliseconds, label) {
   throw new Error(`condition not met within ${milliseconds} ms: ${label}`)
 }
 
-/**
- * Environment with a GM run in campaign Glass (system dnd5e) and party Watch.
- * Adds file stats, a layout-ready queue, and read and write counters.
- */
 export function createVault({ adapterFiles } = {}) {
   const env = createEnvironment()
   if (adapterFiles) for (const [key, value] of adapterFiles) env.adapterFiles.set(key, value)
@@ -67,7 +63,6 @@ export function createVault({ adapterFiles } = {}) {
     const value = env.adapterFiles.get(filePath)
     return value instanceof ArrayBuffer ? value.slice(0) : new TextEncoder().encode(String(value)).buffer
   }
-  // Minimal frontmatter reader for notes the plugin creates: flat `key: value` lines, optional quotes.
   const parseFrontmatter = content => {
     const match = String(content).match(/^---\n([\s\S]*?)\n---/)
     if (!match) return null
@@ -130,7 +125,6 @@ export async function boot(env) {
   return plugin
 }
 
-/** What Obsidian does after plugins load: layout becomes ready, then metadata resolves. */
 export function startObsidian(env) {
   for (const callback of env.layout.splice(0)) callback()
   env.emit("resolved")

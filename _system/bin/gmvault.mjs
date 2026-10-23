@@ -9,11 +9,7 @@ import os from 'node:os'
 
 const exec = promisify(execFile)
 const root = path.resolve(path.dirname(new URL(import.meta.url).pathname), '../..')
-const legacyState = path.join(root, '.rpgvault')
-const currentState = path.join(root, '.gmvault')
-const preview = process.argv[2] === 'update' && process.argv.includes('--dry-run')
 const exists = async item => access(item).then(() => true).catch(() => false)
-if (!preview && await exists(legacyState) && !await exists(currentState)) await rename(legacyState, currentState)
 const system = path.join(root, '_system')
 const manifest = JSON.parse(await readFile(path.join(system, 'manifest.json'), 'utf8'))
 const version = (await readFile(path.join(system, 'VERSION'), 'utf8')).trim()
@@ -50,7 +46,7 @@ const files = async (directory, includeDirectories = false) => {
 const copyManagedObsidian = async () => {
   for (const item of manifest.managedObsidian) {
     const relative = managedPath(item)
-    if (relative === 'plugins/table-tools/main.js') continue
+    if (['plugins/table-tools/main.js', 'plugins/table-tools/styles.css'].includes(relative)) continue
     if (manifest.neverTouch.includes(`.obsidian/${relative}`)) continue
     const source = path.join(system, 'obsidian', relative)
     const target = path.join(root, '.obsidian', relative)
@@ -110,7 +106,7 @@ const refreshPlugin = async () => {
   await writeJson(path.join(root, '.gmvault', 'plugin-build.json'), { sourceHash: await sourceHash() })
 }
 
-const loadState = async () => (await exists(statePath)) ? readJson(statePath) : preview && await exists(path.join(legacyState, 'state.json')) ? readJson(path.join(legacyState, 'state.json')) : { installedVersion: null, appliedMigrations: [], installId: randomUUID(), adoptedFrom: null }
+const loadState = async () => (await exists(statePath)) ? readJson(statePath) : { installedVersion: null, appliedMigrations: [], installId: randomUUID(), adoptedFrom: null }
 
 const releaseSource = async () => {
   const localPath = path.join(root, '_local', 'release.json')
@@ -227,8 +223,7 @@ const doctor = async () => {
     if (!manifest.ownedGlobs.includes(replacement)) failures.push(`replaceOnUpdate entry has no owned glob: ${replacement}`)
   }
   for (const folder of manifest.contentRoots) if (!(await exists(path.join(root, folder)))) failures.push(`missing content root: ${folder}`)
-  const allowedDirectories = new Set(['_system', '_local', '.obsidian', '.gmvault', '.git', '.github', 'docs', 'tests', 'node_modules', '.trash', ...manifest.contentRoots])
-  // A worktree or submodule checkout has a .git file instead of a directory.
+  const allowedDirectories = new Set(['_system', '_local', '.obsidian', '.gmvault', '.git', '.github', '.agents', '.codex', 'docs', 'tests', 'node_modules', '.trash', ...manifest.contentRoots])
   const allowedFiles = new Set(['.git', 'Active.md', 'Home.md', 'README.md', 'CHANGELOG.md', 'package.json', '.gitignore', '.gitattributes'])
   for (const entry of await readdir(root, { withFileTypes: true })) {
     if (entry.isDirectory() && !allowedDirectories.has(entry.name)) failures.push(`undeclared root: ${entry.name}`)
@@ -236,7 +231,7 @@ const doctor = async () => {
   }
   for (const item of manifest.managedObsidian) {
     const relative = managedPath(item)
-    if (relative === 'plugins/table-tools/main.js') continue
+    if (['plugins/table-tools/main.js', 'plugins/table-tools/styles.css'].includes(relative)) continue
     const source = path.join(system, 'obsidian', relative)
     const target = path.join(root, '.obsidian', relative)
     if (!(await exists(target))) {
@@ -280,12 +275,6 @@ const doctor = async () => {
     basenameCounts.set(name, [...(basenameCounts.get(name) ?? []), item])
   }
   for (const [name, entries] of basenameCounts) if (entries.length > 1 && !manifest.contractualNames.includes(name)) failures.push(`duplicate basename: ${name}`)
-  const bases = await files(path.join(system, 'bases'))
-  const baseText = await Promise.all(bases.map(item => readFile(item, 'utf8')))
-  for (const template of templateNames) {
-    const type = frontmatter(await readFile(template, 'utf8')).type
-    if (type && type !== 'home' && !baseText.some(body => body.includes(`type == "${type}"`))) failures.push(`template type has no base: ${type}`)
-  }
   const systemFiles = [...await files(path.join(system, 'scripts')), ...await files(path.join(system, 'plugin', 'src'))]
   for (const item of systemFiles) {
     const body = await readFile(item, 'utf8')

@@ -13,7 +13,7 @@
   "managedObsidian": [
     {"path":"app.json", "keys":["alwaysUpdateLinks", "attachmentFolderPath"]},
     {"path":"community-plugins.json", "merge":true},
-    {"path":"plugins/templater-obsidian/data.json", "keys":["templates_folder", "user_scripts_folder", "folder_templates", "file_templates"]},
+    {"path":"plugins/templater-obsidian/data.json", "keys":["templates_folder", "user_scripts_folder", "folder_templates", "file_templates", "trigger_on_file_creation", "trigger_on_file_creation_mode", "ignore_folders_on_creation"]},
     {"path":"plugins/templater-obsidian/manifest.json", "keys":["id", "name", "version", "minAppVersion", "description", "author", "isDesktopOnly"]},
     {"path":"plugins/templater-obsidian/main.js", "keys":null},
     {"path":"plugins/calendarium/manifest.json", "keys":["id", "name", "version", "minAppVersion", "description", "author", "isDesktopOnly"]},
@@ -25,7 +25,8 @@
     {"path":"snippets/gmvault-fonts.css", "keys":null},
     {"path":"snippets/gmvault-fantasy.css", "keys":null},
     {"path":"plugins/table-tools/manifest.json", "keys":["id", "name", "version", "minAppVersion", "description", "author", "isDesktopOnly"]},
-    {"path":"plugins/table-tools/main.js", "keys":[]}
+    {"path":"plugins/table-tools/main.js", "keys":[]},
+    {"path":"plugins/table-tools/styles.css", "keys":[]}
   ],
   "folders": [
     {"path":"Campaigns","noTemplate":true}, {"path":"Parties","noTemplate":true}, {"path":"Runs","noTemplate":true},

@@ -2,7 +2,7 @@ import { App, TFile, parseYaml } from "obsidian";
 import { EXPERIENCE_BY_CHALLENGE } from "./rules";
 import { Statblock } from "./types";
 
-/** Reads the ```statblock``` block of a note as YAML, falling back to a `monster` frontmatter field. */
+
 export async function readStatblock(app: App, file: TFile, onInvalid?: (path: string) => void): Promise<Statblock | null> {
   const text = await app.vault.cachedRead(file);
   const block = text.match(/```statblock\s*\n([\s\S]*?)```/);
@@ -36,7 +36,7 @@ export function dexterityModifier(statblock: Statblock | undefined): number {
 
 const byName = (left: TFile, right: TFile): number => left.basename.localeCompare(right.basename);
 
-/** Creature notes: anything with `type: creature`, or any note inside one of the bestiary folders. */
+
 export function creatureFiles(app: App, folders: string[]): TFile[] {
   return app.vault.getMarkdownFiles().filter(file => {
     const fields = app.metadataCache.getFileCache(file)?.frontmatter;
@@ -44,7 +44,7 @@ export function creatureFiles(app: App, folders: string[]): TFile[] {
   }).sort(byName);
 }
 
-/** Player character notes: `type: npc` with `subtype: pc`, or notes in the party folder other than its folder note and Party.md. */
+
 export function playerFiles(app: App, folder: string): TFile[] {
   const folderName = folder.split("/").pop() ?? "";
   return app.vault.getMarkdownFiles().filter(file => {

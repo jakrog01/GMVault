@@ -1,6 +1,6 @@
-// Drives the built Table Tools bundle through its user interface and asserts on the
-// resulting state. Expected texts are always taken from plugin.strings, so the same
-// scenario runs with the English strings and with a marker override.
+
+
+
 import assert from "node:assert/strict"
 import { createEnvironment, sseResponse } from "./obsidian.mjs"
 
@@ -62,7 +62,6 @@ export async function runScenario({ override } = {}) {
   const command = name => plugin.commands.find(entry => entry.name === name)
   const participant = name => plugin.combat.participants.find(entry => entry.name === name)
 
-  // ---------- Settings ----------
   const tab = plugin.settingTabs[0]
   tab.display()
   const settingsEl = tab.containerEl
@@ -89,7 +88,6 @@ export async function runScenario({ override } = {}) {
   env.network.requestUrl = async () => ({ status: 403, json: { error: { message: "denied" } } })
   await buttonComponent(settingsEl, s.settingsFetchModels).click()
   assert.ok(notices.includes(s.errorForbidden))
-  // The update check: a newer release, an up-to-date vault, and a host that refuses.
   env.adapterFiles.set("_system/manifest.json", JSON.stringify({ release: { repo: "owner/repo", asset: "GMVault.zip", api: "https://example.invalid" } }))
   env.adapterFiles.set("_system/VERSION", "1.0.0\n")
   env.adapterFiles.set(".gmvault/state.json", JSON.stringify({ installedVersion: "1.0.0", appliedMigrations: [], installId: "scenario", adoptedFrom: null }))
@@ -117,11 +115,9 @@ export async function runScenario({ override } = {}) {
   await buttonComponent(settingsEl, s.settingsEmbeddingTest).click()
   assert.ok(notices.includes(fill(s.settingsEmbeddingTestSuccess, { dimensions: 0 })))
 
-  // ---------- Commands without a selection ----------
   await command(s.commandAskSelection).editorCallback({ getSelection: () => "" })
   assert.ok(notices.includes(s.selectTextFirst))
 
-  // ---------- Combat view ----------
   command(s.commandOpenCombat).callback()
   await until(() => env.leaves.some(leaf => leaf.type === "tt-combat"), "combat view")
   const combatView = env.leaves.find(leaf => leaf.type === "tt-combat").view
@@ -131,7 +127,6 @@ export async function runScenario({ override } = {}) {
   assert.equal(byText(view(), s.emptyCombat).length, 1)
   assert.equal(byText(view(), s.emptyCombatHint).length, 1)
 
-  // Players from the party folder, Initiative Tracker, and manual entry.
   await byLabel(view(), s.toolbarPlayers)[0].click()
   const addPlayers = modals.at(-1)
   settingByName(addPlayers.contentEl, "Cora").components[0].change(true)
@@ -148,7 +143,6 @@ export async function runScenario({ override } = {}) {
   assert.equal(plugin.tracker.addPlayer({ name: "Aria", ac: 1, hp: 1, modifier: 0, level: 1 }), false)
   assert.ok(notices.includes(fill(s.playerAlreadyInCombat, { name: "Aria" })))
 
-  // Start rolls initiative for everyone without one.
   await withRandom(0.5, () => byLabel(view(), s.toolbarStart)[0].click())
   assert.ok(notices.includes(fill(s.initiativeRolledFor, { names: "Aria, Borin, Cora, Dara" })))
   assert.deepEqual(plugin.combat.participants.map(entry => entry.initiative), [14, 11, 12, 13])
@@ -157,7 +151,6 @@ export async function runScenario({ override } = {}) {
   assert.ok(plugin.combat.log.includes(fill(s.logRound, { round: 1 })))
   assert.ok(plugin.combat.log.includes(s.logInitiative))
 
-  // Creatures through the bestiary picker and the quantity modal.
   await byLabel(view(), s.toolbarEnemy)[0].click()
   let picker = modals.at(-1)
   assert.deepEqual(picker.items.map(file => file.basename), ["Broken", "Goblin"])
@@ -181,7 +174,6 @@ export async function runScenario({ override } = {}) {
   assert.ok(notices.includes(fill(s.invalidStatblock, { path: "Library/Mechanics/dnd5e/Bestiary/Broken.md" })))
   assert.deepEqual((({ hp, ac, xp }) => ({ hp, ac, xp }))(participant("Broken")), { hp: 10, ac: 10, xp: 0 })
 
-  // Encounter difficulty: levels 3, 3, 2, 3 against 150 XP from four enemies (x2).
   let difficulty = byClass(view(), "tt-difficulty")[0]
   assert.ok(difficulty.hasClass("tt-difficulty-easy"))
   assert.equal(byClass(difficulty, "tt-difficulty-level")[0].textContent, s.difficultyEasy)
@@ -197,13 +189,11 @@ export async function runScenario({ override } = {}) {
   goblins().forEach((entry, index) => { entry.xp = originalXp[index] })
   plugin.refreshViews()
 
-  // Initiative for everyone, groups sharing one roll.
   await withRandom(0.9, () => byLabel(view(), s.toolbarInitiative)[0].click())
   assert.deepEqual(plugin.combat.participants.map(entry => [entry.name, entry.initiative]), [
     ["Aria", 22], ["Borin", 19], ["Cora", 20], ["Dara", 21], ["Goblin 1", 21], ["Goblin 2", 21], ["Goblin 3", 21], ["Broken", 19]])
   assert.equal(plugin.combat.turn, 0)
 
-  // Row input: temporary hit points, damage, healing, invalid input, dying.
   const enter = (name, value, shiftKey = false) => {
     const input = byClass(rowFor(name), "tt-input-damage")[0]
     input.value = value
@@ -240,7 +230,6 @@ export async function runScenario({ override } = {}) {
   assert.equal(participant("Goblin 2").conditions.includes("dying"), false, "enemies do not gain dying")
   assert.ok(rowFor("Goblin 2").hasClass("tt-defeated"))
 
-  // Turn order skips defeated enemies; rounds advance and rewind.
   const order = () => plugin.combat.participants.slice().sort((left, right) => (right.initiative - left.initiative) || (left.kind === right.kind ? right.modifier - left.modifier : left.kind === "player" ? -1 : 1))
   assert.deepEqual(order().map(entry => entry.name), ["Aria", "Dara", "Goblin 1", "Goblin 2", "Goblin 3", "Cora", "Borin", "Broken"])
   const selectedName = () => plugin.combat.participants.find(entry => entry.id === plugin.combat.selected)?.name
@@ -263,7 +252,6 @@ export async function runScenario({ override } = {}) {
   command(s.commandPreviousTurn).callback()
   assert.equal(selectedName(), "Broken")
 
-  // Conditions modal: toggle two on, one off.
   byLabel(rowFor("Aria"), s.addCondition)[0].click()
   const conditions = modals.at(-1)
   assert.ok(conditions.contentEl.children[0].textContent === fill(s.conditionsTitle, { name: "Aria" }))
@@ -280,7 +268,6 @@ export async function runScenario({ override } = {}) {
   chip.click()
   assert.deepEqual(aria.conditions, [])
 
-  // Edit modal: changes apply only on save.
   byLabel(rowFor("Borin"), s.editParticipant)[0].click()
   let edit = modals.at(-1)
   settingByName(edit.contentEl, s.nameLabel).components[0].change("Nobody")
@@ -302,7 +289,6 @@ export async function runScenario({ override } = {}) {
   assert.ok(byClass(rowFor("Aria the Bold"), "tt-note").some(element => element.textContent === "Watch the gate"))
   assert.ok(byClass(rowFor("Aria the Bold"), "tt-chip").some(element => element.textContent === fill(s.chipLevel, { level: 4 })))
 
-  // Hidden toggle and initiative input.
   byLabel(rowFor("Aria the Bold"), s.visibleToPlayers)[0].click()
   assert.equal(aria.hidden, true)
   assert.ok(rowFor("Aria the Bold").hasClass("tt-hidden"))
@@ -318,7 +304,6 @@ export async function runScenario({ override } = {}) {
   assert.equal(aria.initiative, null)
   assert.equal(env.storage.data.combat.participants.find(entry => entry.name === "Aria the Bold").note, "Watch the gate", "combat state is persisted")
 
-  // Cards: statblock with clickable dice, a note without a statblock, a manual participant.
   assert.equal(byText(view(), s.selectRowHint).length, 0)
   plugin.combat.selected = undefined
   plugin.refreshViews()
@@ -351,12 +336,10 @@ export async function runScenario({ override } = {}) {
   rowFor("Dara").click()
   assert.equal(byText(byClass(view(), "tt-card")[0], s.manualParticipant).length, 1)
 
-  // Remove a participant.
   byLabel(rowFor("Broken"), s.removeParticipant)[0].click()
   assert.equal(participant("Broken"), undefined)
   assert.ok(plugin.combat.log.includes(fill(s.logRemoved, { name: "Broken" })))
 
-  // Encounter sets: save, list, load, delete, missing notes.
   byLabel(view(), s.encounterSetsTitle)[0].click()
   let sets = modals.at(-1)
   assert.equal(byText(sets.contentEl, s.encounterSetsHint).length, 1)
@@ -385,7 +368,6 @@ export async function runScenario({ override } = {}) {
   await plugin.tracker.loadEncounterSet({ name: "Lost", description: "", members: [{ source: "Missing/Ghost.md", name: "Ghost", quantity: 1, group: false }] })
   assert.ok(notices.includes(fill(s.noteMissing, { path: "Missing/Ghost.md" })))
 
-  // Export to the active note, or to the clipboard without one.
   workspace.activeFile = docks
   byLabel(view(), s.exportToNote)[0].click()
   await until(() => env.appended.length === 1, "export append")
@@ -400,7 +382,6 @@ export async function runScenario({ override } = {}) {
   await until(() => env.clipboard.length === 1, "export clipboard")
   assert.ok(notices.includes(s.exportCopied))
 
-  // Clearing asks for confirmation when participants exist.
   byLabel(view(), s.newCombat)[0].click()
   let confirm = modals.at(-1)
   assert.equal(byText(confirm.contentEl, s.confirmClear).length, 1)
@@ -419,7 +400,6 @@ export async function runScenario({ override } = {}) {
   assert.equal(plugin.combat.participants.length, 0)
   plugin.tracker.addPlayer({ name: "Eve", ac: 12, hp: 9, modifier: 1, level: 1 })
 
-  // ---------- Assistant ----------
   plugin.settings.apiKey = ""
   command(s.commandOpenAssistant).callback()
   await until(() => env.leaves.some(leaf => leaf.type === "tt-assistant"), "assistant view")
@@ -482,13 +462,11 @@ export async function runScenario({ override } = {}) {
   assert.equal(assistant.history[1].text, "Hello there.")
   assert.ok(byClass(panel(), "tt-as-model").some(element => element.textContent.includes("Hello there.")))
 
-  // Context truncation.
   plugin.settings.maxContext = 40
   const truncated = await assistant.buildContext()
   assert.ok(truncated.endsWith("[context truncated]"))
   plugin.settings.maxContext = 24000
 
-  // Quick prompts: five send immediately, two wait for the GM to complete them.
   const quick = [[s.quickSceneLabel, s.quickScenePrompt], [s.quickNpcLabel, s.quickNpcPrompt], [s.quickPasserbyLabel, s.quickPasserbyPrompt],
     [s.quickConsequencesLabel, s.quickConsequencesPrompt], [s.quickSummaryLabel, s.quickSummaryPrompt], [s.quickNamesLabel, s.quickNamesPrompt], [s.quickMechanicsLabel, s.quickMechanicsPrompt]]
   for (const [label, prompt] of quick) {
@@ -506,7 +484,6 @@ export async function runScenario({ override } = {}) {
   }
   input().value = ""
 
-  // Message actions: copy, insert, regenerate.
   const lastAction = title => byLabel(panel(), title).at(-1)
   await lastAction(s.copy).click()
   assert.ok(env.clipboard.includes(assistant.history.at(-1).text))
@@ -525,7 +502,6 @@ export async function runScenario({ override } = {}) {
   await until(() => !assistant.busy && assistant.history.length === historyLength, "regenerate")
   assert.equal(assistant.history.at(-2).text, regeneratedQuestion)
 
-  // Stopping a request keeps the partial answer.
   env.network.fetch = async (_url, options) => sseResponse([text(["Partial"])], { signal: options.signal, hold: true })
   void assistant.send("Tell me everything")
   await until(() => byClass(panel(), "tt-as-stop").length === 1, "stop button")
@@ -536,7 +512,6 @@ export async function runScenario({ override } = {}) {
   assert.ok(assistant.history.at(-1).text.startsWith("Partial"))
   assert.ok(assistant.history.at(-1).text.includes(s.stopped))
 
-  // Gemini errors and fallbacks.
   const answerFor = async (question, fetchImplementation) => {
     env.network.fetch = fetchImplementation
     await assistant.send(question)
@@ -552,7 +527,6 @@ export async function runScenario({ override } = {}) {
   env.network.requestUrl = async () => ({ status: 200, json: text(["Fallback answer"]) })
   assert.equal(await answerFor("Offline?", async () => { throw new TypeError("blocked") }), "Fallback answer")
 
-  // Asking about a selection opens the assistant and sends the text.
   env.network.fetch = async () => sseResponse([text(["The captain is Erin."])])
   await command(s.commandAskSelection).editorCallback({ getSelection: () => "Who is the captain?" })
   assert.equal(assistant.history.at(-2).text, "Who is the captain?")
@@ -582,7 +556,6 @@ export async function runScenario({ override } = {}) {
   await until(() => notices.some(notice => notice.includes(invalidSkill.path)), "invalid assistant skill")
   assert.ok(notices.some(notice => notice.includes(fill(s.assistantSkillInvalid, { paths: invalidSkill.path }))))
 
-  // Embedding status, failure fallback, and the settings test each render their localised text.
   plugin.index.embeddingRunning = true
   assistant.renderIndexStatus()
   plugin.index.embeddingRunning = false
@@ -590,7 +563,7 @@ export async function runScenario({ override } = {}) {
   plugin.settings.embeddingProvider = "ollama"
   await plugin.applyEmbeddingSettings()
   await plugin.index.whenEmbedded()
-  assert.ok(notices.includes(s.assistantEmbeddingUnavailable))
+  assert.ok(notices.some(notice => notice.startsWith(s.assistantEmbeddingUnavailable.split("{")[0])))
   await buttonComponent(settingsEl, s.settingsEmbeddingTest).click()
   assert.ok(notices.some(notice => notice.includes("embedding offline")))
 
@@ -648,7 +621,6 @@ export async function runScenario({ override } = {}) {
   return { env, plugin }
 }
 
-/** Loads the plugin with an unreadable string override and returns the notices it raised. */
 export async function runInvalidOverride() {
   const env = createEnvironment()
   env.addFile("_local/plugins/table-tools/strings.json", "{ not json")
