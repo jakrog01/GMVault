@@ -26,7 +26,7 @@ GMVault/
 ├── Runs/
 │   └── <run>/
 │       ├── Run.md               role, campaign, party
-│       ├── State.md             lasting facts and resources
+│       ├── State.md             lasting facts, resources, world changes
 │       ├── World Day.md         current in-world date
 │       ├── Session YYYY-MM-DD.md
 │       └── <claim>.md           optional player claim

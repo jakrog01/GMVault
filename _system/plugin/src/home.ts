@@ -525,7 +525,7 @@ class RunModal extends HomeCreateModal {
       campaign: `"[[${campaign.replace(/\.md$/, "")}]]"`,
       party: `"[[${party.replace(/\.md$/, "")}]]"`,
     });
-    await this.app.vault.create(`${folder}/State.md`, `---\ntype: state\nrun: "[[${folder}/Run]]"\n---\n\n# State\n\n## What players know\n`);
+    await this.app.vault.create(`${folder}/State.md`, `---\ntype: state\nrun: "[[${folder}/Run]]"\n---\n\n# State\n\n## What players know\n\n## World changes\n`);
     await this.app.vault.create(`${folder}/World Day.md`, "---\ntype: world-day\n---\n\n# World Day\n");
     if (this.makeActive) await this.plugin.setActiveRun(run.path);
     await this.complete(run);

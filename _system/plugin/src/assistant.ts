@@ -234,7 +234,7 @@ export class AssistantView extends ItemView {
       if (campaign) pinned.add(settings.campaignPath || run?.campaign.path || "");
       if (runNote) pinned.add(run?.run.path ?? "");
       if (state) pinned.add(run?.state.path ?? "");
-      if (campaign || runNote || state) add(`## Run context\n${cap(campaign, 750, run?.campaign.path ?? "")}\n\n${cap(runNote, 375, run?.run.path ?? "")}\n\n${cap(state, 375, run?.state.path ?? "")}`);
+      if (campaign || runNote || state) add(`## Run context\nThe run state records what happened at this table. Where it differs from world or campaign notes, the run state is true.\n\n${cap(campaign, 750, run?.campaign.path ?? "")}\n\n${cap(runNote, 375, run?.run.path ?? "")}\n\n${cap(state, 375, run?.state.path ?? "")}`);
     }
     if (settings.includeWorldDay) {
       const day = await read(settings.worldDayPath || run?.day?.path || "");

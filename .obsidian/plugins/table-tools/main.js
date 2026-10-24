@@ -34,6 +34,8 @@ ${c.text}`).join(`
 ${h.slice(0,_*4)}
 
 [more in the index: ${w}]`};if(a.includeCampaign){let p=await b(a.campaignPath||u?.campaign.path||""),_=u?await b(u.run.path):"",w=u?await b(u.state.path):"";p&&i.add(a.campaignPath||u?.campaign.path||""),_&&i.add(u?.run.path??""),w&&i.add(u?.state.path??""),(p||_||w)&&m(`## Run context
+The run state records what happened at this table. Where it differs from world or campaign notes, the run state is true.
+
 ${l(p,750,u?.campaign.path??"")}
 
 ${l(_,375,u?.run.path??"")}
@@ -115,6 +117,8 @@ run: "[[${t}/Run]]"
 # State
 
 ## What players know
+
+## World changes
 `),await this.app.vault.create(`${t}/World Day.md`,`---
 type: world-day
 ---

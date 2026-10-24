@@ -27,7 +27,7 @@ Follow these steps from an empty GMVault to a first played session. [Install](GE
 
 7. During play, open **Open combat tracker** to add **Players** and **Enemy**, roll **Initiative**, and use **Next** to advance turns. Click a roll in a statblock or use the assistant's `roll_dice` tool for dice. Open **Open assistant** to ask about the active run, search notes, or summarise a scene.
 
-8. After play, update the run's `State.md` with lasting facts and resources, and `World Day.md` with the current in-world date. Finish the session note's **What happened**, **Loot**, and **Threads** sections so the next session starts with a clear record.
+8. After play, update the run's `State.md` with lasting facts, resources, and **World changes** (leave world notes as they were before play), and `World Day.md` with the current in-world date. Finish the session note's **What happened**, **Loot**, and **Threads** sections so the next session starts with a clear record.
 
 ## What next
 
