@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+## 2.4.2
+
+- GMVault keeps two tables in one world apart: world and campaign notes describe the world before play, and each run's `State.md` records what that table changed.
+- New runs get a **World changes** section in `State.md`.
+- The assistant treats the active run's state as true where it differs from world and campaign notes.
+- The sessions page explains two tables in one world, and the demo's two Glassgate tables show Ilyra's different fates.
+
 ## 2.4.1
 
 - GMVault Home now shows the same screen in the side panel and in `Home.md`.
