@@ -9,7 +9,7 @@ Add a Google AI key in Table Tools settings before sending a question; without o
 
 The active run determines the role, campaign, party, system, and folders available to assistant search.
 A run whose frontmatter role is `player` has player scope; every other value has GM scope.
-GM scope includes run, state, campaign, party, active-system library, and campaign mechanics or homebrew.
+GM scope includes run, state, campaign and its world, party, active-system library, and campaign mechanics or homebrew.
 Player scope includes run, state, party, and ordinary scoped notes, but not campaign, system, or homebrew roots.
 Rule results are ordered house rule, campaign homebrew, then system library when they occupy retrieved positions.
 Campaign-linked rules are restricted to that campaign; system rules require the active campaign system.
@@ -25,7 +25,7 @@ An invalid local policy falls back to the shipped policy and shows a notice.
 ## What a request sends
 
 The top toggles control **Run**, **Today**, **Note**, **Combat**, and **Search** context.
-Run attaches the campaign, active run, and state notes; Today attaches the world-day note; Combat attaches a plain-English tracker summary.
+Run attaches the campaign, active run, and state notes, and tells the assistant that the run's state wins where it differs from world or campaign notes; Today attaches the world-day note; Combat attaches a plain-English tracker summary.
 Note attaches the active Markdown note, and the paperclip can attach specific vault notes for the conversation.
 Search retrieves up to eight distinct scoped note paths after pinned context, within the retrieval-token budget.
 Pinned campaign, run, state, world day, combat, attached notes, and active note are not repeated in retrieval.

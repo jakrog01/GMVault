@@ -452,7 +452,7 @@ export async function runScenario({ override } = {}) {
   await until(() => !assistant.busy && assistant.history.length === 2, "first answer")
   const sent = lastQuestion()
   const question = sent.contents.at(-1).parts[0].text
-  for (const fragment of ["<context>", "## Run context", "Campaign: Glassgate.", "# Harbor run", "State: the gate is open.", "## World day", "First of the month, full moon.",
+  for (const fragment of ["<context>", "## Run context", "the run state is true", "Campaign: Glassgate.", "# Harbor run", "State: the gate is open.", "## World day", "First of the month, full moon.",
     "## Combat state", "Eve (player)", `## Note: ${docks.path}`, "The docks smell of tar.", `## Active note: ${ariaFile.path}`, "Aria keeps watch.", "GM question: What now?"]) assert.ok(question.includes(fragment), fragment)
   assert.equal(question.includes("date: 1"), false, "world-day frontmatter is stripped")
   assert.equal(sent.system_instruction.parts[0].text, plugin.settings.systemPrompt)

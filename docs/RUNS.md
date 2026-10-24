@@ -17,7 +17,19 @@ party: "[[Parties/Watch/Party]]"
 
 ## State
 
-`State.md` holds facts and resources that persist between sessions.
+`State.md` holds facts and resources that persist between sessions. Its **World changes** section records what this table changed in the world.
+
+### Two tables in one world
+
+World and campaign notes describe the world before play. Never edit them because of what players did. Write the outcome in the run's `State.md` instead. The demo shows two tables of the Glassgate campaign:
+
+| Note | Says |
+| --- | --- |
+| `Worlds/Glass Coast/NPCs/Ilyra.md` | Ilyra watches the Storm Gate after sunset. |
+| `Runs/Glassgate-Harbor-S01/State.md` | Ilyra drowned when the Storm Gate opened at dawn. |
+| `Runs/Glassgate-Clock-S02/State.md` | Ilyra joined the Clockmakers and now keeps the Storm Gate's logs. |
+
+The assistant reads the active run's `State.md` and treats it as true where it differs from world and campaign notes. Notes of other runs stay out of its scope, so each table keeps its own story. A larger outcome can get its own note in the run folder.
 
 ```yaml
 ---

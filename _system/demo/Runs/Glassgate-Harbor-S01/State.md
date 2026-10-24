@@ -9,3 +9,7 @@ run: "[[Runs/Glassgate-Harbor-S01/Run]]"
 ## What players know
 
 The gate opens at dawn.
+
+## World changes
+
+Ilyra drowned when the Storm Gate opened at dawn.

@@ -43,7 +43,7 @@ The manifest also creates `_local/templates/` and `_local/scripts/`; those are n
 
 A note's `type` frontmatter defines its identity. The folders are a suggested layout; links such as `world`, `campaign`, and `party` connect notes wherever they live.
 
-One campaign can have many runs, for example two groups playing the same world.
+One campaign can have many runs, for example two groups playing the same world. World and campaign notes describe the world before play; each run's `State.md` records what that table changed. See [Two tables in one world](RUNS.md#two-tables-in-one-world).
 
 ## The active run
 
