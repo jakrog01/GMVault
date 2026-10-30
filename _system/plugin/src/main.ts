@@ -10,6 +10,8 @@ import { Skill, loadSkills } from "./tools";
 import { assistantLayerPaths, defaultScopePolicy } from "./scope";
 import { HomeBlock, HomePanel, HomeView, HOME_VIEW, linkPath } from "./home";
 import { checkLatestRelease, checkedRecently, ReleaseCheck } from "./update";
+import { LookupModal } from "./lookup";
+import { QuickNpcModal } from "./quick-npc";
 
 interface PluginData { settings: Settings; combat: Combat; encounterSets: EncounterSet[] }
 export interface RunContext { run: TFile; campaign: TFile; party: TFile; state: TFile; day: TFile | null }
@@ -75,10 +77,13 @@ export default class TableTools extends Plugin {
     this.addRibbonIcon("home", s.ribbonHome, () => this.openHome());
     this.addRibbonIcon("swords", s.ribbonCombat, () => void this.openView(COMBAT_VIEW));
     this.addRibbonIcon("sparkles", s.ribbonAssistant, () => void this.openView(ASSISTANT_VIEW));
+    this.addRibbonIcon("search", s.lookUp, () => this.openLookup());
 
     this.addCommand({ id: "open-combat", name: s.commandOpenCombat, callback: () => void this.openView(COMBAT_VIEW) });
     this.addCommand({ id: "open-assistant", name: s.commandOpenAssistant, callback: () => void this.openView(ASSISTANT_VIEW) });
     this.addCommand({ id: "open-home", name: s.commandOpenHome, callback: () => this.openHome() });
+    this.addCommand({ id: "look-up", name: s.lookUp, callback: () => this.openLookup() });
+    this.addCommand({ id: "quick-npc", name: s.quickNpc, callback: () => void this.openQuickNpc() });
     this.addCommand({ id: "assistant-rebuild-index", name: s.commandRebuildAssistantIndex, callback: () => void this.index.rebuild(true) });
     this.addCommand({ id: "combat-next-turn", name: s.commandNextTurn, callback: () => this.tracker.advance(1) });
     this.addCommand({ id: "combat-previous-turn", name: s.commandPreviousTurn, callback: () => this.tracker.advance(-1) });
@@ -287,6 +292,10 @@ export default class TableTools extends Plugin {
   assistant(): AssistantView | undefined {
     return this.app.workspace.getLeavesOfType(ASSISTANT_VIEW)[0]?.view as AssistantView | undefined;
   }
+
+  openLookup(): void { new LookupModal(this.app, this).open(); }
+
+  openQuickNpc(): void { new QuickNpcModal(this.app, this).open(); }
 
   private resolve(value: unknown, source: TFile): TFile | null {
     const path = linkPath(value);

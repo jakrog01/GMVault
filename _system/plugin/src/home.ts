@@ -51,7 +51,7 @@ function mergeHomeFrontmatter(frontmatter: string, values: Record<string, string
   return output.join("\n");
 }
 
-function mergeHomeTemplate(template: string, title: string, folder: string, values: Record<string, string>, date?: string): string {
+export function mergeHomeTemplate(template: string, title: string, folder: string, values: Record<string, string>, date?: string): string {
   const rendered = template.replace(/<%\s*tp\.file\.title\s*%>/g, title)
     .replace(/<%\s*tp\.file\.folder\(true\)\s*%>/g, folder)
     .replace(/<%\s*tp\.date\.now\([^%]*?\)\s*%>/g, date ?? "")
@@ -210,6 +210,8 @@ export class HomePanel {
     this.button(actions, s.homeOpenParty, () => this.openNote(context.party.path));
     this.button(actions, s.homeOpenAssistant, () => void this.plugin.openView("tt-assistant"));
     this.button(actions, s.homeOpenCombat, () => void this.plugin.openView("tt-combat"));
+    this.button(actions, s.lookUp, () => this.plugin.openLookup());
+    this.button(actions, s.quickNpc, () => void this.plugin.openQuickNpc());
   }
 
   private async firstDayLine(file: TFile): Promise<string> {

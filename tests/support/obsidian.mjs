@@ -98,6 +98,22 @@ export function createEnvironment() {
     open() { modals.push(this); this.items = this.getItems(); this.items.forEach(item => record(this.getItemText(item))) }
     choose(predicate) { const item = this.items.find(predicate); this.close(); return this.onChooseItem(item) }
   }
+  class SuggestModal extends Modal {
+    setPlaceholder(text) { this.placeholder = text; record(text) }
+    query(text) { this.suggestions = this.getSuggestions(text); return this.suggestions }
+    choose(index = 0, event = {}) { const item = this.suggestions[index]; this.close(); return this.onChooseSuggestion(item, event) }
+  }
+  const prepareFuzzySearch = query => value => {
+    const target = String(value).toLowerCase()
+    let at = -1, score = 0
+    for (const letter of query.toLowerCase()) {
+      const next = target.indexOf(letter, at + 1)
+      if (next < 0) return null
+      score += next === at + 1 ? 2 : 1
+      at = next
+    }
+    return { score: score + (target === query.toLowerCase() ? 100 : 0), matches: [] }
+  }
 
   class Component {
     constructor() { this.inputEl = new MockElement("input"); this.changeHandlers = [] }
@@ -183,6 +199,7 @@ export function createEnvironment() {
     plugin: null,
     getLeavesOfType: type => leaves.filter(leaf => leaf.type === type),
     getRightLeaf: () => makeLeaf(),
+    getLeaf: () => Object.assign(makeLeaf(), { openFile: async file => { opened.push(file.path) } }),
     revealLeaf: async leaf => { await Promise.resolve(); leaf.revealed = true },
     getActiveFile: () => workspace.activeFile,
     getActiveViewOfType: () => workspace.activeView,
@@ -212,12 +229,14 @@ export function createEnvironment() {
       getMarkdownFiles: () => [...files.values()].filter(entry => entry.file.extension === "md").map(entry => entry.file),
       getAbstractFileByPath: filePath => files.get(filePath)?.file ?? null,
       cachedRead: async file => files.get(file.path)?.content ?? "",
+      create: async (filePath, content) => addFile(filePath, content),
+      createFolder: async () => {},
       append: async (file, text) => { files.get(file.path).content += text; appended.push(text); record(text) },
       adapter: { read: async filePath => { if (!adapterFiles.has(filePath)) throw new Error("missing"); return adapterFiles.get(filePath) }, write: async (filePath, value) => adapterFiles.set(filePath, value), mkdir: async () => {}, rmdir: async folder => { for (const key of [...adapterFiles.keys()]) if (key.startsWith(`${folder}/`)) adapterFiles.delete(key) }, exists: async filePath => adapterFiles.has(filePath) || [...adapterFiles.keys()].some(key => key.startsWith(`${filePath}/`)), rename: async (from, to) => { adapterFiles.set(to, adapterFiles.get(from)); adapterFiles.delete(from) } },
       on,
     },
     metadataCache: {
-      getFileCache: file => ({ frontmatter: files.get(file.path)?.frontmatter ?? undefined }),
+      getFileCache: file => ({ frontmatter: files.get(file.path)?.frontmatter ?? undefined, links: [...(files.get(file.path)?.content ?? "").matchAll(/\[\[([^\]]+)\]\]/g)].map(match => ({ link: match[1].split("|")[0] })) }),
       getFirstLinkpathDest: (link, sourcePath) => {
         if (link === "") return files.get(sourcePath)?.file ?? null
         const clean = String(link).replace(/\.md$/, "")
@@ -236,7 +255,7 @@ export function createEnvironment() {
   const clipboard = []
   const platform = { isDesktopApp: true, isMobile: false }
   const obsidian = {
-    Plugin, ItemView, Modal, FuzzySuggestModal, PluginSettingTab, Setting, Notice, TFile, MarkdownView, MarkdownRenderChild,
+    Plugin, ItemView, Modal, FuzzySuggestModal, SuggestModal, prepareFuzzySearch, PluginSettingTab, Setting, Notice, TFile, MarkdownView, MarkdownRenderChild,
     Platform: platform,
     MarkdownRenderer: { render: async (_app, markdown, element) => { element.appendText(markdown) } },
     requestUrl,
