@@ -1,5 +1,6 @@
 ---
 type: world
+system: generic
 origin: demo
 calendar: Calendar
 ---

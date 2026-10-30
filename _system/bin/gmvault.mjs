@@ -308,8 +308,80 @@ const doctor = async () => {
 }
 
 const demoRoots = ['Worlds', 'Campaigns', 'Parties', 'Runs', 'Library', 'Calendar']
+
+const migrateSystemLibrary = async args => {
+  const dryRun = args.includes('--dry-run')
+  const systemIndex = args.indexOf('--system')
+  const fallbackSystem = systemIndex >= 0 ? args[systemIndex + 1] : ''
+  if (args.some((arg, index) => arg !== '--dry-run' && arg !== '--system' && index !== systemIndex + 1) || systemIndex >= 0 && (!fallbackSystem || !/^[A-Za-z0-9][A-Za-z0-9_-]*$/.test(fallbackSystem))) throw new Error('usage: gmvault migrate system-library [--dry-run] [--system <id>]')
+  const moves = []
+  const fields = body => frontmatter(body.match(/^---\r?\n([\s\S]*?)\r?\n---/)?.[1] ?? '')
+  const mechanics = path.join(root, 'Library', 'Mechanics')
+  if (await exists(mechanics)) for (const entry of await readdir(mechanics, { withFileTypes: true })) if (entry.isDirectory()) moves.push({ from: `Library/Mechanics/${entry.name}`, to: `Library/${entry.name}/Mechanics` })
+  const worlds = path.join(root, 'Worlds')
+  const campaignFiles = (await files(path.join(root, 'Campaigns'))).filter(item => item.endsWith('.md'))
+  const campaigns = await Promise.all(campaignFiles.map(async item => ({ fields: fields(await readFile(item, 'utf8')), file: item })))
+  if (await exists(worlds)) for (const entry of await readdir(worlds, { withFileTypes: true })) {
+    if (!entry.isDirectory()) continue
+    const from = `Worlds/${entry.name}`
+    const worldFile = path.join(root, from, 'World.md')
+    const body = await exists(worldFile) ? await readFile(worldFile, 'utf8') : ''
+    const field = fields(body).system
+    const linked = new Set(campaigns.filter(({ fields }) => /^\[\[([^\]|#]+)(?:[|#][^\]]*)?\]\]$/.exec(fields.world)?.[1].replace(/\.md$/, '') === `${from}/World`).map(({ fields }) => fields.system).filter(Boolean))
+    if (linked.size > 1 || field && linked.size && !linked.has(field)) throw new Error(`conflicting systems for ${from}`)
+    const id = field || [...linked][0] || fallbackSystem
+    if (!id || !/^[A-Za-z0-9][A-Za-z0-9_-]*$/.test(id)) throw new Error(`cannot determine system for ${from}; use --system <id>`)
+    moves.push({ from, to: `Library/${id}/Worlds/${entry.name}`, system: id })
+  }
+  if (!moves.length) { console.log('system-library: no changes'); return }
+  for (const move of moves) if (await exists(path.join(root, move.to))) throw new Error(`target already exists: ${move.to}`)
+  const movedFiles = []
+  const movedDirectories = []
+  for (const move of moves) for (const item of await files(path.join(root, move.from))) movedFiles.push({ from: rel(item), to: `${move.to}/${path.relative(path.join(root, move.from), item).split(path.sep).join('/')}`, move })
+  for (const move of moves) for (const item of await files(path.join(root, move.from), true)) if ((await stat(item)).isDirectory()) movedDirectories.push(`${move.to}/${path.relative(path.join(root, move.from), item).split(path.sep).join('/')}`)
+  const replacements = moves.map(move => [move.from, move.to]).sort((a, b) => b[0].length - a[0].length)
+  const rewrite = body => body.replace(/\[\[([^\]|#]+)([^\]]*)\]\]/g, (whole, link, suffix) => {
+    const old = replacements.find(([from]) => link === from || link.startsWith(`${from}/`))
+    return old ? `[[${old[1]}${link.slice(old[0].length)}${suffix}]]` : whole
+  })
+  const content = (await Promise.all(manifest.contentRoots.map(name => files(path.join(root, name))))).flat().filter(item => item.endsWith('.md'))
+  const changed = new Map()
+  for (const item of content) {
+    const relative = rel(item)
+    const before = await readFile(item, 'utf8')
+    let after = rewrite(before)
+    const moved = movedFiles.find(entry => entry.from === relative)
+    if (moved?.move.system && relative === `${moved.move.from}/World.md` && !fields(after).system) {
+      const header = after.match(/^---\r?\n([\s\S]*?)\r?\n---/)
+      if (!header) after = `---\ntype: world\nsystem: ${moved.move.system}\n---\n\n${after}`
+      else if (/^system:/m.test(header[1])) after = after.replace(header[0], header[0].replace(/^system:.*$/m, `system: ${moved.move.system}`))
+      else after = after.replace(/^---\r?\n/, `---\nsystem: ${moved.move.system}\n`)
+    }
+    if (after !== before) changed.set(relative, after)
+  }
+  console.log(`${dryRun ? 'would migrate' : 'migrating'} ${moves.length} folder(s), ${movedFiles.length} file(s), rewrite ${changed.size} note(s)`)
+  for (const move of moves) console.log(`${move.from} -> ${move.to}`)
+  if (dryRun) return
+  const backup = path.join(root, '.gmvault', 'backups', `${new Date().toISOString().replace(/[:.]/g, '-')}-system-library`)
+  for (const relative of new Set([...movedFiles.map(entry => entry.from), ...changed.keys()])) {
+    const target = path.join(backup, relative)
+    await mkdir(path.dirname(target), { recursive: true })
+    await cp(path.join(root, relative), target)
+  }
+  for (const move of moves) await mkdir(path.join(root, move.to), { recursive: true })
+  for (const directory of movedDirectories) await mkdir(path.join(root, directory), { recursive: true })
+  for (const entry of movedFiles) {
+    const target = path.join(root, entry.to)
+    await mkdir(path.dirname(target), { recursive: true })
+    if (changed.has(entry.from)) await writeFile(target, changed.get(entry.from))
+    else await cp(path.join(root, entry.from), target)
+  }
+  for (const [relative, body] of changed) if (!movedFiles.some(entry => entry.from === relative)) await writeFile(path.join(root, relative), body)
+  for (const move of moves) await rm(path.join(root, move.from), { recursive: true })
+  console.log(`backup ${rel(backup)}`)
+}
 const demoInstall = async () => {
-  const source = path.join(system, 'demo')
+  const source = path.join(system, '.demo')
   for (const item of await files(source)) {
     const target = path.join(root, path.relative(source, item))
     await mkdir(path.dirname(target), { recursive: true })
@@ -763,10 +835,11 @@ try {
   else if (command === 'demo' && subcommand === 'install') await demoInstall()
   else if (command === 'demo' && subcommand === 'remove') await demoRemove()
   else if (command === 'demo' && subcommand === 'status') await demoStatus()
+  else if (command === 'migrate' && subcommand === 'system-library') await migrateSystemLibrary(arguments_)
   else if (command === 'update') await update([subcommand, ...arguments_].filter(Boolean))
   else if (command === 'finalize-update') await finalizeUpdate()
   else if (command === 'adopt') await adopt([subcommand, ...arguments_].filter(Boolean))
-  else throw new Error('usage: gmvault init|doctor|update --from <dir> [--dry-run]|demo install|remove|status|adopt <source-path> --map <mapping.json>')
+  else throw new Error('usage: gmvault init|doctor|update --from <dir> [--dry-run]|migrate system-library [--dry-run] [--system <id>]|demo install|remove|status|adopt <source-path> --map <mapping.json>')
 } catch (error) {
   console.error(`gmvault: ${error.message}`)
   process.exitCode = 1

@@ -49,7 +49,7 @@ You should see `GMVault doctor: clean (<version>)`. `doctor` only reads; it neve
 node _system/bin/gmvault.mjs demo install
 ```
 
-This copies a small example campaign, parties, runs, library, and calendar into the vault and reports `demo installed`. Browse it, then clean up:
+This copies a small example campaign, parties, runs, library, and calendar from the hidden `_system/.demo/` folder into the vault and reports `demo installed`. Browse it, then clean up:
 
 ```text
 node _system/bin/gmvault.mjs demo remove

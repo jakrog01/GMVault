@@ -38,6 +38,31 @@ test("a fresh unzipped vault is clean without state", async () => {
   await rm(vault, { recursive: true, force: true })
 })
 
+test("the packaged hidden demo installs and removes from an unzipped vault", async () => {
+  const vault = await unpack()
+  let sequence = 0
+  const demo = async action => {
+    const argv = process.argv
+    const log = console.log
+    const lines = []
+    process.argv = [argv[0], path.join(vault, "_system/bin/gmvault.mjs"), "demo", action]
+    console.log = (...values) => lines.push(values.join(" "))
+    try { await import(`file://${path.join(vault, "_system/bin/gmvault.mjs")}?run=${++sequence}`) }
+    finally { process.argv = argv; console.log = log }
+    return lines.join("\n")
+  }
+  assert.ok(await exists(path.join(vault, "_system/.demo/Campaigns/Glassgate/Campaign.md")))
+  assert.equal(await exists(path.join(vault, "_system/demo")), false)
+  assert.match(await demo("status"), /demo notes: 0/)
+  assert.match(await demo("install"), /demo installed/)
+  assert.ok(await exists(path.join(vault, "Campaigns/Glassgate/Campaign.md")))
+  assert.match(await demo("status"), /demo notes: [1-9]/)
+  assert.match(await demo("remove"), /removed [1-9]/)
+  assert.match(await demo("status"), /demo notes: 0/)
+  assert.equal(await exists(path.join(vault, "Campaigns/Glassgate/Campaign.md")), false)
+  await rm(vault, { recursive: true, force: true })
+})
+
 test("the first init persists a unique install identity", async () => {
   const first = await unpack()
   const second = await unpack()

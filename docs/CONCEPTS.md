@@ -8,7 +8,7 @@ GMVault separates files it ships from files you own, so updates never overwrite 
 
 | Layer | Who owns it | Replaced on update? |
 | --- | --- | --- |
-| `_system/` | GMVault: templates, plugin source, scripts, bases, demo, systems | Yes, after a backup |
+| `_system/` | GMVault: templates, plugin source, scripts, bases, systems, hidden `.demo/` source | Yes, after a backup |
 | `_local/` | You: template overrides, scripts, assistant policy | No |
 | Content roots | You: all game notes | No |
 | `.obsidian/` | Obsidian settings and plugins | Managed entries only |
@@ -24,11 +24,11 @@ The manifest declares seven content roots. Your notes live here; updates never r
 
 | Folder | Holds |
 | --- | --- |
-| `Worlds/` | Settings shared by campaigns: NPCs, locations, factions, lore, events |
+| `Worlds/` | Legacy settings shared by campaigns; still supported |
 | `Campaigns/` | Campaign stories: quests, encounters, handouts, and campaign specific notes |
 | `Parties/` | Party records and rosters |
 | `Runs/` | Table-specific records: sessions, state, world day |
-| `Library/` | Mechanics and assets: bestiary, spells, items, rules |
+| `Library/` | System mechanics, worlds, and shared assets |
 | `Calendar/` | Calendar content for the table |
 | `Archive/` | Retired material, ignored by automation and assistant indexing |
 
@@ -36,7 +36,7 @@ The manifest also creates `_local/templates/` and `_local/scripts/`; those are n
 
 ## Worlds, campaigns, parties, and runs
 
-- A **world** is a setting that several campaigns can share.
+- A **world** is a setting that several campaigns can share. New worlds live under `Library/<system>/Worlds/`; earlier `Worlds/` notes remain valid.
 - A **campaign** is one story in a world. A campaign without a world link acts as its own world.
 - A **party** is the group of characters playing it.
 - A **run** is one table's game: it connects a campaign, a party, and a role (game master or player).
@@ -57,7 +57,7 @@ These note names may repeat across folders because their paths tell them apart: 
 
 ## Systems
 
-System packages in `_system/systems/` describe note shapes and radar requirements for a game system. They contain no published rules text or statblocks. Experiment with a local package first; see [Game systems](AUTHORING-SYSTEMS.md).
+Mechanics live under `Library/<system>/Mechanics/`; the earlier `Library/Mechanics/<system>/` layout remains valid. System packages in `_system/systems/` describe note shapes and radar requirements for a game system. They contain no published rules text or statblocks. Experiment with a local package first; see [Game systems](AUTHORING-SYSTEMS.md).
 
 ## Vault state
 

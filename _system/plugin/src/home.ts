@@ -376,7 +376,12 @@ abstract class HomeCreateModal extends Modal {
 
   protected async createFolder(folder: string): Promise<void> {
     const vault = this.app.vault as typeof this.app.vault & { createFolder?: (path: string) => Promise<void> };
-    await vault.createFolder?.(folder);
+    let current = "";
+    for (const part of folder.split("/")) {
+      current = current ? `${current}/${part}` : part;
+      if (this.app.vault.getAbstractFileByPath(current)) continue;
+      await vault.createFolder?.(current);
+    }
   }
 
   protected async createFromTemplate(kind: "world" | "campaign" | "party" | "pc" | "run", folder: string, fileName: string, values: Record<string, string>): Promise<TFile> {
@@ -393,19 +398,29 @@ abstract class HomeCreateModal extends Modal {
 }
 
 class WorldModal extends HomeCreateModal {
-  onOpen(): void {
+  private system = "generic";
+
+  async onOpen(): Promise<void> {
     this.contentEl.createEl("h3", { text: this.plugin.strings.homeNewWorld });
     this.nameField();
+    const systems = await this.plugin.systemPackages();
+    const campaign = this.app.vault.getMarkdownFiles().find(file => this.app.metadataCache.getFileCache(file)?.frontmatter?.type === "campaign");
+    const preferred = campaign ? String(this.app.metadataCache.getFileCache(campaign)?.frontmatter?.system ?? "") : "";
+    this.system = systems.some(system => system.id === preferred) ? preferred : systems[0]?.id ?? "generic";
+    new Setting(this.contentEl).setName(this.plugin.strings.homeFieldSystem).addDropdown(dropdown => {
+      systems.forEach(system => dropdown.addOption(system.id, system.name));
+      dropdown.setValue(this.system).onChange(value => { this.system = value; });
+    });
     this.submit(() => this.create());
   }
 
   private async create(): Promise<void> {
     const name = this.validName();
     if (!name) return;
-    const folder = `Worlds/${name}`;
+    const folder = `Library/${this.system}/Worlds/${name}`;
     if (!this.folderAvailable(folder)) { new Notice(this.plugin.strings.homeExists); return; }
-    const file = await this.createFromTemplate("world", folder, "World.md", { type: "world" });
-    for (const section of ["NPCs", "Locations", "Factions", "Lore", "Events"]) await this.createFolder(`${folder}/${section}`);
+    const file = await this.createFromTemplate("world", folder, "World.md", { type: "world", system: this.system });
+    for (const section of ["Locations", "Factions", "NPCs", "Events", "Mechanics", "Lore", ...["Religion", "History", "Culture", "Peoples", "Languages", "Magic", "Cosmology", "Economy", "Creatures", "Other"].map(name => `Lore/${name}`)]) await this.createFolder(`${folder}/${section}`);
     await this.complete(file);
   }
 }
@@ -438,7 +453,9 @@ class CampaignModal extends HomeCreateModal {
     this.nameField();
     const systems = await this.plugin.systemPackages();
     if (!systems.some(system => system.id === this.system)) this.system = systems[0]?.id ?? "generic";
+    let systemDropdown: { setValue: (value: string) => unknown } | null = null;
     new Setting(this.contentEl).setName(this.plugin.strings.homeFieldSystem).addDropdown(dropdown => {
+      systemDropdown = dropdown;
       systems.forEach(system => dropdown.addOption(system.id, system.name));
       dropdown.setValue(this.system).onChange(value => { this.system = value; });
     });
@@ -446,7 +463,14 @@ class CampaignModal extends HomeCreateModal {
       dropdown.addOption("", this.plugin.strings.homeNoWorld);
       this.app.vault.getMarkdownFiles().filter(file => isGameNote(file) && this.app.metadataCache.getFileCache(file)?.frontmatter?.type === "world")
         .forEach(file => dropdown.addOption(file.path, folderName(file)));
-      dropdown.setValue(this.world).onChange(value => { this.world = value; });
+      dropdown.setValue(this.world).onChange(value => {
+        this.world = value;
+        const file = this.app.vault.getAbstractFileByPath(value);
+        if (file instanceof TFile) {
+          const system = String(this.app.metadataCache.getFileCache(file)?.frontmatter?.system ?? "");
+          if (system && systems.some(entry => entry.id === system)) { this.system = system; systemDropdown?.setValue(system); }
+        }
+      });
     });
     this.submit(() => this.create());
   }

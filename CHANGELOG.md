@@ -2,6 +2,16 @@
 
 ## Unreleased
 
+## 2.5.0
+
+- GMVault keeps each world with the system it is written for: `Library/<system>/Worlds/<world>/` and `Library/<system>/Mechanics/`, with the old `Worlds/` and `Library/Mechanics/` layout still working everywhere (ADR 0005).
+- `gmvault migrate system-library` moves an existing vault to the new layout on request, with a backup and link rewriting; `--dry-run` shows the plan.
+- Classes, subclasses, races, backgrounds and feats are note types of their own, read by the assistant as system rules, with templates for each.
+- **New world** asks for the system and creates lore categories: Religion, History, Culture, Peoples, Languages, Magic, Cosmology, Economy, Creatures, Other.
+- Places nest inside their parent place, and a new location fills its parent `location` from the folder.
+- Templates ask for the campaign, party, run or world from a list when the folder does not decide it; notes created from Home never prompt.
+- The demo moves to `_system/.demo/`, so Obsidian no longer suggests demo campaigns and parties in properties.
+
 ## 2.4.2
 
 - GMVault keeps two tables in one world apart: world and campaign notes describe the world before play, and each run's `State.md` records what that table changed.

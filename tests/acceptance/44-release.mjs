@@ -87,6 +87,8 @@ test("the archive contains only manifest paths", async () => {
     assert.equal(file.split("/").includes("node_modules"), false, file)
   }
   for (const file of ["_system/VERSION", "_system/bin/gmvault.mjs", "_system/migrations/2026-10-20-lean-vault.mjs", "_system/plugin/main.js", "Home.md", "Active.md", ".gmvault/plugin-build.json", ".obsidian/plugins/table-tools/main.js"]) assert.ok(packaged.includes(file), file)
+  assert.ok(packaged.includes("_system/.demo/Campaigns/Glassgate/Campaign.md"))
+  assert.equal(packaged.some(file => file.startsWith("_system/demo/")), false)
   for (const file of ["README.md", "CHANGELOG.md", "package.json", ".gitattributes", ".gmvault/state.json", ".obsidian/workspace.json", ".obsidian/workspace-mobile.json", ".obsidian/plugins/table-tools/data.json"]) assert.equal(packaged.includes(file), false, file)
   for (const prefix of ["docs/", "tests/", ".github/", ".gmvault/backups/", ".gmvault/cache/"]) assert.equal(packaged.some(file => file.startsWith(prefix)), false, prefix)
 })

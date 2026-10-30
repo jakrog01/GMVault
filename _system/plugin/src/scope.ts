@@ -56,6 +56,7 @@ export function resolveScope(plugin: TableTools): Scope {
       add(roots, enabled, `${campaignFolder}/Mechanics`, "homebrew");
       add(roots, enabled, `${worldFolder}/Mechanics`, "homebrew");
       add(roots, enabled, `Library/Mechanics/${system}`, "system");
+      add(roots, enabled, `Library/${system}/Mechanics`, "system");
     }
   } else {
     add(roots, enabled, campaignFolder, "campaign");
