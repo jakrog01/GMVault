@@ -1,7 +1,7 @@
 ---
 type: faction
 origin: demo
-world: "[[Worlds/Glass Coast/World]]"
+world: "[[Library/generic/Worlds/Glass Coast/World]]"
 ---
 
 # Gate Wardens

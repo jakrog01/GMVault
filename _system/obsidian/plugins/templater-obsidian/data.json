@@ -11,6 +11,62 @@
   "folder_templates": [],
   "file_templates": [
     {
+      "regex": "^Library/[^/]+/Worlds/[^/]+/World\\.md$",
+      "template": "_system/templates/world.md"
+    },
+    {
+      "regex": "^Library/[^/]+/Worlds/[^/]+/NPCs/",
+      "template": "_system/templates/npc.md"
+    },
+    {
+      "regex": "^Library/[^/]+/Worlds/[^/]+/Locations/",
+      "template": "_system/templates/location.md"
+    },
+    {
+      "regex": "^Library/[^/]+/Worlds/[^/]+/Factions/",
+      "template": "_system/templates/faction.md"
+    },
+    {
+      "regex": "^Library/[^/]+/Worlds/[^/]+/Lore/",
+      "template": "_system/templates/lore.md"
+    },
+    {
+      "regex": "^Library/[^/]+/Worlds/[^/]+/Events/",
+      "template": "_system/templates/event.md"
+    },
+    {
+      "regex": "^Library/[^/]+/Mechanics/Spells/",
+      "template": "_system/templates/spell.md"
+    },
+    {
+      "regex": "^Library/[^/]+/Mechanics/Bestiary/",
+      "template": "_system/templates/creature.md"
+    },
+    {
+      "regex": "^Library/[^/]+/Mechanics/Items/",
+      "template": "_system/templates/item.md"
+    },
+    {
+      "regex": "^Library/[^/]+/Mechanics/Classes/",
+      "template": "_system/templates/rules.md"
+    },
+    {
+      "regex": "^Library/[^/]+/Mechanics/Races/",
+      "template": "_system/templates/rules.md"
+    },
+    {
+      "regex": "^Library/[^/]+/Mechanics/Backgrounds/",
+      "template": "_system/templates/rules.md"
+    },
+    {
+      "regex": "^Library/[^/]+/Mechanics/Feats/",
+      "template": "_system/templates/rules.md"
+    },
+    {
+      "regex": "^Library/[^/]+/Mechanics/Rules/",
+      "template": "_system/templates/rules.md"
+    },
+    {
       "regex": "^Worlds/[^/]+/World\\.md$",
       "template": "_system/templates/world.md"
     },

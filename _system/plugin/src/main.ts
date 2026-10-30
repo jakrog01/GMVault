@@ -316,7 +316,9 @@ export default class TableTools extends Plugin {
     if (this.settings.bestiaryPath) return [this.settings.bestiaryPath];
     const context = this.currentContext();
     const system = String(context ? this.app.metadataCache.getFileCache(context.campaign)?.frontmatter?.system ?? "generic" : "generic");
-    return [`Library/Mechanics/${system}/Bestiary`, ...(context?.campaign.parent ? [`${context.campaign.parent.path}/Mechanics/Bestiary`] : [])];
+    const worldLink = context ? linkPath(this.app.metadataCache.getFileCache(context.campaign)?.frontmatter?.world) : "";
+    const world = worldLink && context ? this.app.metadataCache.getFirstLinkpathDest(worldLink, context.campaign.path) : null;
+    return [`Library/${system}/Mechanics/Bestiary`, `Library/Mechanics/${system}/Bestiary`, ...(context?.campaign.parent ? [`${context.campaign.parent.path}/Mechanics/Bestiary`] : []), ...(world?.parent ? [`${world.parent.path}/Mechanics/Bestiary`] : [])];
   }
 }
 

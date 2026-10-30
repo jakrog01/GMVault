@@ -250,6 +250,8 @@ export class AssistantIndex {
     if (/^Worlds\//.test(file.path)) return file.path.includes("/Mechanics/") ? "homebrew" : "campaign";
     if (/^Parties\//.test(file.path)) return "party";
     if (/^Library\/Mechanics\//.test(file.path)) return "system";
+    if (/^Library\/[^/]+\/Worlds\//.test(file.path)) return file.path.includes("/Mechanics/") ? "homebrew" : "campaign";
+    if (/^Library\/[^/]+\/Mechanics\//.test(file.path)) return "system";
     return "note";
   }
 

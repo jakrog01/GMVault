@@ -1,7 +1,7 @@
 ---
 type: location
 origin: demo
-world: "[[Worlds/Glass Coast/World]]"
+world: "[[Library/generic/Worlds/Glass Coast/World]]"
 ---
 
 # Storm Gate

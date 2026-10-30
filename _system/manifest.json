@@ -8,7 +8,7 @@
   "contractualNames": ["Active.md", "World.md", "Campaign.md", "Party.md", "Run.md", "State.md", "Dashboard.md", "Radar.md", "World Day.md"],
   "runtimeReadOnlyAllowlist": ["_system/"],
   "asciiAllowlist": ["_system/obsidian/plugins/calendarium/main.js", "_system/obsidian/themes/Fancy-a-Story/theme.css", "_system/obsidian/plugins/obsidian-style-settings/main.js", "_system/obsidian/plugins/obsidian-style-settings/styles.css"],
-  "referenceFolders": ["Library/Mechanics/*/Spells", "Library/Mechanics/*/Bestiary", "Library/Mechanics/*/Items"],
+  "referenceFolders": ["Library/Mechanics/*/Spells", "Library/Mechanics/*/Bestiary", "Library/Mechanics/*/Items", "Library/*/Mechanics/Spells", "Library/*/Mechanics/Bestiary", "Library/*/Mechanics/Items"],
   "neverTouch": [".obsidian/workspace.json", ".obsidian/workspace-mobile.json", ".obsidian/plugins/table-tools/data.json", ".obsidian/plugins/calendarium/data.json"],
   "managedObsidian": [
     {"path":"app.json", "keys":["alwaysUpdateLinks", "attachmentFolderPath"]},
@@ -34,6 +34,20 @@
     {"path":"Calendar","noTemplate":true}, {"path":"Archive","noTemplate":true}, {"path":"_local/templates","noTemplate":true}, {"path":"_local/scripts","noTemplate":true}
   ],
   "templateRules": [
+    {"pattern":"^Library/[^/]+/Worlds/[^/]+/World\\.md$","template":"world.md"},
+    {"pattern":"^Library/[^/]+/Worlds/[^/]+/NPCs/","template":"npc.md"},
+    {"pattern":"^Library/[^/]+/Worlds/[^/]+/Locations/","template":"location.md"},
+    {"pattern":"^Library/[^/]+/Worlds/[^/]+/Factions/","template":"faction.md"},
+    {"pattern":"^Library/[^/]+/Worlds/[^/]+/Lore/","template":"lore.md"},
+    {"pattern":"^Library/[^/]+/Worlds/[^/]+/Events/","template":"event.md"},
+    {"pattern":"^Library/[^/]+/Mechanics/Spells/","template":"spell.md"},
+    {"pattern":"^Library/[^/]+/Mechanics/Bestiary/","template":"creature.md"},
+    {"pattern":"^Library/[^/]+/Mechanics/Items/","template":"item.md"},
+    {"pattern":"^Library/[^/]+/Mechanics/Classes/","template":"rules.md"},
+    {"pattern":"^Library/[^/]+/Mechanics/Races/","template":"rules.md"},
+    {"pattern":"^Library/[^/]+/Mechanics/Backgrounds/","template":"rules.md"},
+    {"pattern":"^Library/[^/]+/Mechanics/Feats/","template":"rules.md"},
+    {"pattern":"^Library/[^/]+/Mechanics/Rules/","template":"rules.md"},
     {"pattern":"Campaigns/.+","template":"campaign.md"}, {"pattern":"Parties/.+","template":"party.md"},
     {"pattern":"Runs/.+","template":"run.md"}, {"pattern":"Library/Mechanics/.+/Spells/.+","template":"spell.md"},
     {"pattern":"Library/Mechanics/.+/Bestiary/.+","template":"creature.md"}, {"pattern":"Library/Mechanics/.+/Items/.+","template":"item.md"}
