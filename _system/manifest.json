@@ -43,14 +43,23 @@
     {"pattern":"^Library/[^/]+/Mechanics/Spells/","template":"spell.md"},
     {"pattern":"^Library/[^/]+/Mechanics/Bestiary/","template":"creature.md"},
     {"pattern":"^Library/[^/]+/Mechanics/Items/","template":"item.md"},
-    {"pattern":"^Library/[^/]+/Mechanics/Classes/","template":"rules.md"},
-    {"pattern":"^Library/[^/]+/Mechanics/Races/","template":"rules.md"},
-    {"pattern":"^Library/[^/]+/Mechanics/Backgrounds/","template":"rules.md"},
-    {"pattern":"^Library/[^/]+/Mechanics/Feats/","template":"rules.md"},
+    {"pattern":"^Library/[^/]+/Mechanics/Classes/([^/]+)/\\1\\.md$","template":"class.md"},
+    {"pattern":"^Library/[^/]+/Mechanics/Classes/[^/]+\\.md$","template":"class.md"},
+    {"pattern":"^Library/[^/]+/Mechanics/Classes/[^/]+/[^/]+\\.md$","template":"subclass.md"},
+    {"pattern":"^Library/[^/]+/Mechanics/Races/","template":"race.md"},
+    {"pattern":"^Library/[^/]+/Mechanics/Backgrounds/","template":"background.md"},
+    {"pattern":"^Library/[^/]+/Mechanics/Feats/","template":"feat.md"},
     {"pattern":"^Library/[^/]+/Mechanics/Rules/","template":"rules.md"},
     {"pattern":"Campaigns/.+","template":"campaign.md"}, {"pattern":"Parties/.+","template":"party.md"},
     {"pattern":"Runs/.+","template":"run.md"}, {"pattern":"Library/Mechanics/.+/Spells/.+","template":"spell.md"},
-    {"pattern":"Library/Mechanics/.+/Bestiary/.+","template":"creature.md"}, {"pattern":"Library/Mechanics/.+/Items/.+","template":"item.md"}
+    {"pattern":"Library/Mechanics/.+/Bestiary/.+","template":"creature.md"}, {"pattern":"Library/Mechanics/.+/Items/.+","template":"item.md"},
+    {"pattern":"Library/Mechanics/.+/Classes/([^/]+)/\\1\\.md$","template":"class.md"},
+    {"pattern":"Library/Mechanics/.+/Classes/[^/]+\\.md$","template":"class.md"},
+    {"pattern":"Library/Mechanics/.+/Classes/[^/]+/[^/]+\\.md$","template":"subclass.md"},
+    {"pattern":"Library/Mechanics/.+/Races/","template":"race.md"},
+    {"pattern":"Library/Mechanics/.+/Backgrounds/","template":"background.md"},
+    {"pattern":"Library/Mechanics/.+/Feats/","template":"feat.md"},
+    {"pattern":"Library/Mechanics/.+/Rules/","template":"rules.md"}
   ],
   "defaults": {"system":"generic", "calendar":"Calendar"}
 }

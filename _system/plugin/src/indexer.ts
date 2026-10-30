@@ -242,7 +242,7 @@ export class AssistantIndex {
     if (["run", "session", "world-day"].includes(type)) return "run";
     if (type === "state") return "state";
     if (type === "rules" && frontmatter.subtype === "house-rule") return "house-rule";
-    if (["creature", "item", "spell", "rules"].includes(type)) return frontmatter.campaign || frontmatter.world || /^Campaigns\/[^/]+\/Mechanics\//.test(file.path) ? "homebrew" : frontmatter.system ? "system" : "note";
+    if (["creature", "item", "spell", "rules", "class", "subclass", "race", "background", "feat"].includes(type)) return frontmatter.campaign || frontmatter.world || /^Campaigns\/[^/]+\/Mechanics\//.test(file.path) ? "homebrew" : frontmatter.system ? "system" : "note";
     if (["world", "campaign", "npc", "location", "faction", "lore", "event", "quest", "encounter", "handout"].includes(type)) return "campaign";
     if (type) return "note";
     if (/^Runs\//.test(file.path)) return file.basename === "State" ? "state" : "run";
@@ -286,7 +286,7 @@ export class AssistantIndex {
     }
     const rooted = sourceKind(scope, chunk.path);
     if (rooted) return true;
-    if (!scope.runFolder || scope.role !== "gm" || chunk.type !== "rules") return false;
+    if (!scope.runFolder || scope.role !== "gm" || !["rules", "class", "subclass", "race", "background", "feat"].includes(chunk.type)) return false;
     if (chunk.path.startsWith("Campaigns/")) return false;
     if (/^Library\/Mechanics\//.test(chunk.path)) return false;
     if (chunk.campaignLink) {

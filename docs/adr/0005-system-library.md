@@ -38,11 +38,17 @@ A place with sub-places is a folder holding a note with the folder's name (folde
 | `type` | New fields or values |
 | --- | --- |
 | `world` | `system` (package id) |
-| `rules` | `subtype` values `class`, `subclass`, `race`, `subrace`, `background`, `feat`, `condition`; `class` (subclass to class link), `race` (subrace to race link) |
+| `rules` | `subtype` values `house-rule`, `condition` |
+| `class` | `system`, or `world` for homebrew |
+| `subclass` | `class` (link to its class), `system` or `world` |
+| `race` | `subtype` `subrace` for a subrace, `race` (link to the parent race on a subrace), `system` or `world` |
+| `background` | `system` or `world` |
+| `feat` | `system` or `world` |
 | `lore` | suggested `subtype` values `religion`, `deity`, `history`, `culture`, `language`, `magic`, `economy` |
 | any | `source` (free text, the book a note came from) |
 
 `location` on a `location` remains the parent place link. Identity stays `type` plus links; folders remain a recommendation.
+The five character-option types are read as system rules, like `spell`, `item`, and `creature`.
 
 ### Old layout
 

@@ -42,6 +42,24 @@ test("new and old library paths classify and scope correctly", async () => {
   await unload(plugin)
 })
 
+test("character options are system rules in the matching run", async () => {
+  const env = createVault()
+  const campaign = env.files.get("Campaigns/Glass/Campaign.md")
+  campaign.frontmatter.system = "dnd5e"
+  const subclass = env.addFile("Library/dnd5e/Mechanics/Classes/Fighter/Battle Master.md", "Battle Master maneuvers keyword", { type: "subclass", system: "dnd5e", class: "[[Library/dnd5e/Mechanics/Classes/Fighter/Fighter]]" })
+  const feat = env.addFile("Library/dnd5e/Mechanics/Feats/Alert.md", "Alert feat keyword", { type: "feat", system: "dnd5e" })
+  const plugin = await boot(env)
+  startObsidian(env)
+  await idle(plugin)
+  for (const file of [subclass, feat]) {
+    assert.equal(plugin.index.globalKind(file), "system")
+    assert.ok(plugin.index.byPath(file.path).length, file.path)
+  }
+  campaign.frontmatter.system = "generic"
+  for (const file of [subclass, feat]) assert.equal(plugin.index.byPath(file.path).length, 0, file.path)
+  await unload(plugin)
+})
+
 test("shipped Markdown outside templates stays in dot folders", async () => {
   const visible = new Set(["_system/assistant/skills/consequences.md", "_system/assistant/skills/npc-improvisation.md", "_system/assistant/skills/passer-by.md", "_system/assistant/skills/rules-adjudication.md", "_system/assistant/skills/scene-description.md", "_system/assistant/skills/session-summary.md", "_system/obsidian/plugins/obsidian-style-settings/LICENSE.md"])
   const visit = async relative => {

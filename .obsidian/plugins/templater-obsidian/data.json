@@ -40,20 +40,28 @@
       "template": "_system/templates/item.md"
     },
     {
-      "regex": "^Library/[^/]+/Mechanics/Classes/",
-      "template": "_system/templates/rules.md"
+      "regex": "^Library/[^/]+/Mechanics/Classes/([^/]+)/\\1\\.md$",
+      "template": "_system/templates/class.md"
+    },
+    {
+      "regex": "^Library/[^/]+/Mechanics/Classes/[^/]+\\.md$",
+      "template": "_system/templates/class.md"
+    },
+    {
+      "regex": "^Library/[^/]+/Mechanics/Classes/[^/]+/[^/]+\\.md$",
+      "template": "_system/templates/subclass.md"
     },
     {
       "regex": "^Library/[^/]+/Mechanics/Races/",
-      "template": "_system/templates/rules.md"
+      "template": "_system/templates/race.md"
     },
     {
       "regex": "^Library/[^/]+/Mechanics/Backgrounds/",
-      "template": "_system/templates/rules.md"
+      "template": "_system/templates/background.md"
     },
     {
       "regex": "^Library/[^/]+/Mechanics/Feats/",
-      "template": "_system/templates/rules.md"
+      "template": "_system/templates/feat.md"
     },
     {
       "regex": "^Library/[^/]+/Mechanics/Rules/",
@@ -146,6 +154,30 @@
     {
       "regex": "^Library/Mechanics/[^/]+/Items/",
       "template": "_system/templates/item.md"
+    },
+    {
+      "regex": "^Library/Mechanics/[^/]+/Classes/([^/]+)/\\1\\.md$",
+      "template": "_system/templates/class.md"
+    },
+    {
+      "regex": "^Library/Mechanics/[^/]+/Classes/[^/]+\\.md$",
+      "template": "_system/templates/class.md"
+    },
+    {
+      "regex": "^Library/Mechanics/[^/]+/Classes/[^/]+/[^/]+\\.md$",
+      "template": "_system/templates/subclass.md"
+    },
+    {
+      "regex": "^Library/Mechanics/[^/]+/Races/",
+      "template": "_system/templates/race.md"
+    },
+    {
+      "regex": "^Library/Mechanics/[^/]+/Backgrounds/",
+      "template": "_system/templates/background.md"
+    },
+    {
+      "regex": "^Library/Mechanics/[^/]+/Feats/",
+      "template": "_system/templates/feat.md"
     },
     {
       "regex": "^Library/Mechanics/[^/]+/Rules/",

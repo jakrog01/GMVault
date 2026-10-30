@@ -15,12 +15,14 @@ const relations = {
   faction: ["world", "campaign", "status"], lore: ["world", "campaign"], event: ["world", "campaign", "world_date", "location"],
   quest: ["campaign", "status", "location"], encounter: ["campaign", "location", "creatures"], handout: ["campaign", "file"],
   item: ["system", "world", "campaign", "owner"], creature: ["system", "world", "campaign"], spell: ["system", "world", "campaign"],
-  rules: ["system", "campaign", "world", "class", "race"], claim: ["about", "what", "from", "session", "status"],
+  rules: ["system", "campaign", "world"], class: ["system", "world"], subclass: ["class", "system", "world"],
+  race: ["race", "system", "world"], background: ["system", "world"], feat: ["system", "world"],
+  claim: ["about", "what", "from", "session", "status"],
 }
 const types = Object.keys(relations)
 
 test("ADR types and template frontmatter stay inside the note contract", async () => {
-  const adr = await read("docs/adr/0004-note-contract.md")
+  const adr = await read("docs/adr/0004-note-contract.md") + await read("docs/adr/0005-system-library.md")
   for (const type of types) assert.ok(adr.includes(`| \`${type}\` |`), `ADR type ${type}`)
   for (const name of await readdir(path.join(root, "_system/templates"))) {
     if (!name.endsWith(".md")) continue
@@ -38,12 +40,14 @@ test("ADR types and template frontmatter stay inside the note contract", async (
   }
 })
 
-test("ADR 0005 fields and rule and lore subtypes remain additive", async () => {
+test("ADR 0005 defines character-option types and rule and lore subtypes", async () => {
   const adr = await read("docs/adr/0005-system-library.md")
+  for (const type of ["class", "subclass", "race", "background", "feat"]) assert.ok(adr.includes(`| \`${type}\` |`), type)
   for (const field of ["system", "class", "race", "source"]) assert.ok(adr.includes(`\`${field}\``), field)
-  for (const subtype of ["class", "subclass", "race", "subrace", "background", "feat", "condition", "religion", "deity", "history", "culture", "language", "magic", "economy"]) assert.ok(adr.includes(`\`${subtype}\``), subtype)
+  for (const subtype of ["house-rule", "condition", "subrace", "religion", "deity", "history", "culture", "language", "magic", "economy"]) assert.ok(adr.includes(`\`${subtype}\``), subtype)
   const rules = await read("_system/templates/rules.md")
-  for (const subtype of ["class", "subclass", "race", "subrace", "background", "feat"]) assert.ok(rules.includes(`"${subtype}"`), subtype)
+  assert.ok(rules.includes('"house-rule"'))
+  for (const field of ["class", "race"]) assert.ok(!rules.includes(`\n${field}:`), field)
 })
 
 test("Templater maps each new folder to its note template", async () => {
@@ -54,17 +58,40 @@ test("Templater maps each new folder to its note template", async () => {
     "Campaigns/Glass/NPCs/A.md": "npc", "Campaigns/Glass/Locations/A.md": "location", "Campaigns/Glass/Quests/A.md": "quest",
     "Campaigns/Glass/Factions/A.md": "faction", "Campaigns/Glass/Encounters/A.md": "encounter", "Campaigns/Glass/Handouts/A.md": "handout",
     "Campaigns/Glass/Campaign.md": "campaign", "Parties/Watch/Party.md": "party", "Parties/Watch/Aria.md": "pc",
-    "Library/Mechanics/dnd5e/Rules/A.md": "rules",
+    "Library/Mechanics/dnd5e/Classes/Fighter/Fighter.md": "class", "Library/Mechanics/dnd5e/Classes/Wizard.md": "class",
+    "Library/Mechanics/dnd5e/Classes/Fighter/Battle Master.md": "subclass", "Library/Mechanics/dnd5e/Races/Elf/Elf.md": "race",
+    "Library/Mechanics/dnd5e/Races/Elf/High Elf.md": "race", "Library/Mechanics/dnd5e/Backgrounds/A.md": "background",
+    "Library/Mechanics/dnd5e/Feats/A.md": "feat", "Library/Mechanics/dnd5e/Rules/A.md": "rules",
     "Library/dnd5e/Worlds/Glass/World.md": "world", "Library/dnd5e/Worlds/Glass/NPCs/A.md": "npc",
     "Library/dnd5e/Worlds/Glass/Locations/A.md": "location", "Library/dnd5e/Worlds/Glass/Factions/A.md": "faction",
     "Library/dnd5e/Worlds/Glass/Lore/History/A.md": "lore", "Library/dnd5e/Worlds/Glass/Events/A.md": "event",
     "Library/dnd5e/Mechanics/Spells/A.md": "spell", "Library/dnd5e/Mechanics/Bestiary/A.md": "creature",
-    "Library/dnd5e/Mechanics/Items/A.md": "item", "Library/dnd5e/Mechanics/Classes/Fighter/Fighter.md": "rules",
-    "Library/dnd5e/Mechanics/Races/Elf/Elf.md": "rules", "Library/dnd5e/Mechanics/Backgrounds/A.md": "rules",
-    "Library/dnd5e/Mechanics/Feats/A.md": "rules", "Library/dnd5e/Mechanics/Rules/A.md": "rules",
+    "Library/dnd5e/Mechanics/Items/A.md": "item", "Library/dnd5e/Mechanics/Classes/Fighter/Fighter.md": "class",
+    "Library/dnd5e/Mechanics/Classes/Wizard.md": "class", "Library/dnd5e/Mechanics/Classes/Fighter/Battle Master.md": "subclass",
+    "Library/dnd5e/Mechanics/Races/Elf/Elf.md": "race", "Library/dnd5e/Mechanics/Races/Elf/High Elf.md": "race",
+    "Library/dnd5e/Mechanics/Backgrounds/A.md": "background", "Library/dnd5e/Mechanics/Feats/A.md": "feat",
+    "Library/dnd5e/Mechanics/Rules/A.md": "rules",
   }
   for (const [file, kind] of Object.entries(cases)) assert.equal(rules.find(rule => new RegExp(rule.regex).test(file))?.template, `_system/templates/${kind}.md`, file)
   assert.deepEqual(JSON.parse(await read(".obsidian/plugins/templater-obsidian/data.json")).file_templates, rules)
+})
+
+test("character-option templates derive system and parent links", async () => {
+  const render = async (name, folder, title) => {
+    const body = await read(`_system/templates/${name}.md`)
+    const fields = [...body.matchAll(/^([a-z]+): "<%\* (.*?) %>"$/gm)]
+    return Object.fromEntries(fields.map(([, field, command]) => [field, new Function("tp", `let tR = ""; ${command}; return tR`)({ file: { folder: () => folder, title } })]))
+  }
+  for (const prefix of ["Library/dnd5e/Mechanics", "Library/Mechanics/dnd5e"]) {
+    assert.equal((await render("class", `${prefix}/Classes/Fighter`, "Fighter")).system, "dnd5e")
+    assert.equal((await render("subclass", `${prefix}/Classes/Fighter`, "Battle Master")).class, `[[${prefix}/Classes/Fighter/Fighter]]`)
+    assert.deepEqual(await render("race", `${prefix}/Races/Elf`, "Elf"), { system: "dnd5e", world: "", subtype: "", race: "" })
+    assert.equal((await render("race", `${prefix}/Races/Elf`, "High Elf")).race, `[[${prefix}/Races/Elf/Elf]]`)
+    assert.equal((await render("race", `${prefix}/Races/Elf`, "High Elf")).subtype, "subrace")
+    for (const name of ["background", "feat"]) assert.equal((await render(name, `${prefix}/${name === "feat" ? "Feats" : "Backgrounds"}`, "A")).system, "dnd5e")
+    assert.equal((await render("rules", `${prefix}/Rules`, "A")).subtype, "")
+  }
+  assert.equal((await render("rules", "Campaigns/Glass/Mechanics", "A")).subtype, "house-rule")
 })
 
 test("templates and note types are only ever added to, never removed from, since the last release", async () => {

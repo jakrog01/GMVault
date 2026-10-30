@@ -28,9 +28,9 @@ GMVault/
 ├── Library/
 │   ├── <system>/
 │   │   ├── Mechanics/
-│   │   │   ├── Classes/<class>/<class>.md, <subclass>.md
-│   │   │   ├── Races/<race>/<race>.md, <subrace>.md
-│   │   │   ├── Backgrounds/, Feats/, Rules/<chapter>/
+│   │   │   ├── Classes/<class>/<class>.md (class), <subclass>.md (subclass)
+│   │   │   ├── Races/<race>/<race>.md (race), <subrace>.md (subrace)
+│   │   │   ├── Backgrounds/ (background), Feats/ (feat), Rules/<chapter>/
 │   │   │   └── Spells/, Bestiary/, Items/
 │   │   └── Worlds/<world>/
 │   │       ├── World.md
@@ -70,8 +70,8 @@ GMVault/
 | In-world date | `Runs/<run>/World Day.md` | Created by **New run** |
 | Player claim | `Runs/<run>/<claim>.md` | Insert `claim.md` with **Templater: Insert template** |
 | Creature, spell, item | `Library/<system>/Mechanics/Bestiary/`, `Spells/`, or `Items/` | Automatic `creature.md`, `spell.md`, or `item.md` |
-| Class, subclass, race, subrace | `Library/<system>/Mechanics/Classes/<class>/` or `Races/<race>/` | Automatic `rules.md` with subtype and parent link |
-| Background or feat | `Library/<system>/Mechanics/Backgrounds/` or `Feats/` | Automatic `rules.md` |
+| Class, subclass, race, subrace | `Library/<system>/Mechanics/Classes/<class>/` or `Races/<race>/` | Automatic `class.md`, `subclass.md`, or `race.md` with parent link where needed |
+| Background or feat | `Library/<system>/Mechanics/Backgrounds/` or `Feats/` | Automatic `background.md` or `feat.md` |
 | Rules or house rules | `Library/<system>/Mechanics/Rules/<chapter>/` or a campaign or world `Mechanics/` folder | System rules get `rules.md`; homebrew can use it manually |
 | Calendar content | `Calendar/` | No automatic template |
 | Retired note | `Archive/` | No automatic template |
