@@ -2,7 +2,7 @@
 
 ## Unreleased
 
-## 2.6.0
+## 2.6.1
 
 - GMVault finds any person, place or rule during play with **Look up**: notes of the active run come first, exact names beat loose matches, and Polish names match without diacritics.
 - Choosing a result opens a card with the note, what this table recorded about it in `State.md` and the last sessions, and buttons to open it, insert a link, or add it to combat.

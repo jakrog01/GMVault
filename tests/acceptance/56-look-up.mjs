@@ -13,7 +13,7 @@ addFile("Runs/Harbor/Session 2026-10-29.md", "Spoke to [[Campaigns/Glass/NPCs/Ar
 addFile("Runs/Other/Session 2026-10-30.md", "Saw [[Campaigns/Glass/NPCs/Aria]].", { type: "session" })
 const aria = addFile("Campaigns/Glass/NPCs/Aria.md", "---\ntype: npc\n---\n# Aria\nA secret.", { type: "npc", aliases: ["The Watcher"] })
 addFile("Worlds/Other/NPCs/Aria.md", "", { type: "npc" })
-const polish = addFile("Library/dnd5e/Worlds/Coast/Lore/Zaklęcie.md", "A charm.", { type: "lore" })
+const polish = addFile("Library/dnd5e/Worlds/Coast/Lore/Zakl\u0119cie.md", "A charm.", { type: "lore" })
 const city = addFile("Library/dnd5e/Worlds/Coast/Locations/\u0141\u00f3d\u017a.md", "", { type: "location" })
 const bram = addFile("Worlds/Other/NPCs/Bram.md", "", { type: "npc" })
 addFile("Campaigns/Glass/NPCs/Barbarossa Ram.md", "", { type: "npc" })
