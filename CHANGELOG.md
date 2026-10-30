@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+## 2.6.0
+
+- GMVault finds any person, place or rule during play with **Look up**: notes of the active run come first, exact names beat loose matches, and Polish names match without diacritics.
+- Choosing a result opens a card with the note, what this table recorded about it in `State.md` and the last sessions, and buttons to open it, insert a link, or add it to combat.
+- **Quick NPC** rolls a name and a trait, creates the NPC in the campaign's world, and inserts a link where you were writing, without leaving your note.
+- Your own name and trait lists in `_local/tables/names.txt` and `traits.txt` replace the shipped ones.
+- Inserted links use the short `[[Name]]` form when the name is unique.
+
 ## 2.5.0
 
 - GMVault keeps each world with the system it is written for: `Library/<system>/Worlds/<world>/` and `Library/<system>/Mechanics/`, with the old `Worlds/` and `Library/Mechanics/` layout still working everywhere (ADR 0005).
