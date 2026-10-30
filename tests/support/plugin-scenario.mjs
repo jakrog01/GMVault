@@ -634,6 +634,55 @@ export async function runScenario({ override } = {}) {
   await buttonComponent(homeModal.contentEl, s.homeCreate).click()
   assert.ok(notices.includes(s.homeRunNeedsCampaignParty))
   homeModal.close()
+  const archivistPath = "Campaigns/Glass/NPCs/Archivist.md"
+  addFile(archivistPath, "---\ntype: npc\n---\n# Archivist\n" + Array.from({ length: 65 }, (_, index) => `Memory ${index}`).join("\n"), { type: "npc", status: "missing" })
+  addFile("Runs/Harbor/State.md", "The [[Campaigns/Glass/NPCs/Archivist]] is missing.", { type: "state" })
+  addFile("Runs/Harbor/Session 2026-10-30.md", "Met [[Campaigns/Glass/NPCs/Archivist]].", { type: "session" })
+  workspace.activeView = null
+  command(s.lookUp).callback()
+  let lookup = modals.at(-1)
+  lookup.query("Archivist")
+  lookup.choose()
+  let lookupCard = modals.at(-1)
+  await until(() => byText(lookupCard.contentEl, s.lookupAddCombat).length > 0, "lookup card without editor")
+  assert.ok(lookupCard.contentEl.textContent.includes(s.lookupAtTable))
+  assert.ok(lookupCard.contentEl.textContent.includes("State: The [[Campaigns/Glass/NPCs/Archivist]] is missing."))
+  assert.ok(lookupCard.contentEl.textContent.includes("Session 2026-10-30: Met [[Campaigns/Glass/NPCs/Archivist]]."))
+  assert.ok(byText(lookupCard.contentEl, s.lookupMore).length)
+  assert.ok(byText(lookupCard.contentEl, s.lookupInsert)[0].disabled)
+  byText(lookupCard.contentEl, s.lookupOpenSide)[0].click()
+  lookupCard.close()
+  const insertedLinks = []
+  const activeEditor = new env.MarkdownView()
+  activeEditor.editor = { replaceSelection: value => insertedLinks.push(value) }
+  workspace.activeView = activeEditor
+  command(s.lookUp).callback()
+  lookup = modals.at(-1)
+  lookup.query("Archivist")
+  lookup.choose()
+  lookupCard = modals.at(-1)
+  await until(() => byText(lookupCard.contentEl, s.lookupInsert).length > 0, "lookup card with editor")
+  assert.equal(byText(lookupCard.contentEl, s.lookupInsert)[0].disabled, false)
+  byText(lookupCard.contentEl, s.lookupInsert)[0].click()
+  assert.deepEqual(insertedLinks, ["[[Archivist]]"])
+  env.adapterFiles.set("_system/tables/names.txt", "Mira\n")
+  env.adapterFiles.set("_system/tables/traits.txt", "Wears a blue scarf\n")
+  env.adapterFiles.set("_system/templates/npc.md", "---\ntype: npc\nworld: \"\"\ncampaign: \"\"\n---\n\n# <% tp.file.title %>\n")
+  command(s.quickNpc).callback()
+  let npcModal = modals.at(-1)
+  await until(() => !!settingByName(npcModal.contentEl, s.quickNpcWhere), "quick NPC fields")
+  settingByName(npcModal.contentEl, s.homeFieldName).components.find(component => component.kind === "extra").click()
+  settingByName(npcModal.contentEl, s.quickNpcTrait).components.find(component => component.kind === "extra").click()
+  assert.equal(settingByName(npcModal.contentEl, s.quickNpcWhere).components[0].value, "Campaigns/Glass/NPCs")
+  await buttonComponent(npcModal.contentEl, s.homeCreate).click()
+  await until(() => notices.includes(fill(s.quickNpcCreated, { name: "Mira" })), "quick NPC created")
+  assert.ok(env.files.has("Campaigns/Glass/NPCs/Mira.md"))
+  const activePointer = env.files.get("Active.md")
+  const runLink = activePointer.frontmatter.run
+  activePointer.frontmatter.run = ""
+  command(s.quickNpc).callback()
+  assert.ok(notices.includes(s.quickNpcNeedsRun))
+  activePointer.frontmatter.run = runLink
   return { env, plugin }
 }
 

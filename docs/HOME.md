@@ -19,6 +19,8 @@ When `Active.md` points to a complete run, the **Active run** card shows:
 | **Open party** | The party note |
 | **Open assistant** | The assistant view |
 | **Open combat tracker** | The combat tracker |
+| **Look up** | Search game notes and open a card |
+| **Quick NPC** | Create an NPC in the world or campaign |
 
 ## Lists
 
