@@ -6,7 +6,7 @@ Start an experimental system package under `_local`, then ship it only when it c
 
 The package's `noteTypes` lists the note shapes it supports. Its `requiredFrontmatter` maps a shape to the fields that must be present, such as `system` for a campaign or creature and `role` plus `campaign` for a run. These fields let the vault recognise the note without copying game rules into the package.
 
-Keep shapes small and explicit. A package may describe a creature, spell, item, campaign, party, run, or another supported note kind, but it should not embed a rulebook, monster entry, or other published rules material. Put a user's actual mechanics notes in their content roots.
+Keep shapes small and explicit. A package may describe a creature, spell, item, campaign, party, run, or another supported note kind, but it should not embed a rulebook, monster entry, or other published rules material. Put a user's actual mechanics notes in `Library/<system>/Mechanics/`. Use `Classes/`, `Races/`, `Backgrounds/`, and `Feats/` for character options, alongside `Spells/`, `Bestiary/`, `Items/`, and `Rules/`. Worlds for that system live in `Library/<system>/Worlds/`. The older `Library/Mechanics/<system>/` path remains supported.
 
 Use the same field names in templates and examples so a newly created note passes its expected shape without manual repair.
 

@@ -25,7 +25,7 @@ World and campaign notes describe the world before play. Never edit them because
 
 | Note | Says |
 | --- | --- |
-| `Worlds/Glass Coast/NPCs/Ilyra.md` | Ilyra watches the Storm Gate after sunset. |
+| `Library/generic/Worlds/Glass Coast/NPCs/Ilyra.md` | Ilyra watches the Storm Gate after sunset. |
 | `Runs/Glassgate-Harbor-S01/State.md` | Ilyra drowned when the Storm Gate opened at dawn. |
 | `Runs/Glassgate-Clock-S02/State.md` | Ilyra joined the Clockmakers and now keeps the Storm Gate's logs. |
 

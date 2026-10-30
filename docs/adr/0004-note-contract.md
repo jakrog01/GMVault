@@ -50,6 +50,8 @@ Relation fields hold wikilinks. `status` is free text with suggested values: `al
 
 ### Recommended layout
 
+For the newer system library recommendation, see [ADR 0005](0005-system-library.md).
+
 ```text
 Worlds/<world>/World.md, NPCs/, Locations/, Factions/, Lore/, Events/, Mechanics/
 Campaigns/<campaign>/Campaign.md, Quests/, Encounters/, Handouts/, Mechanics/

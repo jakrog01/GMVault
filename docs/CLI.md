@@ -67,13 +67,21 @@ The validated archive is retained as `.gmvault/cache/GMVault-<version>.zip`, the
 With `--dry-run`, it fetches and validates the archive in temporary storage, prints `would replace _system from <path>`, runs migrations in dry-run mode, and leaves no cache archive or other vault changes.
 It refuses a release missing the expected asset, an unavailable or timed-out download, an unreadable archive, a missing `_system/` or `_system/VERSION`, a version mismatch, or `--latest` together with `--from`.
 
+## `migrate system-library`
+
+```text
+node _system/bin/gmvault.mjs migrate system-library [--dry-run] [--system <id>]
+```
+
+Move old `Worlds/<world>/` and `Library/Mechanics/<system>/` folders into `Library/<system>/Worlds/` and `Library/<system>/Mechanics/`. The command rewrites explicit moved-path wikilinks in content notes and backs up every moved or rewritten file under `.gmvault/backups/<timestamp>-system-library/`. It refuses destination collisions and worlds whose system cannot be determined. It uses the world's `system`, agreeing linked campaigns, or `--system` in that order. `--dry-run` prints the planned moves without writing anything. Running it again after migration reports no changes.
+
 ## `demo install`
 
 ```text
 node _system/bin/gmvault.mjs demo install
 ```
 
-Copy shipped demo notes into the content roots, replacing files at matching demo paths.
+Copy shipped demo notes from `_system/.demo/` into the content roots, replacing files at matching demo paths. The dot folder keeps these uninstalled notes out of Obsidian's Properties suggestions.
 It writes the demo campaign, party, run, library, and calendar material.
 Success prints `demo installed`.
 It fails if the shipped demo cannot be read or the target files cannot be copied.
@@ -133,7 +141,7 @@ It fails if a migration, managed artifact refresh, plugin refresh, state write, 
 `--from` belongs to `update` and supplies a directory or zip release source.
 `--check` belongs to `update` and reports whether the configured release host has a newer version.
 `--latest` belongs to `update` and fetches, validates, and installs a newer configured release.
-`--dry-run` belongs to `update` and previews migration work without replacing `_system/`.
+`--dry-run` belongs to `update` and `migrate system-library` and previews work without changing the vault.
 `--map` belongs to `adopt` and supplies the import mapping JSON file.
 No other CLI flags are accepted by the current command parser.
 Use [Troubleshooting](TROUBLESHOOTING.md) to interpret a failed `doctor` command.

@@ -53,7 +53,7 @@ GMVault is an Obsidian vault for running tabletop RPG campaigns. This manual tak
 
     ---
 
-    [Architecture](ARCHITECTURE.md), [maintaining releases](UPGRADING.md), and the design records [ADR 0001](adr/0001-update-mechanism.md), [ADR 0002](adr/0002-active-pointer-location.md), [ADR 0003](adr/0003-assistant-retrieval.md), [ADR 0004](adr/0004-note-contract.md).
+    [Architecture](ARCHITECTURE.md), [maintaining releases](UPGRADING.md), and the design records [ADR 0001](adr/0001-update-mechanism.md), [ADR 0002](adr/0002-active-pointer-location.md), [ADR 0003](adr/0003-assistant-retrieval.md), [ADR 0004](adr/0004-note-contract.md), [ADR 0005](adr/0005-system-library.md).
 
     [Section overview](for-developers/index.md)
 

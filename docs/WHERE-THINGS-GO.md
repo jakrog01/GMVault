@@ -6,12 +6,7 @@ Use this map when deciding where to create a note. Names in angle brackets stand
 GMVault/
 ├── Active.md                    active run pointer
 ├── Home.md                      the Home screen as a note
-├── Worlds/
-│   └── <world>/
-│       ├── World.md             setting and calendar
-│       ├── NPCs/, Locations/, Factions/
-│       ├── Lore/, Events/
-│       └── Mechanics/           shared homebrew
+├── Worlds/                     earlier world layout, still supported
 ├── Campaigns/
 │   └── <campaign>/
 │       ├── Campaign.md          premise, factions, locations
@@ -31,9 +26,18 @@ GMVault/
 │       ├── Session YYYY-MM-DD.md
 │       └── <claim>.md           optional player claim
 ├── Library/
-│   ├── Mechanics/<system>/Bestiary/
-│   ├── Mechanics/<system>/Spells/
-│   ├── Mechanics/<system>/Items/
+│   ├── <system>/
+│   │   ├── Mechanics/
+│   │   │   ├── Classes/<class>/<class>.md, <subclass>.md
+│   │   │   ├── Races/<race>/<race>.md, <subrace>.md
+│   │   │   ├── Backgrounds/, Feats/, Rules/<chapter>/
+│   │   │   └── Spells/, Bestiary/, Items/
+│   │   └── Worlds/<world>/
+│   │       ├── World.md
+│   │       ├── Locations/<place>/<place>.md
+│   │       ├── Lore/<category>/
+│   │       └── Factions/, NPCs/, Events/, Mechanics/
+│   ├── Mechanics/<system>/      earlier mechanics layout, still supported
 │   └── Assets/
 ├── Calendar/                    calendar content
 ├── Archive/                     retired material
@@ -48,8 +52,10 @@ GMVault/
 
 | I want to add... | Put it in... | Template it gets |
 | --- | --- | --- |
-| World overview | `Worlds/<world>/World.md` | **New world** uses `world.md` |
-| World NPC, location, faction, lore, event | `Worlds/<world>/` matching subfolder | Automatic matching template |
+| World overview | `Library/<system>/Worlds/<world>/World.md` | **New world** uses `world.md` |
+| World NPC, location, faction, lore, event | `Library/<system>/Worlds/<world>/` matching subfolder | Automatic matching template |
+| Nested place | `Library/<system>/Worlds/<world>/Locations/<place>/` | `location.md` links the parent place |
+| Religion, history, culture, peoples, languages, magic, cosmology, economy, creatures, other lore | `Library/<system>/Worlds/<world>/Lore/<category>/` | Automatic `lore.md` |
 | Campaign overview | `Campaigns/<campaign>/Campaign.md` | **New campaign** uses `campaign.md` |
 | NPC | `Campaigns/<campaign>/NPCs/<name>.md` | Automatic `npc.md` |
 | Location | `Campaigns/<campaign>/Locations/<name>.md` | Automatic `location.md` |
@@ -63,8 +69,10 @@ GMVault/
 | Persistent state | `Runs/<run>/State.md` | Created by **New run** |
 | In-world date | `Runs/<run>/World Day.md` | Created by **New run** |
 | Player claim | `Runs/<run>/<claim>.md` | Insert `claim.md` with **Templater: Insert template** |
-| Creature, spell, item | `Library/Mechanics/<system>/Bestiary/`, `Spells/`, or `Items/` | Automatic `creature.md`, `spell.md`, or `item.md` |
-| Rules or house rules | `Library/Mechanics/<system>/` or the campaign's `Mechanics/` folder | Choose a rules note or `rules.md` manually |
+| Creature, spell, item | `Library/<system>/Mechanics/Bestiary/`, `Spells/`, or `Items/` | Automatic `creature.md`, `spell.md`, or `item.md` |
+| Class, subclass, race, subrace | `Library/<system>/Mechanics/Classes/<class>/` or `Races/<race>/` | Automatic `rules.md` with subtype and parent link |
+| Background or feat | `Library/<system>/Mechanics/Backgrounds/` or `Feats/` | Automatic `rules.md` |
+| Rules or house rules | `Library/<system>/Mechanics/Rules/<chapter>/` or a campaign or world `Mechanics/` folder | System rules get `rules.md`; homebrew can use it manually |
 | Calendar content | `Calendar/` | No automatic template |
 | Retired note | `Archive/` | No automatic template |
 | Template override | `_local/templates/<kind>.md` | Your local version takes precedence for Table Tools creation |
@@ -76,3 +84,7 @@ GMVault/
     `_system/` is replaced on update. Keep your notes in the content roots and your overrides in `_local/`. [Templates and overrides](CUSTOMISING.md) explains the local layer.
 
 Read [Your first campaign](FIRST-CAMPAIGN.md) for the creation sequence and [Sessions and runs](RUNS.md) for the run files.
+
+## Existing vaults
+
+The earlier `Worlds/<world>/` and `Library/Mechanics/<system>/` paths remain valid. To move them with backups and rewritten explicit links, run `node _system/bin/gmvault.mjs migrate system-library --dry-run`, then run it without `--dry-run`. A world with sub-places can use `Locations/<place>/<place>.md` with child places in the same folder. Organise lore under `Religion/`, `History/`, `Culture/`, `Peoples/`, `Languages/`, `Magic/`, `Cosmology/`, `Economy/`, `Creatures/`, or `Other/`.

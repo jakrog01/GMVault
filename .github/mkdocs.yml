@@ -88,3 +88,4 @@ nav:
       - "ADR 0002: active run pointer location": adr/0002-active-pointer-location.md
       - "ADR 0003: assistant retrieval": adr/0003-assistant-retrieval.md
       - "ADR 0004: note contract": adr/0004-note-contract.md
+      - "ADR 0005: system library layout": adr/0005-system-library.md
