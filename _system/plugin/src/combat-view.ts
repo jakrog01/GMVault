@@ -5,7 +5,7 @@ import { experienceForChallenge, savesText } from "./statblock";
 import { conditionDescription, conditionLabel, format, Strings } from "./strings";
 import { Participant, Trait } from "./types";
 import { CombatTracker, COMBAT_VIEW, sortedParticipants } from "./combat";
-import { AddPlayersModal, ConditionsModal, ConfirmModal, CreaturePickerModal, EditParticipantModal, EncounterSetsModal } from "./combat-modals";
+import { AddPlayersModal, ConditionsModal, ConfirmModal, CreaturePickerModal, EditParticipantModal, EncounterNameModal, EncounterNotePicker, EncounterSetsModal } from "./combat-modals";
 
 function appendLogEntry(list: HTMLElement, entry: string): void {
   const item = list.createEl("li");
@@ -57,11 +57,14 @@ export class CombatView extends ItemView {
     round.createSpan({ cls: "tt-round-label", text: s.roundLabel });
     round.createSpan({ cls: "tt-round-number", text: combat.round ? String(combat.round) : "\u2014" });
     const right = toolbar.createDiv("tt-toolbar-right");
-    const iconButton = (icon: string, title: string, onClick: () => void): void => {
+    const iconButton = (icon: string, title: string, onClick: () => void, disabled = false): void => {
       const element = right.createEl("button", { cls: "tt-btn tt-btn-icon-only", attr: { "aria-label": title, title } });
       setIcon(element, icon);
+      element.disabled = disabled;
       element.onclick = onClick;
     };
+    iconButton("book-open", s.encounterStart, () => new EncounterNotePicker(this.app, this.plugin).open());
+    iconButton("save", s.encounterSaveCurrentNote, () => new EncounterNameModal(this.app, this.plugin, combat.name).open(), !combat.participants.some(participant => participant.kind !== "player"));
     iconButton("layers", s.encounterSetsTitle, () => new EncounterSetsModal(this.app, this.plugin).open());
     iconButton("file-down", s.exportToNote, () => void this.tracker.exportToActiveNote());
     iconButton("rotate-ccw", s.newCombat, () => {

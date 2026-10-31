@@ -110,6 +110,21 @@ export function createEnvironment() {
     query(text) { this.suggestions = this.getSuggestions(text); return this.suggestions }
     choose(index = 0, event = {}) { const item = this.suggestions[index]; this.close(); return this.onChooseSuggestion(item, event) }
   }
+  const menus = []
+  class MenuItem {
+    setTitle(title) { this.title = title; record(title); return this }
+    setIcon(icon) { this.icon = icon; return this }
+    setSection(section) { this.section = section; return this }
+    onClick(handler) { this.handler = handler; return this }
+    click() { return this.handler?.() }
+  }
+  class Menu {
+    constructor() { this.items = [] }
+    addItem(callback) { const item = new MenuItem(); this.items.push(item); callback(item); return this }
+    showAtMouseEvent() { menus.push(this); return this }
+    showAtPosition() { menus.push(this); return this }
+    item(title) { return this.items.find(item => item.title === title) }
+  }
   const prepareFuzzySearch = query => value => {
     const target = String(value).toLowerCase()
     let at = -1, score = 0
@@ -211,6 +226,7 @@ export function createEnvironment() {
     getActiveFile: () => workspace.activeFile,
     getActiveViewOfType: () => workspace.activeView,
     openLinkText: async target => { opened.push(target) },
+    on: (...args) => on(...args),
   }
   const makeLeaf = (type = null, deferred = false) => ({
     app, type, deferred, view: type ? new ItemView({ app }) : null,
@@ -266,7 +282,7 @@ export function createEnvironment() {
   const clipboard = []
   const platform = { isDesktopApp: true, isMobile: false }
   const obsidian = {
-    Plugin, ItemView, Modal, FuzzySuggestModal, SuggestModal, prepareFuzzySearch, PluginSettingTab, Setting, Notice, TFile, MarkdownView, MarkdownRenderChild,
+    Plugin, ItemView, Menu, Modal, FuzzySuggestModal, SuggestModal, prepareFuzzySearch, PluginSettingTab, Setting, Notice, TFile, MarkdownView, MarkdownRenderChild,
     Platform: platform,
     MarkdownRenderer: { render: async (_app, markdown, element) => { element.appendText(markdown) } },
     requestUrl,
@@ -288,7 +304,7 @@ export function createEnvironment() {
   Object.defineProperty(globalThis, "navigator", { value: { clipboard: { writeText: async text => { clipboard.push(text); record(text) } } }, configurable: true })
 
   return {
-    app, workspace, files, addFile, adapterFiles, appended, opened, leaves, restoreLeaf, modals, notices, rendered, requests, network, platform, clipboard, storage, emit,
+    app, workspace, files, addFile, adapterFiles, appended, opened, leaves, menus, Menu, restoreLeaf, modals, notices, rendered, requests, network, platform, clipboard, storage, emit,
     MockElement, TFile, MarkdownView, load, byLabel, byClass, byText, settingByName, buttonComponent, record,
   }
 }

@@ -19,13 +19,21 @@ The assistant ribbon is **Table Tools: Assistant** and opens the assistant.
 | `open-map` | **Open map** | Opens the active campaign world's map, or the active world or location note's map. See [Maps](MAPS.md). |
 | `look-up` | **Look up** | Finds a game note and opens its card. |
 | `quick-npc` | **Quick NPC** | Creates an NPC in the active campaign or world. |
+| `new-session` | **New session** | Creates and opens a dated session note for the active run, like Home's **New session**. |
+| `note-actions` | **Note actions** | Lists the actions for the open game note: **Add to combat**, **Start encounter**, **Wrap up**, **Open map**, **Show on map**. Shown only when the open note has one. |
 | `wrap-up-session` | **Wrap up session** | Proposes run state changes and rumours from a session note. |
 | `assistant-rebuild-index` | **Assistant: rebuild index** | Rebuilds the assistant index. |
 | `combat-next-turn` | **Combat: next turn** | Advances the active combat turn. |
 | `combat-previous-turn` | **Combat: previous turn** | Moves the active combat turn back. |
 | `combat-roll-initiative` | **Combat: roll initiative** | Rolls initiative for combat participants. |
+| `combat-add-players` | **Combat: add players** | Opens the **Players** picker. |
+| `combat-add-creature` | **Combat: add enemy** | Opens the **Enemy** picker. |
+| `combat-start-encounter` | **Combat: start encounter** | Picks an encounter note and loads it. |
+| `combat-save-encounter` | **Combat: save as encounter note** | Saves the current non-player participants as an encounter note. |
 | `combat-clear` | **Combat: clear** | Clears the current combat. |
 | `assistant-ask-selection` | **Assistant: ask about the selected text** | Opens the assistant and sends the editor selection; without a selection it says **Select some text first.** |
+
+Right-click a game note in the file explorer, its tab, or the editor to get the same note actions, plus **Look up** to open its card. Other files get nothing extra.
 
 ## Combat tracker
 
@@ -42,7 +50,7 @@ The toolbar has **Players**, **Enemy**, and **Initiative** for adding party memb
 Before combat starts, **Start** begins round 1 and rolls initiative for participants without one.
 Once active, **Previous** and **Next** move the turn; the tracker skips defeated non-player participants.
 The **Round** display shows the current round or an em dash before start.
-The right-side buttons open **Encounter sets**, **Save to the active note**, and **New combat (clear)**.
+The right-side buttons are **Start encounter**, **Save as encounter note** (enabled once there is a non-player participant), **Encounter sets**, **Save to the active note**, and **New combat (clear)**.
 Clearing an occupied combat asks **Clear the combat?** and requires **Clear**; an empty combat clears immediately.
 
 ### Difficulty and participant table
@@ -71,7 +79,7 @@ The **Log** panel shows the most recent combat events, including additions, init
 An encounter set is a saved list of source-backed enemies prepared before a session.
 Open **Encounter sets** to load a set, delete one, or **Save the current enemies as a set** with a name and description.
 Loading adds the set's enemies to the current combat; saving stores encounter sets in Table Tools plugin data.
-The same menu has **Start encounter** for `type: encounter` notes and **Save as encounter note** for the current non-player participants. Starting a note loads its `creatures` entries and adds missing party players once. Missing creature links are reported together while valid creatures still load. The note writer creates `Campaigns/<campaign>/Encounters/<name>.md`, adds a number to a duplicate name, groups source-backed creatures as `creature` and `count` entries, and lists manual participants below the title. Each legacy set also has **Save as note** to copy it into a note while keeping the set. An encounter note's **Look up** card has **Start encounter**.
+**Start encounter** on the toolbar (also in **Encounter sets**) loads a `type: encounter` note; **Save as encounter note** saves the current non-player participants. Starting a note loads its `creatures` entries and adds missing party players once. Missing creature links are reported together while valid creatures still load. The note writer creates `Campaigns/<campaign>/Encounters/<name>.md`, adds a number to a duplicate name, groups source-backed creatures as `creature` and `count` entries, and lists manual participants below the title. Each legacy set also has **Save as note** to copy it into a note while keeping the set. An encounter note's **Look up** card has **Start encounter**.
 **Save to the active note** appends a combat callout with the initiative table and recent log to the active Markdown note.
 If no note is open, the same export is copied to the clipboard and reports **No open note; the combat was copied to the clipboard.**
 

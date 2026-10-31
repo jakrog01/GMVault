@@ -1,7 +1,7 @@
 {
   "id": "table-tools",
   "name": "GMVault Table Tools",
-  "version": "2.7.1",
+  "version": "2.7.2",
   "minAppVersion": "1.5.0",
   "description": "Combat tracker, dice, statblock cards, and a Gemini assistant for GMVault",
   "author": "GMVault",

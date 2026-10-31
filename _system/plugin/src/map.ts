@@ -1,7 +1,7 @@
-import { App, FuzzySuggestModal, ItemView, MarkdownRenderChild, Modal, Setting, TFile, WorkspaceLeaf, setIcon } from "obsidian";
+import { App, FuzzySuggestModal, ItemView, MarkdownRenderChild, Menu, Modal, Setting, TFile, WorkspaceLeaf, setIcon } from "obsidian";
 import type TableTools from "./main";
 import { createNote, linkTarget, noteFields, pathLink, resolveLink, wikilink } from "./notes";
-import { LookupCard, LookupModal } from "./lookup";
+import { LookupCard, LookupModal, lookupCandidate } from "./lookup";
 import { MAP_TYPES } from "./contract";
 
 export const MAP_VIEW = "tt-map";
@@ -66,7 +66,6 @@ class NewLocationModal extends Modal {
 }
 
 export class MapPanel {
-  private edit = false;
   private scale = 1;
   private x = 0;
   private y = 0;
@@ -96,7 +95,7 @@ export class MapPanel {
       else this.render();
     }, 200) as unknown as number;
   }
-  setOwner(file: TFile, highlight?: TFile): void { if (this.timer) clearTimeout(this.timer); this.timer = undefined; this.owner = file; this.highlight = highlight; this.edit = false; this.scale = 1; this.x = 0; this.y = 0; this.render(); }
+  setOwner(file: TFile, highlight?: TFile): void { if (this.timer) clearTimeout(this.timer); this.timer = undefined; this.owner = file; this.highlight = highlight; this.scale = 1; this.x = 0; this.y = 0; this.render(); }
   private button(parent: HTMLElement, label: string, action: () => void): HTMLElement {
     const button = parent.createEl("button", { cls: "tt-btn", text: label, attr: { "aria-label": label } });
     button.onclick = action;
@@ -142,9 +141,6 @@ export class MapPanel {
     this.button(actions, s.mapZoomIn, () => this.zoom(1.3));
     this.button(actions, s.mapZoomOut, () => this.zoom(1 / 1.3));
     this.button(actions, s.mapFit, () => this.fit());
-    const edit = this.button(actions, s.mapEditPins, () => { this.edit = !this.edit; edit.toggleClass("is-active", this.edit); edit.setAttribute("aria-pressed", String(this.edit)); this.renderPins(); });
-    edit.toggleClass("is-active", this.edit);
-    edit.setAttribute("aria-pressed", String(this.edit));
     const viewport = this.container.createDiv("tt-map-viewport");
     this.viewport = viewport;
     const layer = viewport.createDiv("tt-map-layer");
@@ -159,8 +155,10 @@ export class MapPanel {
     viewport.addEventListener("pointerdown", event => this.pointerDown(event));
     viewport.addEventListener("pointermove", event => this.pointerMove(event));
     viewport.addEventListener("pointerup", event => void this.pointerUp(event));
+    viewport.addEventListener("keydown", event => { if (event.key === "Escape") this.closeMenu(); });
   }
-  private navigate(file: TFile): void { if (this.inline) void this.plugin.openMap(file); else this.plugin.openMap(file); }
+  private closeMenu(): void { this.menu?.remove(); this.menu = undefined; }
+  private navigate(file: TFile): void { void this.plugin.openMap(file); }
   private bounds(): DOMRect { return this.viewport?.getBoundingClientRect() ?? { left: 0, top: 0, width: 1000, height: 1000 } as DOMRect; }
   private applyTransform(): void {
     if (!this.layer) return;
@@ -189,7 +187,7 @@ export class MapPanel {
     if (event.button !== 0) return;
     const marker = (event.target as HTMLElement).closest(".tt-map-pin") as HTMLElement | null;
     const pin = marker?.dataset.index;
-    this.pointer = { x: event.clientX, y: event.clientY, startX: this.x, startY: this.y, pin: this.edit && pin !== undefined ? Number(pin) : undefined, onPin: !!marker, moved: false };
+    this.pointer = { x: event.clientX, y: event.clientY, startX: this.x, startY: this.y, pin: pin !== undefined ? Number(pin) : undefined, onPin: !!marker, moved: false };
   }
   private pointerMove(event: PointerEvent): void {
     if (!this.pointer) return;
@@ -213,7 +211,8 @@ export class MapPanel {
       await this.writePins(pins => { if (pins[pointer.pin!]) pins[pointer.pin!] = { ...pins[pointer.pin!], ...point }; });
       return;
     }
-    if (pointer.moved || !this.edit || pointer.onPin) return;
+    if (pointer.moved || pointer.onPin) return;
+    if (this.menu) { this.closeMenu(); return; }
     const rect = this.bounds();
     const imageX = (event.clientX - rect.left - this.x) / this.scale;
     const imageY = (event.clientY - rect.top - this.y) / this.scale;
@@ -221,7 +220,7 @@ export class MapPanel {
     this.showMenu(this.point(event));
   }
   private showMenu(point: { x: number; y: number }): void {
-    this.menu?.remove();
+    this.closeMenu();
     const menu = this.viewport!.createDiv("tt-map-menu");
     this.menu = menu;
     const bounds = this.bounds();
@@ -229,8 +228,14 @@ export class MapPanel {
     menu.style.top = `${clamp(this.y + point.y * this.height * this.scale, 0, Math.max(0, bounds.height - 40))}px`;
     menu.addEventListener("pointerdown", event => event.stopPropagation());
     menu.addEventListener("pointerup", event => event.stopPropagation());
-    this.button(menu, this.plugin.strings.mapAttachNote, () => { menu.remove(); new LookupModal(this.app, this.plugin, file => void this.addPin(file, point)).open(); });
-    this.button(menu, this.plugin.strings.mapNewLocation, () => { menu.remove(); new NewLocationModal(this.app, this.plugin, this.owner, file => void this.addPin(file, point)).open(); });
+    this.button(menu, this.plugin.strings.mapAttachNote, () => { this.closeMenu(); new LookupModal(this.app, this.plugin, file => void this.addPin(file, point)).open(); });
+    this.button(menu, this.plugin.strings.mapNewLocation, () => { this.closeMenu(); new NewLocationModal(this.app, this.plugin, this.owner, file => void this.addPin(file, point)).open(); });
+  }
+  private pinMenu(event: MouseEvent, target: TFile | null, remove: { label: string; icon: string; run: () => void }): void {
+    const menu = new Menu();
+    if (target) menu.addItem(item => item.setTitle(this.plugin.strings.lookupOpen).setIcon("file-text").onClick(() => void this.app.workspace.openLinkText(target.path, "")));
+    menu.addItem(item => item.setTitle(remove.label).setIcon(remove.icon).onClick(remove.run));
+    menu.showAtMouseEvent(event);
   }
   private async addPin(file: TFile, point: { x: number; y: number }): Promise<void> { await this.writePins(pins => { pins.push({ note: wikilink(this.app, file, this.owner.path), ...point }); }); }
   private async writePins(change: (pins: Pin[]) => void): Promise<void> {
@@ -254,8 +259,15 @@ export class MapPanel {
       const glyph = marker.createSpan("tt-map-pin-icon");
       setIcon(glyph, icon);
       marker.createSpan({ cls: "tt-map-pin-label", text: target?.basename ?? pin.note });
-      if (this.edit) this.button(marker, this.plugin.strings.mapRemovePin, () => {}).onclick = event => { event.stopPropagation(); void this.writePins(pins => { pins.splice(index, 1); }); };
-      marker.onclick = event => { event.stopPropagation(); if (this.suppressPinClick) return; if (target) new LookupCard(this.app, this.plugin, { file: target, type, context: "", names: [], tier: 0 }).open(); };
+      const remove = { label: this.plugin.strings.mapRemovePin, icon: "trash", run: () => void this.writePins(pins => { pins.splice(index, 1); }) };
+      marker.onclick = event => {
+        event.stopPropagation();
+        if (this.suppressPinClick) return;
+        const candidate = target && lookupCandidate(this.app, target);
+        if (candidate) new LookupCard(this.app, this.plugin, candidate, undefined, [remove]).open();
+        else this.pinMenu(event, target, remove);
+      };
+      marker.oncontextmenu = event => { event.preventDefault(); event.stopPropagation(); this.pinMenu(event, target, remove); };
       marker.onkeydown = event => { if (event.target === marker && (event.key === "Enter" || event.key === " ")) { event.preventDefault(); marker.click(); } };
     });
   }
