@@ -51,7 +51,7 @@ function resolvedLink(app: App, name: string, source: string): string {
   return file ? wikilink(app, file, source) : name.trim();
 }
 
-export class WrapUpModal extends Modal {
+class WrapUpModal extends Modal {
   private edits: Edit[] = [];
   constructor(app: App, private readonly plugin: TableTools, private readonly session: TFile, private readonly state: TFile, private readonly proposals: Proposals) { super(app); }
 

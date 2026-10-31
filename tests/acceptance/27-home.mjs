@@ -121,7 +121,7 @@ test("setActiveRun creates a missing pointer note", async () => {
   await plugin.setActiveRun("Runs/Harbor/Run.md")
   assert.ok(env.files.has("Active.md"), "Active.md created")
   assert.equal(String(env.files.get("Active.md").frontmatter.run), "[[Runs/Harbor/Run]]")
-  assert.ok(plugin.currentContext(), "the new pointer resolves")
+  assert.ok(plugin.context(), "the new pointer resolves")
   await unload(plugin)
 })
 

@@ -2,12 +2,11 @@ import { DataAdapter, requestUrl } from "obsidian";
 import workerCode from "./local-worker.js?worker";
 import type { EmbeddingProvider } from "./embeddings";
 
-export const LOCAL_MODEL = "Xenova/multilingual-e5-small";
-export const ORT_VERSION = "1.22.0-dev.20250409-89f8206ba4";
-export const ORT_WASM_URL = `https://cdn.jsdelivr.net/npm/onnxruntime-web@${ORT_VERSION}/dist/ort-wasm-simd-threaded.wasm`;
-export const ORT_WASM_SHA256 = "f061472c6e77d6d50d079aacdc0ff9b63fee287ddd2cbf46cf62438d3891de2b";
+const LOCAL_MODEL = "Xenova/multilingual-e5-small";
+const ORT_VERSION = "1.22.0-dev.20250409-89f8206ba4";
+const ORT_WASM_URL = `https://cdn.jsdelivr.net/npm/onnxruntime-web@${ORT_VERSION}/dist/ort-wasm-simd-threaded.wasm`;
+const ORT_WASM_SHA256 = "f061472c6e77d6d50d079aacdc0ff9b63fee287ddd2cbf46cf62438d3891de2b";
 export const LOCAL_CACHE = ".gmvault/cache/models";
-const CACHE = LOCAL_CACHE;
 const IDLE = 5 * 60 * 1000;
 const BATCH = 8;
 
@@ -15,7 +14,7 @@ export type Extractor = ((texts: string[], options: { pooling: "mean"; normalize
 export interface LocalHooks { onProgress(percent: number): void; onReady(): void }
 
 const sha256 = async (data: ArrayBuffer): Promise<string> => [...new Uint8Array(await crypto.subtle.digest("SHA-256", data))].map(byte => byte.toString(16).padStart(2, "0")).join("");
-const cacheFile = (url: string): string => `${CACHE}/${url.replace(/^https?:\/\//, "").replace(/[^A-Za-z0-9._-]+/g, "_")}`;
+const cacheFile = (url: string): string => `${LOCAL_CACHE}/${url.replace(/^https?:\/\//, "").replace(/[^A-Za-z0-9._-]+/g, "_")}`;
 
 async function ensureFolder(adapter: DataAdapter, folder: string): Promise<void> {
   let current = "";
@@ -26,7 +25,7 @@ async function ensureFolder(adapter: DataAdapter, folder: string): Promise<void>
 }
 
 async function runtimeBinary(adapter: DataAdapter, announce: () => void): Promise<ArrayBuffer> {
-  const path = `${CACHE}/ort-wasm-simd-threaded-${ORT_VERSION}.wasm`;
+  const path = `${LOCAL_CACHE}/ort-wasm-simd-threaded-${ORT_VERSION}.wasm`;
   if (await adapter.exists(path)) {
     const cached = await adapter.readBinary(path);
     if (await sha256(cached) === ORT_WASM_SHA256) return cached;
@@ -37,7 +36,7 @@ async function runtimeBinary(adapter: DataAdapter, announce: () => void): Promis
   catch (error) { throw new Error(`The local embedding runtime could not be downloaded: ${error instanceof Error ? error.message : String(error)}`); }
   if (response.status >= 400) throw new Error(`The local embedding runtime could not be downloaded (${response.status}).`);
   if (await sha256(response.arrayBuffer) !== ORT_WASM_SHA256) throw new Error("The downloaded local embedding runtime failed its integrity check.");
-  await ensureFolder(adapter, CACHE);
+  await ensureFolder(adapter, LOCAL_CACHE);
   await adapter.writeBinary(path, response.arrayBuffer);
   return response.arrayBuffer;
 }
@@ -74,7 +73,7 @@ export async function loadExtractor(adapter: DataAdapter, model: string, hooks: 
     announce();
     const buffer = await downloadFile(url, percent => { if (percent >= 0) hooks.onProgress(percent); });
     if (!buffer) return null;
-    await ensureFolder(adapter, CACHE);
+    await ensureFolder(adapter, LOCAL_CACHE);
     await adapter.writeBinary(path, buffer);
     return buffer;
   };

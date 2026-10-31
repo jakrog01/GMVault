@@ -21,8 +21,8 @@ export function sortedParticipants(combat: Combat): Participant[] {
     return right.modifier - left.modifier;
   });
 }
-export interface Difficulty { xp: number; adjustedXp: number; level: DifficultyLevel; thresholds: number[]; players: number }
-export interface PlayerInput { name: string; ac: number; hp: number; modifier: number; level: number; source?: string }
+interface Difficulty { xp: number; adjustedXp: number; level: DifficultyLevel; thresholds: number[]; players: number }
+interface PlayerInput { name: string; ac: number; hp: number; modifier: number; level: number; source?: string }
 export class CombatTracker {
   constructor(private readonly plugin: TableTools) {}
   get combat(): Combat { return this.plugin.combat; }

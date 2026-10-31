@@ -1,6 +1,6 @@
 import { Chunk } from "./types";
 
-export const terms = (value: string): string[] => {
+const terms = (value: string): string[] => {
   const words = value.normalize("NFKD").replace(/[\u0300-\u036f]/g, "").toLowerCase().match(/[\p{L}\p{N}]+/gu) ?? [];
   return words.flatMap(word => word.length > 5 ? [word, word.slice(0, 4)] : [word]);
 };

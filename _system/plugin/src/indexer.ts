@@ -14,7 +14,7 @@ const cachePath = ".gmvault/cache/assistant/manifest.json";
 const vectorsPath = ".gmvault/cache/assistant/vectors.bin";
 const version = 6;
 
-export type ScoredChunk = { chunk: Chunk; score: number };
+type ScoredChunk = { chunk: Chunk; score: number };
 const rulePriority = (kind: Chunk["kind"]): number => kind === "house-rule" ? 3 : kind === "homebrew" ? 2 : kind === "system" ? 1 : 0;
 export const compareRuleHits = (left: ScoredChunk, right: ScoredChunk): number => rulePriority(right.chunk.kind) - rulePriority(left.chunk.kind) || right.score - left.score;
 

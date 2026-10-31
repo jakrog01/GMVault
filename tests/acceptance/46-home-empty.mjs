@@ -41,7 +41,7 @@ test("the exact post-demo-remove state shows the heading, create buttons, and em
   shell(env, plugin, view)
   assert.ok(view.contentEl.textContent.includes(plugin.strings.homeEmpty))
   assert.equal(env.byClass(view.contentEl, "tt-home-active").length, 0)
-  assert.equal(plugin.currentContext(), null)
+  assert.equal(plugin.context(), null)
   await unload(plugin)
 })
 
@@ -137,12 +137,12 @@ test("empty run, campaign, and party links never resolve to their source note", 
   for (const value of [undefined, "", "   ", "[[]]", "[[#Heading]]", "[[|Label]]"]) {
     assert.equal(plugin.resolve(value, pointer), null, `unset link ${JSON.stringify(value)}`)
     env.files.get("Active.md").frontmatter.run = value
-    assert.equal(plugin.currentContext(), null)
+    assert.equal(plugin.context(), null)
   }
   const run = env.addFile("Runs/Incomplete/Run.md", "", { type: "run", campaign: "", party: "" })
   env.addFile("Runs/Incomplete/State.md")
   env.files.get("Active.md").frontmatter.run = "[[Runs/Incomplete/Run]]"
-  assert.equal(plugin.currentContext(), null)
+  assert.equal(plugin.context(), null)
   assert.equal(view.resolvesTo("", run, run), false)
   await view.render()
   const card = env.byClass(view.contentEl, "tt-home-run")[0]

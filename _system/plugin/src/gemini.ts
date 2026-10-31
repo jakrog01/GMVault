@@ -4,11 +4,11 @@ import { ChatMessage } from "./types";
 
 const ENDPOINT = "https://generativelanguage.googleapis.com/v1beta";
 
-export interface GeminiOptions { apiKey: string; model: string; temperature: number; system: string; retrievalInstructions?: string; tools?: unknown[] }
-export interface GeminiFunctionCall { name: string; args: Record<string, unknown>; id?: string }
-export interface GeminiTurn { text: string; parts: unknown[]; calls: GeminiFunctionCall[] }
+interface GeminiOptions { apiKey: string; model: string; temperature: number; system: string; retrievalInstructions?: string; tools?: unknown[] }
+interface GeminiFunctionCall { name: string; args: Record<string, unknown>; id?: string }
+interface GeminiTurn { text: string; parts: unknown[]; calls: GeminiFunctionCall[] }
 
-export type GeminiPart = { text?: string; functionCall?: GeminiFunctionCall; functionResponse?: unknown; thoughtSignature?: string; [key: string]: unknown };
+type GeminiPart = { text?: string; functionCall?: GeminiFunctionCall; functionResponse?: unknown; thoughtSignature?: string; [key: string]: unknown };
 
 type Payload = {
   candidates?: { content?: { parts?: GeminiPart[] } }[];
@@ -55,16 +55,6 @@ export function describeError(payload: Payload | null, status: number, strings: 
   return format(strings.errorGeneric, { status, message: message || strings.errorUnknown });
 }
 
-
-export async function streamResponse(
-  options: GeminiOptions,
-  messages: ChatMessage[],
-  strings: Strings,
-  onFragment: (text: string) => void,
-  signal?: AbortSignal,
-): Promise<string> {
-  return (await streamTurn(options, messages, strings, onFragment, signal)).text;
-}
 
 export async function streamTurn(
   options: GeminiOptions,
@@ -121,7 +111,7 @@ export async function requestResponse(options: GeminiOptions, messages: ChatMess
   return (await requestTurn(options, messages, strings, onFragment)).text;
 }
 
-export async function requestTurn(options: GeminiOptions, messages: ChatMessage[], strings: Strings, onFragment: (text: string) => void): Promise<GeminiTurn> {
+async function requestTurn(options: GeminiOptions, messages: ChatMessage[], strings: Strings, onFragment: (text: string) => void): Promise<GeminiTurn> {
   const response = await requestUrl({
     url: `${ENDPOINT}/models/${encodeURIComponent(options.model)}:generateContent?key=${encodeURIComponent(options.apiKey)}`,
     method: "POST", contentType: "application/json", body: JSON.stringify(requestBody(options, messages)), throw: false,

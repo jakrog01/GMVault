@@ -7,7 +7,6 @@ import { MAP_TYPES, NOTE_TYPES } from "./contract";
 interface Candidate { file: TFile; type: string; context: string; names: string[]; tier: number }
 interface Match { candidate: Candidate; score: number; bucket: number }
 const normal = (value: string): string => value.normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[\u0141\u0142]/g, "l").toLowerCase();
-export const noteLink = wikilink;
 const validTypes = new Set<string>(NOTE_TYPES);
 
 export class LookupModal extends SuggestModal<Match> {
@@ -88,7 +87,7 @@ export class LookupCard extends Modal {
     const actions = this.contentEl.createDiv("tt-home-actions");
     this.button(s.lookupOpen, () => void this.openFile(), actions);
     this.button(s.lookupOpenSide, () => void this.app.workspace.getLeaf("split").openFile(file), actions);
-    this.button(s.lookupInsert, () => { this.editor?.replaceSelection(noteLink(this.app, file, this.app.workspace.getActiveFile()?.path ?? "")); this.close(); }, actions, !this.editor);
+    this.button(s.lookupInsert, () => { this.editor?.replaceSelection(wikilink(this.app, file, this.app.workspace.getActiveFile()?.path ?? "")); this.close(); }, actions, !this.editor);
     if (type === "session") this.button(s.wrapUp, () => { this.close(); void this.plugin.wrapUp(undefined, file); }, actions);
     if (type === "encounter") this.button(s.encounterStart, () => { this.close(); void this.plugin.tracker.loadEncounterNote(file); }, actions);
     if (type === "creature" || type === "npc") this.button(s.lookupAddCombat, () => { void this.plugin.tracker.addCreature(file, 1, true); this.close(); }, actions);

@@ -6,7 +6,7 @@ export const TIMELINE_VIEW = "tt-timeline";
 
 interface TimelineRow { file: TFile; type: "event" | "session"; worldDate: string; date: string; sort: number[] | null }
 
-export function timelineDate(value: string): number[] | null {
+function timelineDate(value: string): number[] | null {
   const match = value.trim().match(/^(-?\d+)(?:-(\d{1,2}))?(?:-(\d{1,2}))?(?:\s+.*)?$/);
   return match ? [Number(match[1]), Number(match[2] ?? 0), Number(match[3] ?? 0)] : null;
 }
