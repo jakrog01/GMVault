@@ -16,6 +16,7 @@ The assistant ribbon is **Table Tools: Assistant** and opens the assistant.
 | `open-assistant` | **Open assistant** | Opens the assistant view. |
 | `open-home` | **Open Home** | Opens the home view. |
 | `open-timeline` | **Open timeline** | Opens the active run's Timeline. |
+| `open-map` | **Open map** | Opens the active campaign world's map, or the active world or location note's map. See [Maps](MAPS.md). |
 | `look-up` | **Look up** | Finds a game note and opens its card. |
 | `quick-npc` | **Quick NPC** | Creates an NPC in the active campaign or world. |
 | `wrap-up-session` | **Wrap up session** | Proposes run state changes and rumours from a session note. |

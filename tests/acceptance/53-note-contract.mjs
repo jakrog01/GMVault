@@ -8,10 +8,10 @@ import { assert, run, test } from "./support.mjs"
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..")
 const read = relative => readFile(path.join(root, relative), "utf8")
 const relations = {
-  world: ["calendar", "system"], campaign: ["world", "system", "calendar"], party: ["campaign"],
+  world: ["calendar", "system", "map", "pins"], campaign: ["world", "system", "calendar"], party: ["campaign"],
   pc: ["party", "player", "class", "level", "ac", "hp", "init_mod"],
   run: ["campaign", "party", "role"], session: ["run", "date", "world_date"], state: ["run"], "world-day": ["run"],
-  npc: ["world", "campaign", "faction", "location", "status"], location: ["world", "campaign", "location", "status"],
+  npc: ["world", "campaign", "faction", "location", "status"], location: ["world", "campaign", "location", "status", "map", "pins"],
   faction: ["world", "campaign", "status"], lore: ["world", "campaign"], event: ["world", "campaign", "world_date", "location"],
   quest: ["campaign", "status", "location"], encounter: ["campaign", "location", "creatures"], handout: ["campaign", "file"],
   item: ["system", "world", "campaign", "owner"], creature: ["system", "world", "campaign"], spell: ["system", "world", "campaign"],
@@ -22,7 +22,7 @@ const relations = {
 const types = Object.keys(relations)
 
 test("ADR types and template frontmatter stay inside the note contract", async () => {
-  const adr = await read("docs/adr/0004-note-contract.md") + await read("docs/adr/0005-system-library.md")
+  const adr = await read("docs/adr/0004-note-contract.md") + await read("docs/adr/0005-system-library.md") + await read("docs/adr/0006-maps.md")
   for (const type of types) assert.ok(adr.includes(`| \`${type}\` |`), `ADR type ${type}`)
   for (const name of await readdir(path.join(root, "_system/templates"))) {
     if (!name.endsWith(".md")) continue

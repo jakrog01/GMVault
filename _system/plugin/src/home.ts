@@ -116,6 +116,7 @@ export class HomePanel {
       card.createDiv({ cls: "tt-home-name", text: folderName(world.file) });
       card.createDiv({ cls: "tt-muted", text: format(s.homeCampaignCount, { count: campaigns.filter(campaign => this.resolvesTo(campaign.fields.world, campaign.file, world.file)).length }) });
       this.button(card, s.homeOpenWorld, () => this.openNote(world.file.path));
+      this.button(card, s.mapOpen, () => void this.plugin.openMap(world.file));
     }
 
     const campaignSection = root.createDiv("tt-home-section");

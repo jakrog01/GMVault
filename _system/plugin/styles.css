@@ -177,3 +177,25 @@
 .tt-timeline-row .tt-chip { margin-left: auto; }
 .tt-home-maintenance:not(:empty) { margin: 8px 0; color: var(--text-muted); font-size: .85em; }
 .tt-maintenance-line { display: flex; align-items: center; gap: 6px; }
+.tt-map { display: flex; flex-direction: column; gap: 8px; padding: 12px; height: 100%; box-sizing: border-box; }
+.tt-map-inline { height: 480px; padding: 4px; }
+.tt-map-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap; }
+.tt-map-crumbs, .tt-map-actions { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.tt-map-crumbs .tt-btn { background: transparent; box-shadow: none; padding: 3px 5px; }
+.tt-map-crumbs .tt-btn::after { content: "/"; margin-left: 8px; color: var(--text-muted); }
+.tt-map-actions .is-active { background: var(--interactive-accent); color: var(--text-on-accent); }
+.tt-map-viewport { position: relative; flex: 1; min-height: 300px; overflow: hidden; background: var(--background-secondary); touch-action: none; cursor: grab; }
+.tt-map-viewport:active { cursor: grabbing; }
+.tt-map-layer { position: absolute; left: 0; top: 0; transform-origin: 0 0; }
+.tt-map-layer img { display: block; width: 100%; height: 100%; user-select: none; pointer-events: none; }
+.tt-map-pins { position: absolute; inset: 0; pointer-events: none; }
+.tt-map-pin { position: absolute; display: flex; align-items: center; flex-direction: column; gap: 2px; transform: translate(-50%, -100%) scale(var(--tt-map-inverse-scale)); transform-origin: bottom center; color: white; text-shadow: 0 1px 3px black, 0 -1px 3px black; cursor: pointer; pointer-events: auto; white-space: nowrap; }
+.tt-map-pin-icon { display: flex; align-items: center; justify-content: center; width: 27px; height: 27px; border-radius: 50%; background: var(--interactive-accent); border: 2px solid white; box-shadow: 0 1px 4px black; }
+.tt-map-pin-icon svg { width: 16px; height: 16px; }
+.tt-map-pin-label { display: none; padding: 1px 5px; border-radius: 4px; background: rgba(0, 0, 0, .72); }
+.tt-map-pin:hover .tt-map-pin-label, .tt-map-pin:focus-within .tt-map-pin-label, .tt-map-labels .tt-map-pin-label { display: block; }
+.tt-map-pin.is-missing { opacity: .55; filter: grayscale(1); }
+.tt-map-pin.is-highlighted .tt-map-pin-icon { outline: 3px solid var(--color-yellow); }
+.tt-map-pin .tt-btn { display: none; font-size: 10px; padding: 1px 4px; }
+.tt-map-pin:hover .tt-btn, .tt-map-pin:focus-within .tt-btn { display: block; }
+.tt-map-menu { position: absolute; z-index: 3; display: flex; gap: 4px; padding: 7px; background: var(--background-primary); border: 1px solid var(--background-modifier-border); box-shadow: var(--shadow-s); }

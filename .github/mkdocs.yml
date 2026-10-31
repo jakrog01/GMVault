@@ -66,6 +66,7 @@ nav:
   - At the table:
       - At the table: at-the-table/index.md
       - Home: HOME.md
+      - Maps: MAPS.md
       - Sessions and runs: RUNS.md
       - Combat tracker and dice: TABLE-TOOLS.md
       - Assistant: ASSISTANT.md
@@ -89,3 +90,4 @@ nav:
       - "ADR 0003: assistant retrieval": adr/0003-assistant-retrieval.md
       - "ADR 0004: note contract": adr/0004-note-contract.md
       - "ADR 0005: system library layout": adr/0005-system-library.md
+      - "ADR 0006: maps and pins": adr/0006-maps.md

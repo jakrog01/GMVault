@@ -14,6 +14,7 @@ import { LookupModal } from "./lookup";
 import { QuickNpcModal } from "./quick-npc";
 import { wrapUp } from "./wrap-up";
 import { TimelineView, TIMELINE_VIEW } from "./timeline";
+import { MapBlock, MapPanel, MapView, MAP_VIEW } from "./map";
 
 interface PluginData { settings: Settings; combat: Combat; encounterSets: EncounterSet[] }
 export interface RunContext { run: TFile; campaign: TFile; party: TFile; state: TFile; day: TFile | null }
@@ -33,6 +34,7 @@ export default class TableTools extends Plugin {
 
   homeViews = new Set<HomePanel>();
   timelineViews = new Set<TimelineView>();
+  mapPanels = new Set<MapPanel>();
   index!: AssistantIndex;
   skills = new Map<string, Skill>();
   invalidSkillsKey = "";
@@ -54,19 +56,19 @@ export default class TableTools extends Plugin {
     this.app.vault.getMarkdownFiles().forEach(file => this.homeChangeAffects(file, file.path));
     const vaultEvents = this.app.vault as typeof this.app.vault & { on: (event: string, callback: (file: TFile) => void) => unknown };
     for (const event of ["create", "modify", "delete"]) this.registerEvent(vaultEvents.on(event, file => {
-      if (file instanceof TFile) { this.timelineViews.forEach(view => view.schedule()); this.homeViews.forEach(view => view.refreshMaintenance()); }
+      if (file instanceof TFile) { this.timelineViews.forEach(view => view.schedule()); this.mapPanels.forEach(panel => panel.schedule(file)); this.homeViews.forEach(view => view.refreshMaintenance()); }
       if (file instanceof TFile && SCOPE_PATHS.includes(file.path)) void this.loadScopePolicy();
       if (file instanceof TFile && this.isSkillPath(file.path)) void this.reloadSkills();
       if (file instanceof TFile && this.homeChangeAffects(file, file.path)) this.scheduleHomeRefresh(file.path);
     }) as never);
     this.skills = await loadSkills(this);
     this.registerEvent(this.app.metadataCache.on("changed", file => {
-      if (file instanceof TFile) { this.timelineViews.forEach(view => view.schedule()); this.homeViews.forEach(view => view.refreshMaintenance()); }
+      if (file instanceof TFile) { this.timelineViews.forEach(view => view.schedule()); this.mapPanels.forEach(panel => panel.schedule(file)); this.homeViews.forEach(view => view.refreshMaintenance()); }
       if (file instanceof TFile && this.isSkillPath(file.path)) void this.reloadSkills();
       if (file instanceof TFile && this.homeChangeAffects(file, file.path)) this.scheduleHomeRefresh(file.path);
     }));
     this.registerEvent(this.app.vault.on("rename", (file, oldPath) => {
-      if (file instanceof TFile) { this.timelineViews.forEach(view => view.schedule()); this.homeViews.forEach(view => view.refreshMaintenance()); }
+      if (file instanceof TFile) { this.timelineViews.forEach(view => view.schedule()); this.mapPanels.forEach(panel => panel.schedule(file)); this.homeViews.forEach(view => view.refreshMaintenance()); }
       if (file instanceof TFile && (this.isSkillPath(file.path) || this.isSkillPath(oldPath))) void this.reloadSkills();
       if (file instanceof TFile && (this.homeChangeAffects(file, file.path) || this.homeChangeAffects(undefined, oldPath))) {
         this.scheduleHomeRefresh(file.path, oldPath);
@@ -77,8 +79,14 @@ export default class TableTools extends Plugin {
     this.registerView(ASSISTANT_VIEW, leaf => new AssistantView(leaf, this));
     this.registerView(HOME_VIEW, leaf => new HomeView(leaf, this));
     this.registerView(TIMELINE_VIEW, leaf => new TimelineView(leaf, this));
+    this.registerView(MAP_VIEW, leaf => new MapView(leaf, this));
     this.registerMarkdownCodeBlockProcessor("gmvault-home", (_source, element, context) => {
       context.addChild(new HomeBlock(element, this.app, this));
+    });
+    this.registerMarkdownCodeBlockProcessor("gmvault-map", (source, element, context) => {
+      const path = source.match(/^note:\s*(.+)$/m)?.[1];
+      const owner = path ? this.app.metadataCache.getFirstLinkpathDest(linkPath(path), context.sourcePath) : this.app.vault.getAbstractFileByPath(context.sourcePath);
+      if (owner instanceof TFile) context.addChild(new MapBlock(element, this.app, this, owner.path));
     });
 
     this.addRibbonIcon("home", s.ribbonHome, () => this.openHome());
@@ -90,6 +98,7 @@ export default class TableTools extends Plugin {
     this.addCommand({ id: "open-assistant", name: s.commandOpenAssistant, callback: () => void this.openView(ASSISTANT_VIEW) });
     this.addCommand({ id: "open-home", name: s.commandOpenHome, callback: () => this.openHome() });
     this.addCommand({ id: "open-timeline", name: s.commandOpenTimeline, callback: () => void this.openView(TIMELINE_VIEW) });
+    this.addCommand({ id: "open-map", name: s.mapOpen, callback: () => this.openDefaultMap() });
     this.addCommand({ id: "look-up", name: s.lookUp, callback: () => this.openLookup() });
     this.addCommand({ id: "quick-npc", name: s.quickNpc, callback: () => void this.openQuickNpc() });
     this.addCommand({ id: "wrap-up-session", name: s.wrapUpSession, callback: () => void this.wrapUp() });
@@ -259,6 +268,23 @@ export default class TableTools extends Plugin {
     if (!leaf) return;
     await leaf.setViewState({ type: HOME_VIEW, active: true });
     await this.app.workspace.revealLeaf(leaf);
+  }
+
+  async openMap(owner: TFile, highlight?: TFile): Promise<void> {
+    let leaf: import("obsidian").WorkspaceLeaf | undefined = this.app.workspace.getLeavesOfType(MAP_VIEW)[0];
+    if (!leaf) { leaf = this.app.workspace.getRightLeaf(false) ?? undefined; if (!leaf) return; await leaf.setViewState({ type: MAP_VIEW, active: true, state: { owner: owner.path } }); }
+    else await leaf.loadIfDeferred?.();
+    (leaf.view as MapView).setOwner(owner, highlight);
+    await this.app.workspace.revealLeaf(leaf);
+  }
+
+  async openDefaultMap(): Promise<void> {
+    const campaign = this.currentContext()?.campaign;
+    const world = campaign ? this.app.metadataCache.getFirstLinkpathDest(linkPath(this.app.metadataCache.getFileCache(campaign)?.frontmatter?.world), campaign.path) : null;
+    const active = this.app.workspace.getActiveFile();
+    const owner = world ?? (active && ["world", "location"].includes(String(this.app.metadataCache.getFileCache(active)?.frontmatter?.type)) ? active : null);
+    if (owner) await this.openMap(owner);
+    else new Notice(this.strings.mapNoOwner);
   }
 
   async setActiveRun(runPath: string): Promise<void> {

@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+## 2.7.0
+
+- GMVault has interactive maps: a world or location note gets a map image with **Choose map image**, and the map view zooms, pans and fits it.
+- Pins link any game note and open its card; a pinned place with its own map opens it with **Open map**, and the breadcrumb leads back up from district to city to realm.
+- **Edit pins** turns on editing, so a click at the table changes nothing by accident: click the map to **Attach note** or create a **New location here** in the right folder, drag pins to move them, or remove them.
+- Look up cards offer **Open map** and **Show on map**; a `gmvault-map` block shows a map inside any note.
+- Maps and pins are stored as `map` and `pins` in the owning note's properties (ADR 0006); existing notes need no change.
+
 ## 2.6.2
 
 - GMVault can wrap up a session: **Wrap up session** reads the session note and proposes world changes, what players know and rumours; you untick or edit them, and **Apply** writes them to the run's `State.md` and new claim notes, never to world notes.

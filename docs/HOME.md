@@ -31,7 +31,7 @@ The active run card includes a **Next session** block. It links the **Last sessi
 
 When game notes have unresolved links, Home shows **Maintenance: Broken links: N**. Click **Broken links: N** to see each source note and missing target, then click a row to open its source. The line is hidden when the count is zero. System, local, archived, and dot-folder notes are excluded.
 
-**Worlds** lists notes with `type: world`, a campaign count, and **Open world**.
+**Worlds** lists notes with `type: world`, a campaign count, **Open world**, and **Open map**. See [Maps](MAPS.md) to add images and pins.
 
 **Campaigns** lists every note with `type: campaign`, its system, and **Runs: <count>**. Each card has **Open campaign**.
 
