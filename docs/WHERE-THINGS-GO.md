@@ -88,3 +88,5 @@ Read [Your first campaign](FIRST-CAMPAIGN.md) for the creation sequence and [Ses
 ## Existing vaults
 
 The earlier `Worlds/<world>/` and `Library/Mechanics/<system>/` paths remain valid. To move them with backups and rewritten explicit links, run `node _system/bin/gmvault.mjs migrate system-library --dry-run`, then run it without `--dry-run`. A world with sub-places can use `Locations/<place>/<place>.md` with child places in the same folder. Organise lore under `Religion/`, `History/`, `Culture/`, `Peoples/`, `Languages/`, `Magic/`, `Cosmology/`, `Economy/`, `Creatures/`, or `Other/`.
+
+Put map images in `Library/Assets/` (or anywhere in the vault). Link them from world and location notes using [Maps](MAPS.md).

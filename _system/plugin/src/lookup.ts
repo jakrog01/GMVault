@@ -1,6 +1,7 @@
 import { App, MarkdownRenderChild, MarkdownRenderer, MarkdownView, Modal, SuggestModal, TFile, prepareFuzzySearch } from "obsidian";
 import type TableTools from "./main";
 import { linkPath } from "./home";
+import { mapOwnersFor, chooseMapOwner } from "./map";
 
 interface Candidate { file: TFile; type: string; context: string; names: string[]; tier: number }
 interface Match { candidate: Candidate; score: number; bucket: number }
@@ -13,7 +14,7 @@ export class LookupModal extends SuggestModal<Match> {
   readonly candidates: Candidate[];
   private readonly editor = this.app.workspace.getActiveViewOfType(MarkdownView)?.editor;
 
-  constructor(app: App, private readonly plugin: TableTools) {
+  constructor(app: App, private readonly plugin: TableTools, private readonly pick?: (file: TFile) => void) {
     super(app);
     this.setPlaceholder(plugin.strings.lookupPlaceholder);
     const run = plugin.currentContext();
@@ -59,12 +60,13 @@ export class LookupModal extends SuggestModal<Match> {
   }
 
   onChooseSuggestion(match: Match, event: MouseEvent | KeyboardEvent): void {
+    if (this.pick) { this.pick(match.candidate.file); return; }
     if (event.metaKey || event.ctrlKey) { void this.app.workspace.openLinkText(match.candidate.file.path, ""); return; }
     new LookupCard(this.app, this.plugin, match.candidate, this.editor).open();
   }
 }
 
-class LookupCard extends Modal {
+export class LookupCard extends Modal {
   constructor(app: App, private readonly plugin: TableTools, private readonly note: Candidate, private readonly editor?: MarkdownView["editor"]) { super(app); }
 
   async onOpen(): Promise<void> {
@@ -91,6 +93,9 @@ class LookupCard extends Modal {
     if (type === "session") this.button(s.wrapUp, () => { this.close(); void this.plugin.wrapUp(undefined, file); }, actions);
     if (type === "encounter") this.button(s.encounterStart, () => { this.close(); void this.plugin.tracker.loadEncounterNote(file); }, actions);
     if (type === "creature" || type === "npc") this.button(s.lookupAddCombat, () => { void this.plugin.tracker.addCreature(file, 1, true); this.close(); }, actions);
+    if (["world", "location"].includes(type) && linkPath(this.app.metadataCache.getFileCache(file)?.frontmatter?.map)) this.button(s.mapOpen, () => { this.close(); void this.plugin.openMap(file); }, actions);
+    const owners = mapOwnersFor(this.app, file);
+    if (owners.length) this.button(s.mapShowOn, () => { this.close(); chooseMapOwner(this.app, this.plugin, owners, file); }, actions);
   }
 
   private button(label: string, action: () => void, parent = this.contentEl, disabled = false): void {

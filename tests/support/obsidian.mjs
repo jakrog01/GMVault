@@ -20,7 +20,8 @@ export function createEnvironment() {
       this.ownText = ""
       this.classes = new Set()
       this.attributes = {}
-      this.style = {}
+      this.dataset = {}
+      this.style = { setProperty(name, value) { this[name] = value } }
       this.listeners = {}
       this.settings = []
       this.value = ""
@@ -41,6 +42,7 @@ export function createEnvironment() {
       if (options.href !== undefined) this.attributes.href = options.href
       for (const [name, value] of Object.entries(options.attr ?? {})) {
         this.attributes[name] = String(value)
+        if (name.startsWith("data-")) this.dataset[name.slice(5)] = String(value)
         if (["title", "placeholder", "aria-label"].includes(name)) record(value)
       }
       return this
@@ -56,16 +58,21 @@ export function createEnvironment() {
     removeClass(name) { this.classes.delete(name) }
     toggleClass(name, force) { if (force ?? !this.classes.has(name)) this.classes.add(name); else this.classes.delete(name) }
     hasClass(name) { return this.classes.has(name) }
+    setAttribute(name, value) { this.attributes[name] = String(value) }
     focus() { this.focused = true }
     addEventListener(type, listener) { (this.listeners[type] ??= []).push(listener) }
     get textContent() { return this.ownText + this.children.map(child => child.textContent).join("") }
     closest(selector) {
       const tags = selector.split(",").map(value => value.trim())
-      for (let node = this; node; node = node.parent) if (tags.includes(node.tag)) return node
+      for (let node = this; node; node = node.parent) if (tags.some(tag => tag.startsWith(".") ? node.classes.has(tag.slice(1)) : tag === node.tag)) return node
       return null
     }
     all(predicate, found = []) { for (const child of this.children) { if (predicate(child)) found.push(child); child.all(predicate, found) } return found }
     querySelector(selector) { const name = selector.replace(/^\./, ""); return this.all(element => element.classes.has(name))[0] ?? null }
+    querySelectorAll(selector) { const name = selector.replace(/^\./, ""); return this.all(element => element.classes.has(name)) }
+    getBoundingClientRect() { return this.rect ?? { left: 0, top: 0, width: 1000, height: 1000 } }
+    dispatch(type, event = {}) { const payload = { target: event.target ?? this, button: 0, pointerId: 1, clientX: 0, clientY: 0, preventDefault() {}, stopPropagation() {}, ...event }; for (const listener of this.listeners[type] ?? []) listener(payload); return payload }
+    setPointerCapture() {}
     click(event = {}) {
       const payload = { target: event.target ?? this, stopPropagation() {}, preventDefault() {}, ...event }
       for (const listener of this.listeners.click ?? []) listener(payload)
@@ -227,10 +234,12 @@ export function createEnvironment() {
     vault: {
       configDir: ".obsidian",
       getMarkdownFiles: () => [...files.values()].filter(entry => entry.file.extension === "md").map(entry => entry.file),
+      getFiles: () => [...files.values()].map(entry => entry.file),
+      getResourcePath: file => `app://vault/${file.path}`,
       getAbstractFileByPath: filePath => files.get(filePath)?.file ?? null,
       cachedRead: async file => files.get(file.path)?.content ?? "",
       modify: async (file, content) => { files.get(file.path).content = content; emit("modify", file); emit("changed", file) },
-      create: async (filePath, content) => addFile(filePath, content),
+      create: async (filePath, content) => { const block = content.match(/^---\n([\s\S]*?)\n---/); const frontmatter = block ? Object.fromEntries(block[1].split("\n").flatMap(line => { const match = line.match(/^([A-Za-z][\w-]*):\s*(.*)$/); if (!match) return []; let value = match[2]; try { value = JSON.parse(value) } catch {} return [[match[1], value]] })) : null; return addFile(filePath, content, frontmatter) },
       createFolder: async () => {},
       append: async (file, text) => { files.get(file.path).content += text; appended.push(text); record(text) },
       adapter: { read: async filePath => { if (!adapterFiles.has(filePath)) throw new Error("missing"); return adapterFiles.get(filePath) }, write: async (filePath, value) => adapterFiles.set(filePath, value), mkdir: async () => {}, rmdir: async folder => { for (const key of [...adapterFiles.keys()]) if (key.startsWith(`${folder}/`)) adapterFiles.delete(key) }, exists: async filePath => adapterFiles.has(filePath) || [...adapterFiles.keys()].some(key => key.startsWith(`${filePath}/`)), rename: async (from, to) => { adapterFiles.set(to, adapterFiles.get(from)); adapterFiles.delete(from) } },
@@ -241,11 +250,12 @@ export function createEnvironment() {
       getFirstLinkpathDest: (link, sourcePath) => {
         if (link === "") return files.get(sourcePath)?.file ?? null
         const clean = String(link).replace(/\.md$/, "")
-        return files.get(`${clean}.md`)?.file ?? [...files.values()].find(entry => entry.file.basename === clean)?.file ?? null
+        return files.get(clean)?.file ?? files.get(`${clean}.md`)?.file ?? [...files.values()].find(entry => entry.file.basename === clean)?.file ?? null
       },
       on,
     },
     workspace,
+    fileManager: { processFrontMatter: async (file, change) => { const entry = files.get(file.path); entry.frontmatter ??= {}; change(entry.frontmatter); emit("changed", file) } },
     setting: { open() { this.opened = true } },
   }
 

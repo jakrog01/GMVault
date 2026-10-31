@@ -748,6 +748,33 @@ export async function runScenario({ override } = {}) {
   home.panel.refreshMaintenance()
   await byText(home.contentEl, fill(s.homeBrokenLinks, { count: 1 }))[0].click()
   modals.at(-1).close()
+  plugin.settings.activePointerPath = "Missing.md"
+  workspace.activeFile = null
+  await command(s.mapOpen).callback()
+  plugin.settings.activePointerPath = "Active.md"
+  const mapWorld = addFile("Worlds/Map/World.md", "", { type: "world" })
+  addFile("Library/Assets/map.jpg")
+  await plugin.openMap(mapWorld)
+  const mapView = env.leaves.find(leaf => leaf.type === "tt-map").view
+  byText(mapView.contentEl, s.mapChooseImage)[0].click()
+  modals.at(-1).choose(file => file.path === "Library/Assets/map.jpg")
+  await until(() => byText(mapView.contentEl, s.mapEditPins).length > 0, "map image selected")
+  mapWorld && (env.files.get(mapWorld.path).frontmatter.pins = [{ note: "[[Missing Map Note]]", x: 0.2, y: 0.3 }, { note: "[[Campaigns/Glass/NPCs/Archivist]]", x: 0.4, y: 0.5 }])
+  mapView.setOwner(mapWorld)
+  byText(mapView.contentEl, s.mapEditPins)[0].click()
+  byText(mapView.contentEl, s.mapRemovePin)[0].click()
+  const mapViewport = byClass(mapView.contentEl, "tt-map-viewport")[0]
+  mapViewport.dispatch("pointerdown", { clientX: 300, clientY: 300 })
+  mapViewport.dispatch("pointerup", { clientX: 300, clientY: 300 })
+  byText(mapView.contentEl, s.mapNewLocation)[0].click()
+  modals.at(-1).close()
+  const otherMap = addFile("Worlds/Other Map/World.md", "", { type: "world", map: "[[Library/Assets/map.jpg]]", pins: [{ note: "[[Campaigns/Glass/NPCs/Archivist]]", x: 0.5, y: 0.5 }] })
+  plugin.openLookup()
+  modals.at(-1).query("Archivist")
+  modals.at(-1).choose()
+  await until(() => byText(modals.at(-1).contentEl, s.mapShowOn).length > 0, "show on map action")
+  byText(modals.at(-1).contentEl, s.mapShowOn)[0].click()
+  modals.at(-1).close()
   return { env, plugin }
 }
 
