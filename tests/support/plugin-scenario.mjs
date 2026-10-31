@@ -683,6 +683,71 @@ export async function runScenario({ override } = {}) {
   command(s.quickNpc).callback()
   assert.ok(notices.includes(s.quickNpcNeedsRun))
   activePointer.frontmatter.run = runLink
+  addFile("Campaigns/Glass/Quests/Find Guide.md", "", { type: "quest", campaign: "[[Campaigns/Glass/Campaign]]", status: "active" })
+  addFile("Runs/Harbor/Claim Pending.md", "", { type: "claim", status: "current" })
+  await home.render()
+  env.adapterFiles.set("_system/templates/claim.md", "---\ntype: claim\nabout: \"\"\nwhat: \"\"\nfrom: \"\"\nsession: \"\"\nstatus: current\n---\n\n# <% tp.file.title %>\n")
+  workspace.activeFile = env.files.get("Runs/Harbor/Session 2026-10-30.md").file
+  env.network.requestUrl = async () => ({ status: 200, json: { candidates: [{ content: { parts: [{ text: JSON.stringify({ worldChanges: [{ text: "Gate opened", links: [] }], playersKnow: [{ text: "The gate is open" }], claims: [{ about: "Archivist", what: "The guide knows", from: "" }] }) }] } }] } })
+  await plugin.wrapUp()
+  let wrap = modals.at(-1)
+  assert.ok(byText(wrap.contentEl, s.wrapUpTitle).length)
+  assert.ok(byLabel(wrap.contentEl, s.wrapUpRumourText).length)
+  env.record(JSON.parse(requests.at(-1).body).system_instruction.parts[0].text)
+  byLabel(wrap.contentEl, s.wrapUpApply)[0].click()
+  await until(() => notices.some(notice => notice.includes(s.wrapUpApplied.split("{")[0])), "wrap-up applied")
+  env.network.requestUrl = async () => ({ status: 200, json: { candidates: [{ content: { parts: [{ text: "bad json" }] } }] } })
+  await plugin.wrapUp()
+  assert.ok(notices.includes(s.wrapUpInvalid))
+  workspace.activeFile = addFile("Runs/No State/Session.md", "", { type: "session" })
+  await plugin.wrapUp()
+  assert.ok(notices.includes(s.wrapUpNoRun))
+  workspace.activeFile = null
+  plugin.settings.activePointerPath = "Missing.md"
+  await plugin.wrapUp()
+  assert.ok(notices.includes(s.wrapUpNoSession))
+  plugin.settings.activePointerPath = "Active.md"
+  env.adapterFiles.set("_system/templates/encounter.md", "---\ntype: encounter\ncampaign: \"\"\ncreatures: []\n---\n\n# <% tp.file.title %>\n")
+  env.adapterFiles.set("_system/templates/event.md", "---\ntype: event\nworld: \"\"\ncampaign: \"\"\nworld_date: \"\"\n---\n\n# <% tp.file.title %>\n")
+  const encounter = addFile("Campaigns/Glass/Encounters/Bridge.md", "# Bridge", { type: "encounter", campaign: "[[Campaigns/Glass/Campaign]]", creatures: [{ creature: "[[Library/Mechanics/dnd5e/Bestiary/Goblin]]", count: 1 }, { creature: "[[Missing Creature]]", count: 1 }] })
+  plugin.encounterSets.push({ name: "Bridge set", description: "", members: [{ source: goblinFile.path, name: "Goblin", quantity: 1, group: false }] })
+  await byLabel(combatView.contentEl, s.encounterSetsTitle)[0].click()
+  let encounterMenu = modals.at(-1)
+  await buttonComponent(encounterMenu.contentEl, s.encounterStart).click()
+  modals.at(-1).choose(file => file.path === encounter.path)
+  await until(() => notices.some(notice => notice.includes("Missing Creature")), "missing encounter creature")
+  await byLabel(combatView.contentEl, s.encounterSetsTitle)[0].click()
+  encounterMenu = modals.at(-1)
+  await buttonComponent(encounterMenu.contentEl, s.encounterSaveCurrentNote).click()
+  await buttonComponent(modals.at(-1).contentEl, s.save).click()
+  await until(() => notices.some(notice => notice.includes(s.encounterNoteSaved.split("{")[0])), "encounter note saved")
+  workspace.activeFile = encounter
+  command(s.lookUp).callback()
+  lookup = modals.at(-1)
+  lookup.query("Bridge")
+  lookup.choose()
+  lookupCard = modals.at(-1)
+  await until(() => byText(lookupCard.contentEl, s.encounterStart).length > 0, "encounter card")
+  lookupCard.close()
+  plugin.settings.activePointerPath = "Missing.md"
+  await plugin.tracker.saveEncounterNote("Without campaign")
+  await command(s.commandOpenTimeline).callback()
+  const timeline = env.leaves.find(leaf => leaf.type === "tt-timeline").view
+  plugin.settings.activePointerPath = "Active.md"
+  const sessionEntry = env.files.get("Runs/Harbor/Session 2026-10-30.md")
+  env.files.delete("Runs/Harbor/Session 2026-10-30.md")
+  timeline.render()
+  env.files.set("Runs/Harbor/Session 2026-10-30.md", sessionEntry)
+  addFile("Campaigns/Glass/Events/Arrival.md", "", { type: "event", campaign: "[[Campaigns/Glass/Campaign]]", world_date: "1492" })
+  timeline.render()
+  await byText(timeline.contentEl, s.timelineNewEvent)[0].click()
+  timeline.render()
+  addFile("Campaigns/Glass/Events/Unknown.md", "", { type: "event", campaign: "[[Campaigns/Glass/Campaign]]", world_date: "unknown" })
+  timeline.render()
+  app.metadataCache.unresolvedLinks = { "Campaigns/Glass/Campaign.md": { "Missing World": 1 } }
+  home.panel.refreshMaintenance()
+  await byText(home.contentEl, fill(s.homeBrokenLinks, { count: 1 }))[0].click()
+  modals.at(-1).close()
   return { env, plugin }
 }
 

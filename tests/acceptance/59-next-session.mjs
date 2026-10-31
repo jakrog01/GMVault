@@ -1,0 +1,51 @@
+import assert from "node:assert/strict"
+import { createEnvironment } from "../support/obsidian.mjs"
+
+const env = createEnvironment()
+const { addFile, app, workspace, files, opened, byClass, byLabel } = env
+addFile("Active.md", "", { run: "[[Runs/Harbor/Run]]" })
+addFile("Runs/Harbor/Run.md", "", { type: "run", campaign: "[[Campaigns/Glass/Campaign]]", party: "[[Parties/Watch/Party]]" })
+addFile("Runs/Harbor/State.md", "", { type: "state" })
+addFile("Campaigns/Glass/Campaign.md", "", { type: "campaign" })
+addFile("Parties/Watch/Party.md", "", { type: "party" })
+addFile("Runs/Harbor/Session 2026-10-29.md", "Old", { type: "session", date: "2026-10-29" })
+addFile("Runs/Harbor/Session 2026-10-30.md", "[[Guide]] [[Docks]] [[Guild]] [[Campaigns/Glass/Quests/Find Map]]", { type: "session", date: "2026-10-30" })
+addFile("Campaigns/Glass/NPCs/Guide.md", "", { type: "npc" })
+addFile("Campaigns/Glass/Locations/Docks.md", "", { type: "location" })
+addFile("Campaigns/Glass/Factions/Guild.md", "", { type: "faction" })
+addFile("Campaigns/Glass/Quests/Find Map.md", "", { type: "quest", campaign: "[[Campaigns/Glass/Campaign]]", status: "active" })
+addFile("Campaigns/Glass/Quests/Old.md", "", { type: "quest", campaign: "[[Campaigns/Glass/Campaign]]", status: "done" })
+addFile("Campaigns/Glass/Quests/Failed.md", "", { type: "quest", campaign: "[[Campaigns/Glass/Campaign]]", status: "failed" })
+addFile("Campaigns/Glass/Quests/Folder fallback.md", "", { type: "quest" })
+addFile("Runs/Harbor/Claim One.md", "", { type: "claim", status: "current" })
+addFile("Runs/Harbor/Claim Two.md", "", { type: "claim" })
+addFile("Runs/Harbor/Claim Closed.md", "", { type: "claim", status: "resolved" })
+const TableTools = env.load()
+const plugin = new TableTools(app, { id: "table-tools" })
+workspace.plugin = plugin
+await plugin.onload()
+await plugin.openHome()
+const home = env.leaves.find(leaf => leaf.type === "tt-home").view
+const next = byClass(home.contentEl, "tt-home-next")[0]
+assert.ok(next)
+assert.ok(next.textContent.includes(plugin.strings.homeNextSession))
+assert.ok(next.textContent.includes("Last session: 2026-10-30"))
+for (const text of ["Session 2026-10-30", "Guide", "Docks", "Guild", "Find Map", "Folder fallback", "Claim One", "Claim Two", "Rumours to resolve: 2"]) assert.ok(next.textContent.includes(text), text)
+for (const text of ["Old", "Failed", "Claim Closed", "Session 2026-10-29"]) assert.ok(!next.textContent.includes(text), text)
+assert.equal(byLabel(next, plugin.strings.homeNewSession).length, 1)
+assert.equal(byLabel(next, plugin.strings.wrapUp).length, 1)
+byLabel(next, "Guide")[0].click()
+assert.ok(opened.includes("Campaigns/Glass/NPCs/Guide.md"))
+
+for (const filePath of [...files.keys()]) if (filePath.includes("Session ") || filePath.includes("/NPCs/") || filePath.includes("/Locations/") || filePath.includes("/Factions/") || filePath.includes("/Quests/") || filePath.includes("Claim ")) files.delete(filePath)
+await home.render()
+const empty = byClass(home.contentEl, "tt-home-next")[0]
+assert.ok(empty)
+assert.equal(byClass(empty, "tt-home-next-part").length, 0)
+assert.equal(byLabel(empty, plugin.strings.homeNewSession).length, 1)
+assert.equal(byLabel(empty, plugin.strings.wrapUp).length, 1)
+const newClaim = addFile("Runs/Harbor/Claim Fresh.md", "", { type: "claim", status: "current" })
+env.emit("changed", newClaim)
+for (let attempt = 0; attempt < 100 && !home.contentEl.textContent.includes("Claim Fresh"); attempt++) await new Promise(resolve => setTimeout(resolve, 5))
+assert.ok(home.contentEl.textContent.includes("Rumours to resolve: 1"))
+assert.ok(home.contentEl.textContent.includes("Claim Fresh"))

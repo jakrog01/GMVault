@@ -12,6 +12,8 @@ import { HomeBlock, HomePanel, HomeView, HOME_VIEW, linkPath } from "./home";
 import { checkLatestRelease, checkedRecently, ReleaseCheck } from "./update";
 import { LookupModal } from "./lookup";
 import { QuickNpcModal } from "./quick-npc";
+import { wrapUp } from "./wrap-up";
+import { TimelineView, TIMELINE_VIEW } from "./timeline";
 
 interface PluginData { settings: Settings; combat: Combat; encounterSets: EncounterSet[] }
 export interface RunContext { run: TFile; campaign: TFile; party: TFile; state: TFile; day: TFile | null }
@@ -30,6 +32,7 @@ export default class TableTools extends Plugin {
   views = new Set<CombatView>();
 
   homeViews = new Set<HomePanel>();
+  timelineViews = new Set<TimelineView>();
   index!: AssistantIndex;
   skills = new Map<string, Skill>();
   invalidSkillsKey = "";
@@ -51,16 +54,19 @@ export default class TableTools extends Plugin {
     this.app.vault.getMarkdownFiles().forEach(file => this.homeChangeAffects(file, file.path));
     const vaultEvents = this.app.vault as typeof this.app.vault & { on: (event: string, callback: (file: TFile) => void) => unknown };
     for (const event of ["create", "modify", "delete"]) this.registerEvent(vaultEvents.on(event, file => {
+      if (file instanceof TFile) { this.timelineViews.forEach(view => view.schedule()); this.homeViews.forEach(view => view.refreshMaintenance()); }
       if (file instanceof TFile && SCOPE_PATHS.includes(file.path)) void this.loadScopePolicy();
       if (file instanceof TFile && this.isSkillPath(file.path)) void this.reloadSkills();
       if (file instanceof TFile && this.homeChangeAffects(file, file.path)) this.scheduleHomeRefresh(file.path);
     }) as never);
     this.skills = await loadSkills(this);
     this.registerEvent(this.app.metadataCache.on("changed", file => {
+      if (file instanceof TFile) { this.timelineViews.forEach(view => view.schedule()); this.homeViews.forEach(view => view.refreshMaintenance()); }
       if (file instanceof TFile && this.isSkillPath(file.path)) void this.reloadSkills();
       if (file instanceof TFile && this.homeChangeAffects(file, file.path)) this.scheduleHomeRefresh(file.path);
     }));
     this.registerEvent(this.app.vault.on("rename", (file, oldPath) => {
+      if (file instanceof TFile) { this.timelineViews.forEach(view => view.schedule()); this.homeViews.forEach(view => view.refreshMaintenance()); }
       if (file instanceof TFile && (this.isSkillPath(file.path) || this.isSkillPath(oldPath))) void this.reloadSkills();
       if (file instanceof TFile && (this.homeChangeAffects(file, file.path) || this.homeChangeAffects(undefined, oldPath))) {
         this.scheduleHomeRefresh(file.path, oldPath);
@@ -70,6 +76,7 @@ export default class TableTools extends Plugin {
     this.registerView(COMBAT_VIEW, leaf => new CombatView(leaf, this));
     this.registerView(ASSISTANT_VIEW, leaf => new AssistantView(leaf, this));
     this.registerView(HOME_VIEW, leaf => new HomeView(leaf, this));
+    this.registerView(TIMELINE_VIEW, leaf => new TimelineView(leaf, this));
     this.registerMarkdownCodeBlockProcessor("gmvault-home", (_source, element, context) => {
       context.addChild(new HomeBlock(element, this.app, this));
     });
@@ -82,8 +89,10 @@ export default class TableTools extends Plugin {
     this.addCommand({ id: "open-combat", name: s.commandOpenCombat, callback: () => void this.openView(COMBAT_VIEW) });
     this.addCommand({ id: "open-assistant", name: s.commandOpenAssistant, callback: () => void this.openView(ASSISTANT_VIEW) });
     this.addCommand({ id: "open-home", name: s.commandOpenHome, callback: () => this.openHome() });
+    this.addCommand({ id: "open-timeline", name: s.commandOpenTimeline, callback: () => void this.openView(TIMELINE_VIEW) });
     this.addCommand({ id: "look-up", name: s.lookUp, callback: () => this.openLookup() });
     this.addCommand({ id: "quick-npc", name: s.quickNpc, callback: () => void this.openQuickNpc() });
+    this.addCommand({ id: "wrap-up-session", name: s.wrapUpSession, callback: () => void this.wrapUp() });
     this.addCommand({ id: "assistant-rebuild-index", name: s.commandRebuildAssistantIndex, callback: () => void this.index.rebuild(true) });
     this.addCommand({ id: "combat-next-turn", name: s.commandNextTurn, callback: () => this.tracker.advance(1) });
     this.addCommand({ id: "combat-previous-turn", name: s.commandPreviousTurn, callback: () => this.tracker.advance(-1) });
@@ -131,7 +140,7 @@ export default class TableTools extends Plugin {
     if (this.homeRelevantPaths.has(path)) return true;
     const type = file ? this.app.metadataCache.getFileCache(file)?.frontmatter?.type : undefined;
     const partyMembers = /^Parties\/[^/]+\/Party\.md$/.test(path);
-    if (!["world", "campaign", "run", "party", "pc", "world-day", "state"].includes(String(type)) && !(type === "npc" && this.app.metadataCache.getFileCache(file!)?.frontmatter?.subtype === "pc") && !partyMembers) return false;
+    if (!["world", "campaign", "run", "party", "pc", "world-day", "state", "session", "quest", "claim"].includes(String(type)) && !(type === "npc" && this.app.metadataCache.getFileCache(file!)?.frontmatter?.subtype === "pc") && !partyMembers) return false;
     this.homeRelevantPaths.add(path);
     return true;
   }
@@ -296,6 +305,8 @@ export default class TableTools extends Plugin {
   openLookup(): void { new LookupModal(this.app, this).open(); }
 
   openQuickNpc(): void { new QuickNpcModal(this.app, this).open(); }
+
+  wrapUp(run?: TFile, session?: TFile): Promise<void> { return wrapUp(this, run, session); }
 
   private resolve(value: unknown, source: TFile): TFile | null {
     const path = linkPath(value);

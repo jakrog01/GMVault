@@ -1,0 +1,57 @@
+import assert from "node:assert/strict"
+import { readFileSync } from "node:fs"
+import path from "node:path"
+import { createEnvironment, root } from "../support/obsidian.mjs"
+
+const env = createEnvironment()
+const { addFile, app, workspace, files, adapterFiles, modals, notices, byLabel, buttonComponent, settingByName } = env
+addFile("Active.md", "", { run: "[[Runs/Harbor/Run]]" })
+addFile("Runs/Harbor/Run.md", "", { type: "run", campaign: "[[Campaigns/Glass/Campaign]]", party: "[[Parties/Watch/Party]]" })
+addFile("Runs/Harbor/State.md", "", { type: "state" })
+addFile("Campaigns/Glass/Campaign.md", "", { type: "campaign" })
+addFile("Parties/Watch/Party.md", "", { type: "party" })
+addFile("Parties/Watch/Aria.md", "", { type: "pc", ac: 15, hp: 25, level: 3 })
+addFile("Parties/Watch/Borin.md", "", { type: "pc", ac: 16, hp: 28, level: 3 })
+addFile("Library/Bestiary/Goblin.md", "", { type: "creature" })
+addFile("Library/Bestiary/Wolf.md", "", { type: "creature" })
+const encounter = addFile("Campaigns/Glass/Encounters/Bridge.md", "", { type: "encounter", creatures: [
+  { creature: "[[Library/Bestiary/Goblin]]", count: 2 }, { creature: "[[Library/Bestiary/Wolf]]", count: 1 }, { creature: "[[Missing]]", count: 1 },
+] })
+adapterFiles.set("_system/templates/encounter.md", readFileSync(path.join(root, "_system/templates/encounter.md"), "utf8"))
+const TableTools = env.load()
+const plugin = new TableTools(app, { id: "table-tools" })
+workspace.plugin = plugin
+await plugin.onload()
+await plugin.openView("tt-combat")
+const view = env.leaves.find(leaf => leaf.type === "tt-combat").view
+await byLabel(view.contentEl, plugin.strings.encounterSetsTitle)[0].click()
+await buttonComponent(modals.at(-1).contentEl, plugin.strings.encounterStart).click()
+await modals.at(-1).choose(file => file.path === encounter.path)
+for (let attempt = 0; attempt < 100 && plugin.combat.participants.filter(item => item.kind === "enemy").length < 3; attempt++) await new Promise(resolve => setTimeout(resolve, 0))
+assert.equal(plugin.combat.participants.filter(item => item.kind === "enemy").length, 3)
+assert.equal(plugin.combat.participants.filter(item => item.kind === "player").length, 2)
+assert.equal(notices.filter(item => item.includes("Missing")).length, 1)
+await plugin.tracker.loadEncounterNote(encounter)
+assert.equal(plugin.combat.participants.filter(item => item.kind === "player").length, 2)
+plugin.combat.participants.push({ name: "Bandit", kind: "ally", hp: 10, source: undefined })
+await byLabel(view.contentEl, plugin.strings.encounterSetsTitle)[0].click()
+await buttonComponent(modals.at(-1).contentEl, plugin.strings.encounterSaveCurrentNote).click()
+settingByName(modals.at(-1).contentEl, plugin.strings.nameLabel).components[0].change("Bridge")
+await buttonComponent(modals.at(-1).contentEl, plugin.strings.save).click()
+const saved = files.get("Campaigns/Glass/Encounters/Bridge 2.md").content
+assert.ok(saved.includes('campaign: "[[Campaigns/Glass/Campaign]]"'))
+assert.ok(saved.includes('  - creature: "[[Library/Bestiary/Goblin]]"\n    count: 4'))
+assert.ok(saved.includes('  - creature: "[[Library/Bestiary/Wolf]]"\n    count: 2'))
+assert.ok(saved.includes("# Bridge 2\n\n- Bandit"))
+plugin.encounterSets.push({ name: "Old set", description: "", members: [{ source: "Library/Bestiary/Wolf.md", name: "Wolf", quantity: 2, group: true }] })
+await byLabel(view.contentEl, plugin.strings.encounterSetsTitle)[0].click()
+const menu = modals.at(-1)
+await buttonComponent(menu.contentEl, plugin.strings.encounterSaveCurrentNote).click()
+assert.ok(modals.at(-1))
+modals.at(-1).close()
+await byLabel(view.contentEl, plugin.strings.encounterSetsTitle)[0].click()
+const old = modals.at(-1).contentEl.settings.find(item => item.name === "Old set")
+await old.components.find(item => item.kind === "button" && item.text === plugin.strings.encounterSaveAsNote).click()
+await buttonComponent(modals.at(-1).contentEl, plugin.strings.save).click()
+assert.ok(files.get("Campaigns/Glass/Encounters/Old set.md").content.includes('count: 2'))
+assert.equal(plugin.encounterSets.length, 1)

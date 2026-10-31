@@ -21,8 +21,15 @@ When `Active.md` points to a complete run, the **Active run** card shows:
 | **Open combat tracker** | The combat tracker |
 | **Look up** | Search game notes and open a card |
 | **Quick NPC** | Create an NPC in the world or campaign |
+| **Timeline** | Open the active run's events and sessions |
+
+### Next session
+
+The active run card includes a **Next session** block. It links the **Last session** with its date, up to eight **People and places from last session**, up to eight **Open quests**, and a count with up to five links under **Rumours to resolve**. Empty lists are hidden. The lists use note links and frontmatter, and refresh when relevant notes change. **New session** creates the next dated note; **Wrap up** reviews the latest session and records selected outcomes in the run.
 
 ## Lists
+
+When game notes have unresolved links, Home shows **Maintenance: Broken links: N**. Click **Broken links: N** to see each source note and missing target, then click a row to open its source. The line is hidden when the count is zero. System, local, archived, and dot-folder notes are excluded.
 
 **Worlds** lists notes with `type: world`, a campaign count, and **Open world**.
 
@@ -60,10 +67,10 @@ It creates:
 
 ```text
 Campaigns/<name>/
-├── Campaign.md     type: campaign, with the chosen system and world link
-├── Quests/
-├── Encounters/
-└── Handouts/
+|-- Campaign.md     type: campaign, with the chosen system and world link
+|-- Quests/
+|-- Encounters/
+`-- Handouts/
 ```
 
 With **No world**, Home also creates `NPCs/`, `Locations/`, and `Factions/`. New notes in these folders get their template automatically; see [Where things go](WHERE-THINGS-GO.md). The created note opens and the Home screen refreshes.

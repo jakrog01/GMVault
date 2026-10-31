@@ -88,6 +88,8 @@ class LookupCard extends Modal {
     this.button(s.lookupOpen, () => void this.openFile(), actions);
     this.button(s.lookupOpenSide, () => void this.app.workspace.getLeaf("split").openFile(file), actions);
     this.button(s.lookupInsert, () => { this.editor?.replaceSelection(noteLink(this.app, file, this.app.workspace.getActiveFile()?.path ?? "")); this.close(); }, actions, !this.editor);
+    if (type === "session") this.button(s.wrapUp, () => { this.close(); void this.plugin.wrapUp(undefined, file); }, actions);
+    if (type === "encounter") this.button(s.encounterStart, () => { this.close(); void this.plugin.tracker.loadEncounterNote(file); }, actions);
     if (type === "creature" || type === "npc") this.button(s.lookupAddCombat, () => { void this.plugin.tracker.addCreature(file, 1, true); this.close(); }, actions);
   }
 

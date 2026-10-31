@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+## 2.6.2
+
+- GMVault can wrap up a session: **Wrap up session** reads the session note and proposes world changes, what players know and rumours; you untick or edit them, and **Apply** writes them to the run's `State.md` and new claim notes, never to world notes.
+- Home shows a **Next session** block: last session, people and places from it, open quests and rumours to resolve.
+- The combat tracker starts an encounter from an encounter note and saves the current fight as one; saved encounter sets can be turned into notes.
+- **Timeline** orders the world's events and the run's sessions by world date, with undated notes last, and creates new events dated from the run's world day.
+- Home shows **Broken links** in game notes when there are any, each opening its source note.
+
 ## 2.6.1
 
 - GMVault finds any person, place or rule during play with **Look up**: notes of the active run come first, exact names beat loose matches, and Polish names match without diacritics.

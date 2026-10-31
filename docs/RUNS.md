@@ -60,6 +60,14 @@ world_date: ""
 ---
 ```
 
+## Wrap up a session
+
+Choose **Wrap up session** while a session note is active, or use **Wrap up** on its Look up card or a Home run card. Without an active session note, the command uses the newest session in the active run. A Google AI key must be set in Table Tools settings.
+
+The configured Gemini chat model reads the session, `Run.md`, `State.md`, and the names, types, and statuses of notes linked from the session. Review its proposals under **World changes**, **What players know**, and **Rumours**. Every proposal starts checked and its text is editable. **Cancel** writes nothing. **Apply** appends selected facts beneath the matching headings in `State.md`, skips identical lines already there, and creates a `claim` note for each selected rumour. Each fact cites the session. Claims link back to the session and start with `status: current`.
+
+Review proposals before applying them. The world and campaign notes are never changed by this action.
+
 ## Claims and other working notes
 
 Player runs can keep claims about uncertain information. Insert the `claim` template with **Templater: Insert template**.
