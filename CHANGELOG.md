@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+## 2.7.2
+
+- GMVault maps need no edit mode: click an empty spot to **Attach note** or add a **New location here**, drag a pin to move it, and remove it with **Remove pin** on its card or by right-clicking it. The full map opens in a main tab.
+- Right-click a game note in the file explorer, its tab or the editor for its actions: **Add to combat**, **Start encounter**, **Wrap up**, **Open map**, **Show on map** and **Look up**.
+- The combat toolbar has **Start encounter** and **Save as encounter note** directly instead of inside **Encounter sets**.
+- New commands: **New session**, **Note actions**, **Combat: add players**, **Combat: add enemy**, **Combat: start encounter** and **Combat: save as encounter note**.
+
 ## 2.7.1
 
 - GMVault keeps working for a run without a party or `State.md`, such as a player run: Look up, Quick NPC, Timeline, maps and the assistant's run context no longer go silent.

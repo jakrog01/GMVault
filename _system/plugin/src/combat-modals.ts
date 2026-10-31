@@ -190,7 +190,7 @@ export class EncounterSetsModal extends Modal {
   onClose(): void { this.contentEl.empty(); }
 }
 
-class EncounterNotePicker extends FuzzySuggestModal<TFile> {
+export class EncounterNotePicker extends FuzzySuggestModal<TFile> {
   constructor(app: App, private readonly plugin: TableTools) { super(app); this.setPlaceholder(plugin.strings.encounterStart); }
   getItems(): TFile[] {
     const campaign = this.plugin.context()?.campaign;
@@ -201,7 +201,7 @@ class EncounterNotePicker extends FuzzySuggestModal<TFile> {
   onChooseItem(file: TFile): void { void this.plugin.tracker.loadEncounterNote(file); }
 }
 
-class EncounterNameModal extends Modal {
+export class EncounterNameModal extends Modal {
   constructor(app: App, private readonly plugin: TableTools, private name: string, private readonly participants?: Participant[]) { super(app); }
   onOpen(): void {
     const s = this.plugin.strings;

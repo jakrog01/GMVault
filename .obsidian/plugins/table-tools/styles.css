@@ -183,7 +183,6 @@
 .tt-map-crumbs, .tt-map-actions { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
 .tt-map-crumbs .tt-btn { background: transparent; box-shadow: none; padding: 3px 5px; }
 .tt-map-crumbs .tt-btn::after { content: "/"; margin-left: 8px; color: var(--text-muted); }
-.tt-map-actions .is-active { background: var(--interactive-accent); color: var(--text-on-accent); }
 .tt-map-viewport { position: relative; flex: 1; min-height: 300px; overflow: hidden; background: var(--background-secondary); touch-action: none; cursor: grab; }
 .tt-map-viewport:active { cursor: grabbing; }
 .tt-map-layer { position: absolute; left: 0; top: 0; transform-origin: 0 0; }
@@ -196,6 +195,4 @@
 .tt-map-pin:hover .tt-map-pin-label, .tt-map-pin:focus-within .tt-map-pin-label, .tt-map-labels .tt-map-pin-label { display: block; }
 .tt-map-pin.is-missing { opacity: .55; filter: grayscale(1); }
 .tt-map-pin.is-highlighted .tt-map-pin-icon { outline: 3px solid var(--color-yellow); }
-.tt-map-pin .tt-btn { display: none; font-size: 10px; padding: 1px 4px; }
-.tt-map-pin:hover .tt-btn, .tt-map-pin:focus-within .tt-btn { display: block; }
 .tt-map-menu { position: absolute; z-index: 3; display: flex; gap: 4px; padding: 7px; background: var(--background-primary); border: 1px solid var(--background-modifier-border); box-shadow: var(--shadow-s); }

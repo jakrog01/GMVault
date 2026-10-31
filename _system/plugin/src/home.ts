@@ -4,7 +4,7 @@ import { format } from "./strings";
 import { RecordedUpdate, recordedUpdate, shippedPath } from "./update";
 import { newestRunSession, sessionLinks } from "./wrap-up";
 import { CampaignModal, CharacterModal, PartyModal, RunModal, WorldModal } from "./home-create";
-import { createNote, isGameNotePath, linkTarget, noteFields, resolveLink } from "./notes";
+import { isGameNotePath, linkTarget, noteFields, resolveLink } from "./notes";
 import { HOME_RECENT_TYPES } from "./contract";
 export const HOME_VIEW = "tt-home";
 interface NoteSummary {
@@ -206,7 +206,7 @@ export class HomePanel {
     list(s.homeOpenQuests, quests.map(note => note.file));
     list(s.homeRumours, claims.slice(0, 5).map(note => note.file), claims.length);
     const nextActions = next.createDiv("tt-home-actions");
-    this.button(nextActions, s.homeNewSession, () => void this.createSession(context.run));
+    this.button(nextActions, s.homeNewSession, () => void this.plugin.newSession(context.run));
     this.button(nextActions, s.wrapUp, () => void this.plugin.wrapUp());
   }
   private async firstDayLine(file: TFile): Promise<string> {
@@ -258,17 +258,9 @@ export class HomePanel {
       const party = path ? this.app.metadataCache.getFirstLinkpathDest(path, run.file.path) : null;
       if (party) card.createDiv({ cls: "tt-muted", text: folderName(party) });
       this.button(card, this.plugin.strings.homeMakeActive, () => void this.plugin.setActiveRun(run.file.path));
-      this.button(card, this.plugin.strings.homeNewSession, () => void this.createSession(run.file));
+      this.button(card, this.plugin.strings.homeNewSession, () => void this.plugin.newSession(run.file));
       this.button(card, this.plugin.strings.wrapUp, () => void this.plugin.wrapUp(run.file));
     }
-  }
-  private async createSession(run: TFile): Promise<void> {
-    const folder = run.parent?.path ?? run.path.slice(0, run.path.lastIndexOf("/"));
-    const now = new Date();
-    const date = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
-    const base = `Session ${date}`;
-    const file = await createNote(this.app, { template: "session", folder, name: base, values: { type: "session", run: `"[[${folder}/Run]]"`, date }, date });
-    await this.app.workspace.openLinkText(file.path, "");
   }
   private renderParty(parent: HTMLElement, party: NoteSummary, members: number): void {
     const s = this.plugin.strings;

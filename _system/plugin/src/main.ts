@@ -9,11 +9,13 @@ import { Skill, loadSkills } from "./tools";
 import { assistantLayerPaths, defaultScopePolicy } from "./scope";
 import { HomeBlock, HomePanel, HomeView, HOME_VIEW } from "./home";
 import { checkLatestRelease, checkedRecently, ReleaseCheck } from "./update";
-import { LookupModal } from "./lookup";
+import { LookupCard, LookupModal, lookupCandidate } from "./lookup";
+import { addNoteActions, NoteActionsModal, noteActions } from "./actions";
+import { AddPlayersModal, CreaturePickerModal, EncounterNameModal, EncounterNotePicker } from "./combat-modals";
 import { QuickNpcModal } from "./quick-npc";
 import { wrapUp } from "./wrap-up";
 import { TimelineView, TIMELINE_VIEW } from "./timeline";
-import { linkTarget, noteFields, pathLink, resolveLink } from "./notes";
+import { createNote, linkTarget, noteFields, pathLink, resolveLink } from "./notes";
 import { MapBlock, MapPanel, MapView, MAP_VIEW } from "./map";
 import { HOME_TYPES, MAP_TYPES } from "./contract";
 import { GameContext, contextStamp, resolveGameContext } from "./context";
@@ -85,11 +87,23 @@ export default class TableTools extends Plugin {
     this.addCommand({ id: "open-map", name: s.mapOpen, callback: () => this.openDefaultMap() });
     this.addCommand({ id: "look-up", name: s.lookUp, callback: () => this.openLookup() });
     this.addCommand({ id: "quick-npc", name: s.quickNpc, callback: () => void this.openQuickNpc() });
+    this.addCommand({ id: "new-session", name: s.homeNewSession, callback: () => void this.newSession() });
+    this.addCommand({ id: "note-actions", name: s.noteActions, checkCallback: checking => {
+      const file = this.app.workspace.getActiveFile();
+      const actions = file ? noteActions(this, file) : [];
+      if (!actions.length) return false;
+      if (!checking) new NoteActionsModal(this.app, this, actions).open();
+      return true;
+    } });
     this.addCommand({ id: "wrap-up-session", name: s.wrapUpSession, callback: () => void this.wrapUp() });
     this.addCommand({ id: "assistant-rebuild-index", name: s.commandRebuildAssistantIndex, callback: () => void this.index.rebuild(true) });
     this.addCommand({ id: "combat-next-turn", name: s.commandNextTurn, callback: () => this.tracker.advance(1) });
     this.addCommand({ id: "combat-previous-turn", name: s.commandPreviousTurn, callback: () => this.tracker.advance(-1) });
     this.addCommand({ id: "combat-roll-initiative", name: s.commandRollInitiative, callback: () => this.tracker.rollInitiative(false) });
+    this.addCommand({ id: "combat-add-players", name: s.commandAddPlayers, callback: () => new AddPlayersModal(this.app, this).open() });
+    this.addCommand({ id: "combat-add-creature", name: s.commandAddEnemy, callback: () => new CreaturePickerModal(this.app, this).open() });
+    this.addCommand({ id: "combat-start-encounter", name: s.commandStartEncounter, callback: () => new EncounterNotePicker(this.app, this).open() });
+    this.addCommand({ id: "combat-save-encounter", name: s.commandSaveEncounter, callback: () => new EncounterNameModal(this.app, this, this.combat.name).open() });
     this.addCommand({ id: "combat-clear", name: s.commandClearCombat, callback: () => this.tracker.clear() });
     this.addCommand({
       id: "assistant-ask-selection", name: s.commandAskSelection, editorCallback: async editor => {
@@ -99,6 +113,8 @@ export default class TableTools extends Plugin {
         await this.assistant()?.send(selection);
       },
     });
+    this.registerEvent(this.app.workspace.on("file-menu", (menu, file) => { if (file instanceof TFile) addNoteActions(this, menu, file); }));
+    this.registerEvent(this.app.workspace.on("editor-menu", (menu, _editor, info) => { if (info.file) addNoteActions(this, menu, info.file); }));
     this.addSettingTab(new TableToolsSettingTab(this.app, this));
     const workspace = this.app.workspace as typeof this.app.workspace & { onLayoutReady?: (callback: () => void) => void };
     workspace.onLayoutReady?.(async () => {
@@ -231,7 +247,7 @@ export default class TableTools extends Plugin {
   }
   async openMap(owner: TFile, highlight?: TFile): Promise<void> {
     let leaf: import("obsidian").WorkspaceLeaf | undefined = this.app.workspace.getLeavesOfType(MAP_VIEW)[0];
-    if (!leaf) { leaf = this.app.workspace.getRightLeaf(false) ?? undefined; if (!leaf) return; await leaf.setViewState({ type: MAP_VIEW, active: true, state: { owner: owner.path } }); }
+    if (!leaf) { leaf = this.app.workspace.getLeaf("tab"); await leaf.setViewState({ type: MAP_VIEW, active: true, state: { owner: owner.path } }); }
     else await leaf.loadIfDeferred?.();
     (leaf.view as MapView).setOwner(owner, highlight);
     await this.app.workspace.revealLeaf(leaf);
@@ -282,6 +298,15 @@ export default class TableTools extends Plugin {
     return this.app.workspace.getLeavesOfType(ASSISTANT_VIEW)[0]?.view as AssistantView | undefined;
   }
   openLookup(): void { new LookupModal(this.app, this).open(); }
+  openLookupCard(file: TFile): void { const candidate = lookupCandidate(this.app, file); if (candidate) new LookupCard(this.app, this, candidate).open(); }
+  async newSession(run = this.context()?.run): Promise<void> {
+    if (!run) { new Notice(this.strings.quickNpcNeedsRun); return; }
+    const folder = run.parent?.path ?? run.path.slice(0, run.path.lastIndexOf("/"));
+    const now = new Date();
+    const date = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
+    const file = await createNote(this.app, { template: "session", folder, name: `Session ${date}`, values: { type: "session", run: `"[[${folder}/Run]]"`, date }, date });
+    await this.app.workspace.openLinkText(file.path, "");
+  }
   openQuickNpc(): void { new QuickNpcModal(this.app, this).open(); }
   wrapUp(run?: TFile, session?: TFile): Promise<void> { return wrapUp(this, run, session); }
   resolve(value: unknown, source: TFile): TFile | null { return resolveLink(this.app, value, source); }
