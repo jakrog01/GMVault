@@ -8,8 +8,8 @@ import { compareRuleHits } from "./indexer";
 import { format } from "./strings";
 
 export interface Skill { name: string; description: string; body: string; system?: string; tools: string[]; path: string }
-export interface ToolCall { name: string; args: Record<string, unknown>; id?: string }
-export interface ToolResult { name: string; id?: string; result: Record<string, unknown> }
+interface ToolCall { name: string; args: Record<string, unknown>; id?: string }
+interface ToolResult { name: string; id?: string; result: Record<string, unknown> }
 
 export const declarations = [
   { name: "search_vault", description: "Search notes in the active scope.", parameters: { type: "OBJECT", properties: { query: { type: "STRING" }, kinds: { type: "ARRAY", items: { type: "STRING" } }, limit: { type: "INTEGER" } }, required: ["query"] } },

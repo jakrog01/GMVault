@@ -5,7 +5,7 @@ interface VaultAdapter {
   write(path: string, value: string): Promise<void>;
 }
 
-export interface ReleaseSource { repo: string; asset: string; api: string }
+interface ReleaseSource { repo: string; asset: string; api: string }
 export interface ReleaseCheck { source: ReleaseSource; latestVersion: string; installedVersion: string; newer: boolean }
 export interface RecordedUpdate { latestVersion: string; installedVersion: string }
 
@@ -18,13 +18,13 @@ const readJson = async (adapter: VaultAdapter, path: string): Promise<unknown> =
 
 export const shippedPath = (path: string): string => `${SHIPPED}${path}`;
 
-export const releaseVersion = (tag: unknown): string | null => {
+const releaseVersion = (tag: unknown): string | null => {
   if (typeof tag !== "string") return null;
   const value = tag.replace(/^v/, "");
   return /^\d+(\.\d+)*$/.test(value) ? value : null;
 };
 
-export const compareReleaseVersions = (left: string, right: string): number => {
+const compareReleaseVersions = (left: string, right: string): number => {
   const leftParts = left.split(".").map(Number);
   const rightParts = right.split(".").map(Number);
   for (let index = 0; index < Math.max(leftParts.length, rightParts.length); index += 1) {
@@ -34,7 +34,7 @@ export const compareReleaseVersions = (left: string, right: string): number => {
   return 0;
 };
 
-export const releaseSource = async (adapter: VaultAdapter): Promise<ReleaseSource> => {
+const releaseSource = async (adapter: VaultAdapter): Promise<ReleaseSource> => {
   const manifest = await readJson(adapter, `${SHIPPED}manifest.json`) as { release?: Partial<ReleaseSource> };
   let local: Partial<ReleaseSource> = {};
   try {

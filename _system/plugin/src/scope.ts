@@ -6,7 +6,7 @@ import { isBuiltInExcluded, noteFields, pathLink, resolveLink } from "./notes";
 export { isBuiltInExcluded } from "./notes";
 
 export const assistantLayerPaths = (name: string): string[] => [`_local/assistant/${name}`, `_system/assistant/${name}`];
-export const builtInExclusions = ["Archive/", "_local/", "_system/", ".obsidian/", ".gmvault/"];
+const builtInExclusions = ["Archive/", "_local/", "_system/", ".obsidian/", ".gmvault/"];
 const excluded = (path: string, prefixes: string[] = []): boolean => isBuiltInExcluded(path) || prefixes.some(prefix => path === prefix.replace(/\/$/, "") || path.startsWith(prefix));
 export const defaultScopePolicy: ScopePolicy = {
   version: 1,

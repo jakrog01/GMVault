@@ -9,16 +9,15 @@ interface Pin { note: string; x: number; y: number }
 const imageTypes = new Set(["png", "jpg", "jpeg", "webp", "gif", "svg"]);
 const clamp = (value: number, low: number, high: number): number => Math.min(high, Math.max(low, value));
 const rounded = (value: number): number => Number(clamp(value, 0, 1).toFixed(4));
-const resolve = resolveLink;
 const pinsOf = (app: App, owner: TFile): Pin[] => {
   const pins = noteFields(app, owner).pins;
   return Array.isArray(pins) ? pins.filter(pin => pin && typeof pin.note === "string" && Number.isFinite(pin.x) && Number.isFinite(pin.y)) as Pin[] : [];
 };
-export const hasMap = (app: App, file: TFile): boolean => !!linkTarget(noteFields(app, file).map);
+const hasMap = (app: App, file: TFile): boolean => !!linkTarget(noteFields(app, file).map);
 
 export function mapOwnersFor(app: App, note: TFile): TFile[] {
   return app.vault.getMarkdownFiles().filter(owner => MAP_TYPES.includes(String(noteFields(app, owner).type)) && hasMap(app, owner)
-    && pinsOf(app, owner).some(pin => resolve(app, pin.note, owner)?.path === note.path));
+    && pinsOf(app, owner).some(pin => resolveLink(app, pin.note, owner)?.path === note.path));
 }
 
 export function chooseMapOwner(app: App, plugin: TableTools, owners: TFile[], note: TFile): void {
@@ -58,7 +57,7 @@ class NewLocationModal extends Modal {
     const path = `${folder}/${name}.md`;
     if (this.app.vault.getAbstractFileByPath(path)) { this.contentEl.createDiv({ cls: "tt-muted", text: this.plugin.strings.homeExists }); return; }
     const inferredWorld = this.app.vault.getAbstractFileByPath(`${worldFolder}/World.md`);
-    const world = noteFields(this.app, this.owner).type === "world" ? this.owner : resolve(this.app, noteFields(this.app, this.owner).world, this.owner) ?? (inferredWorld instanceof TFile ? inferredWorld : null);
+    const world = noteFields(this.app, this.owner).type === "world" ? this.owner : resolveLink(this.app, noteFields(this.app, this.owner).world, this.owner) ?? (inferredWorld instanceof TFile ? inferredWorld : null);
     const values: Record<string, string> = { type: "location", world: JSON.stringify(world ? wikilink(this.app, world, path) : ""), location: JSON.stringify(noteFields(this.app, this.owner).type === "location" ? wikilink(this.app, this.owner, path) : ""), campaign: '""' };
     const file = await createNote(this.app, { template: "location", folder, name, values, exact: true });
     this.close();
@@ -92,7 +91,7 @@ export class MapPanel {
     if (this.timer) clearTimeout(this.timer);
     this.timer = setTimeout(() => {
       this.timer = undefined;
-      const image = resolve(this.app, noteFields(this.app, this.owner).map, this.owner);
+      const image = resolveLink(this.app, noteFields(this.app, this.owner).map, this.owner);
       if ((image?.path ?? "") === this.imagePath) this.renderPins();
       else this.render();
     }, 200) as unknown as number;
@@ -109,7 +108,7 @@ export class MapPanel {
     let file = this.owner;
     while (true) {
       const field = noteFields(this.app, file);
-      const parent = resolve(this.app, field.type === "location" ? field.location || field.world : field.world, file);
+      const parent = resolveLink(this.app, field.type === "location" ? field.location || field.world : field.world, file);
       if (!parent || seen.has(parent.path)) break;
       seen.add(parent.path);
       chain.unshift(parent);
@@ -133,7 +132,7 @@ export class MapPanel {
     crumbs.createSpan({ text: this.owner.basename });
     const actions = head.createDiv("tt-map-actions");
     if (this.inline) this.button(actions, s.mapOpen, () => void this.plugin.openMap(this.owner));
-    const image = resolve(this.app, noteFields(this.app, this.owner).map, this.owner);
+    const image = resolveLink(this.app, noteFields(this.app, this.owner).map, this.owner);
     this.imagePath = image?.path ?? "";
     if (!image || !imageTypes.has(image.extension.toLowerCase())) {
       this.container.createDiv({ cls: "tt-empty", text: s.mapNoImage });
@@ -246,7 +245,7 @@ export class MapPanel {
     if (!this.pinLayer) return;
     this.pinLayer.empty();
     pinsOf(this.app, this.owner).forEach((pin, index) => {
-      const target = resolve(this.app, pin.note, this.owner);
+      const target = resolveLink(this.app, pin.note, this.owner);
       const type = target ? String(noteFields(this.app, target).type ?? "") : "";
       const icon = type === "location" ? "map-pin" : type === "npc" || type === "pc" ? "user" : type === "faction" ? "flag" : type === "event" ? "calendar" : "scroll";
       const marker = this.pinLayer!.createDiv({ cls: `tt-map-pin${target ? "" : " is-missing"}${target?.path === this.highlight?.path ? " is-highlighted" : ""}`, attr: { title: target?.basename ?? `${this.plugin.strings.mapMissingNote}: ${pin.note}`, "data-index": String(index), tabindex: "0", role: "button" } });

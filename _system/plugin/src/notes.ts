@@ -1,7 +1,6 @@
 import { App, TFile } from "obsidian";
 
 export const noteFields = (app: App, file: TFile): Record<string, unknown> => app.metadataCache.getFileCache(file)?.frontmatter ?? {};
-export const noteType = (app: App, file: TFile): string => String(noteFields(app, file).type ?? "");
 export const linkTarget = (value: unknown): string => String(value ?? "").trim().replace(/^\[\[/, "").replace(/\]\]$/, "").split("|")[0].split("#")[0].trim();
 export const resolveLink = (app: App, value: unknown, source: TFile | string): TFile | null => {
   const target = linkTarget(value);
@@ -28,7 +27,7 @@ export function uniqueName(app: App, folder: string, base: string): string {
   return name;
 }
 
-export async function homeTemplate(app: App, kind: string): Promise<string> {
+async function homeTemplate(app: App, kind: string): Promise<string> {
   for (const root of ["_local/", "_system/"]) {
     try { return await app.vault.adapter.read(`${root}templates/${kind}.md`); } catch { continue; }
   }
@@ -53,7 +52,7 @@ function mergeHomeFrontmatter(frontmatter: string, values: Record<string, string
   return output.join("\n");
 }
 
-export function mergeHomeTemplate(template: string, title: string, folder: string, values: Record<string, string>, date?: string): string {
+function mergeHomeTemplate(template: string, title: string, folder: string, values: Record<string, string>, date?: string): string {
   const rendered = template.replace(/<%\s*tp\.file\.title\s*%>/g, title)
     .replace(/<%\s*tp\.file\.folder\(true\)\s*%>/g, folder)
     .replace(/<%\s*tp\.date\.now\([^%]*?\)\s*%>/g, date ?? "")

@@ -293,7 +293,6 @@ export default class TableTools extends Plugin {
     }
     return this.contextCache;
   }
-  currentContext(): GameContext | null { return this.context(); }
   partyPath(): string {
     return this.settings.partyPath || this.context()?.folders.party || "";
   }

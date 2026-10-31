@@ -4,8 +4,6 @@ export const CONDITIONS = [
   "petrified", "poisoned", "prone", "restrained", "stunned", "unconscious", "concentration", "exhaustion", "dying",
 ] as const;
 
-export type ConditionKey = typeof CONDITIONS[number];
-
 export const EXPERIENCE_BY_CHALLENGE: Record<string, number> = {
   "0": 10, "1/8": 25, "0.125": 25, "1/4": 50, "0.25": 50, "1/2": 100, "0.5": 100,
   "1": 200, "2": 450, "3": 700, "4": 1100, "5": 1800, "6": 2300, "7": 2900, "8": 3900, "9": 5000, "10": 5900,

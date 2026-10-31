@@ -161,7 +161,7 @@ test("a new run creates Run, State, and World Day notes, links campaign and part
   assert.equal(env.files.get("Runs/Glass Friday/State.md").frontmatter.run, "[[Runs/Glass Friday/Run]]")
   assert.equal(env.files.get("Runs/Glass Friday/World Day.md")?.frontmatter?.type, "world-day")
   await until(() => String(env.files.get("Active.md").frontmatter.run) === "[[Runs/Glass Friday/Run]]", 2000, "new run active")
-  assert.equal(plugin.currentContext()?.run.path, "Runs/Glass Friday/Run.md")
+  assert.equal(plugin.context()?.run.path, "Runs/Glass Friday/Run.md")
   await unload(plugin)
 })
 

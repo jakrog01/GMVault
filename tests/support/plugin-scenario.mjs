@@ -768,7 +768,7 @@ export async function runScenario({ override } = {}) {
   mapViewport.dispatch("pointerup", { clientX: 300, clientY: 300 })
   byText(mapView.contentEl, s.mapNewLocation)[0].click()
   modals.at(-1).close()
-  const otherMap = addFile("Worlds/Other Map/World.md", "", { type: "world", map: "[[Library/Assets/map.jpg]]", pins: [{ note: "[[Campaigns/Glass/NPCs/Archivist]]", x: 0.5, y: 0.5 }] })
+  addFile("Worlds/Other Map/World.md", "", { type: "world", map: "[[Library/Assets/map.jpg]]", pins: [{ note: "[[Campaigns/Glass/NPCs/Archivist]]", x: 0.5, y: 0.5 }] })
   plugin.openLookup()
   modals.at(-1).query("Archivist")
   modals.at(-1).choose()

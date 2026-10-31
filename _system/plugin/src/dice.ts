@@ -2,10 +2,9 @@
 
 export interface Roll { expression: string; dice: number[]; modifier: number; total: number; critical?: "success" | "failure" }
 
-export function rollDie(sides: number): number {
+function rollDie(sides: number): number {
   return Math.floor(Math.random() * sides) + 1;
 }
-
 
 const normalise = (expression: string): string => expression.replace(/\s+/g, "").toLowerCase().replace(/k(?=\d)/g, "d");
 
@@ -22,13 +21,6 @@ export function roll(expression: string): Roll {
   return result;
 }
 
-export function average(expression: string): number {
-  const match = normalise(expression).match(/^(\d*)d(\d+)([+-]\d+)?$/);
-  if (!match) return NaN;
-  const count = Number(match[1] || 1), sides = Number(match[2]), modifier = Number(match[3] || 0);
-  return Math.floor(count * (sides + 1) / 2 + modifier);
-}
-
 export function abilityModifier(score: number): number {
   return Math.floor((score - 10) / 2);
 }
@@ -37,9 +29,7 @@ export function signed(value: number): string {
   return (value >= 0 ? "+" : "") + value;
 }
 
-
-export interface RollLabels { critical: string; naturalOne: string }
-
+interface RollLabels { critical: string; naturalOne: string }
 
 export function describeRoll(result: Roll, labels: RollLabels): string {
   if (isNaN(result.total)) return `${result.expression}: ?`;
@@ -51,7 +41,6 @@ export function describeRoll(result: Roll, labels: RollLabels): string {
 }
 
 const escapeRegExp = (value: string): string => value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-
 
 export function dicePattern(attackBonusPhrases: string): RegExp {
   const phrases = attackBonusPhrases.split(",").map(phrase => phrase.trim()).filter(Boolean).map(phrase => escapeRegExp(phrase).replace(/\s+/g, "\\s+"));
