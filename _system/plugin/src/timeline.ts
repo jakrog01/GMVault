@@ -1,6 +1,6 @@
-import { App, ItemView, TFile, WorkspaceLeaf } from "obsidian";
+import { ItemView, TFile, WorkspaceLeaf } from "obsidian";
 import type TableTools from "./main";
-import { homeTemplate, linkPath, mergeHomeTemplate } from "./home";
+import { createNote, isGameNotePath, linkTarget, noteFields, quotedLink, resolveLink } from "./notes";
 
 export const TIMELINE_VIEW = "tt-timeline";
 
@@ -13,29 +13,29 @@ export function timelineDate(value: string): number[] | null {
 
 export class TimelineView extends ItemView {
   private timer?: number;
+  private unsubscribe?: () => void;
   constructor(leaf: WorkspaceLeaf, readonly plugin: TableTools) { super(leaf); }
   getViewType(): string { return TIMELINE_VIEW; }
   getDisplayText(): string { return this.plugin.strings.timelineTitle; }
   getIcon(): string { return "calendar-days"; }
-  async onOpen(): Promise<void> { this.plugin.timelineViews.add(this); this.render(); }
-  async onClose(): Promise<void> { this.plugin.timelineViews.delete(this); if (this.timer) clearTimeout(this.timer); }
+  async onOpen(): Promise<void> { this.plugin.timelineViews.add(this); this.unsubscribe = this.plugin.onNotesChanged(() => this.schedule()); this.render(); }
+  async onClose(): Promise<void> { this.unsubscribe?.(); this.plugin.timelineViews.delete(this); if (this.timer) clearTimeout(this.timer); }
   schedule(): void { if (this.timer) clearTimeout(this.timer); this.timer = setTimeout(() => { this.timer = undefined; this.render(); }, 200) as unknown as number; }
 
   rows(): TimelineRow[] {
-    const context = this.plugin.currentContext();
+    const context = this.plugin.context();
     if (!context) return [];
     const app = this.app;
     const campaign = context.campaign;
-    const worldPath = linkPath(app.metadataCache.getFileCache(campaign)?.frontmatter?.world);
-    const world = worldPath ? app.metadataCache.getFirstLinkpathDest(worldPath, campaign.path) ?? campaign : campaign;
-    const belongs = (value: unknown, file: TFile, target: TFile | null): boolean => !!target && !!linkPath(value) && app.metadataCache.getFirstLinkpathDest(linkPath(value), file.path)?.path === target.path;
-    return app.vault.getMarkdownFiles().flatMap(file => {
-      const fields = app.metadataCache.getFileCache(file)?.frontmatter ?? {};
+    const world = context.world;
+    const belongs = (value: unknown, file: TFile, target: TFile | null): boolean => !!target && resolveLink(app, value, file)?.path === target.path;
+    return app.vault.getMarkdownFiles().filter(file => isGameNotePath(file.path)).flatMap(file => {
+      const fields = noteFields(app, file);
       const type = fields.type;
       const folder = file.parent?.path ?? "";
       const event = type === "event" && (belongs(fields.world, file, world) || belongs(fields.campaign, file, campaign)
-        || (!linkPath(fields.world) && !linkPath(fields.campaign) && (folder.startsWith(`${campaign.parent?.path}/`) || !!world && folder.startsWith(`${world.parent?.path}/`))));
-      const session = type === "session" && (belongs(fields.run, file, context.run) || !linkPath(fields.run) && folder === context.run.parent?.path);
+        || (!linkTarget(fields.world) && !linkTarget(fields.campaign) && (folder.startsWith(`${campaign.parent?.path}/`) || !!world && folder.startsWith(`${world.parent?.path}/`))));
+      const session = type === "session" && (belongs(fields.run, file, context.run) || !linkTarget(fields.run) && folder === context.run.parent?.path);
       if (!event && !session) return [];
       const worldDate = String(fields.world_date ?? "");
       return [{ file, type: session ? "session" as const : "event" as const, worldDate, date: session ? String(fields.date ?? "") : "", sort: timelineDate(worldDate) }];
@@ -51,7 +51,7 @@ export class TimelineView extends ItemView {
     root.empty();
     root.addClass("tt-timeline");
     root.createEl("h2", { text: s.timelineTitle });
-    const context = this.plugin.currentContext();
+    const context = this.plugin.context();
     if (!context) { root.createDiv({ cls: "tt-empty", text: s.timelineNoRun }); return; }
     const button = root.createEl("button", { cls: "tt-btn", text: s.timelineNewEvent });
     button.onclick = () => void this.newEvent();
@@ -70,22 +70,15 @@ export class TimelineView extends ItemView {
   }
 
   async newEvent(): Promise<void> {
-    const context = this.plugin.currentContext();
+    const context = this.plugin.context();
     if (!context) return;
-    const worldPath = linkPath(this.app.metadataCache.getFileCache(context.campaign)?.frontmatter?.world);
-    const world = worldPath ? this.app.metadataCache.getFirstLinkpathDest(worldPath, context.campaign.path) : null;
+    const world = context.world.path === context.campaign.path ? null : context.world;
     const folder = `${(world ?? context.campaign).parent?.path ?? "Campaigns"}/Events`;
-    const day = context.day ? this.app.metadataCache.getFileCache(context.day)?.frontmatter ?? {} : {};
+    const day = context.day ? noteFields(this.app, context.day) : {};
     const worldDate = String(day.world_date || day.date || "");
-    const base = this.plugin.strings.timelineEvent;
-    let name = base;
-    for (let number = 2; this.app.vault.getAbstractFileByPath(`${folder}/${name}.md`); number++) name = `${base} ${number}`;
     const target = world ?? context.campaign;
-    const values = { type: "event", world: world ? `"[[${target.path.replace(/\.md$/, "")}]]"` : '""', campaign: world ? '""' : `"[[${target.path.replace(/\.md$/, "")}]]"`, world_date: JSON.stringify(worldDate) };
-    const content = mergeHomeTemplate(await homeTemplate(this.app, "event"), name, folder, values);
-    const vault = this.app.vault as typeof this.app.vault & { createFolder?: (path: string) => Promise<void> };
-    if (!vault.getAbstractFileByPath(folder)) await vault.createFolder?.(folder);
-    const file = await this.app.vault.create(`${folder}/${name}.md`, content);
+    const values = { type: "event", world: world ? quotedLink(target) : '""', campaign: world ? '""' : quotedLink(target), world_date: JSON.stringify(worldDate) };
+    const file = await createNote(this.app, { template: "event", folder, name: this.plugin.strings.timelineEvent, values });
     await this.app.workspace.openLinkText(file.path, "");
     this.render();
   }

@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+## 2.7.1
+
+- GMVault keeps working for a run without a party or `State.md`, such as a player run: Look up, Quick NPC, Timeline, maps and the assistant's run context no longer go silent.
+- Assistant search resolves each note's campaign and world once instead of once per text chunk, which is faster on large vaults.
+- The plugin code is reorganised around one vault toolkit, one game context and one change notifier, with dead code removed; behaviour is otherwise unchanged.
+
 ## 2.7.0
 
 - GMVault has interactive maps: a world or location note gets a map image with **Choose map image**, and the map view zooms, pans and fits it.

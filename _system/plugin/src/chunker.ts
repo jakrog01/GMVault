@@ -1,4 +1,5 @@
 import { TFile } from "obsidian";
+import { noteFields } from "./notes";
 import type TableTools from "./main";
 import { Chunk, SourceKind } from "./types";
 
@@ -20,7 +21,7 @@ const stringList = (value: unknown): string[] => Array.isArray(value) ? value.ma
 
 export async function chunkFile(plugin: TableTools, file: TFile, kind: SourceKind): Promise<Chunk[]> {
   const raw = await plugin.app.vault.cachedRead(file);
-  const frontmatter = plugin.app.metadataCache.getFileCache(file)?.frontmatter ?? {};
+  const frontmatter = noteFields(plugin.app, file);
   const title = String(frontmatter.title ?? file.basename);
   const aliases = stringList(frontmatter.aliases);
   const type = String(frontmatter.type ?? "note");

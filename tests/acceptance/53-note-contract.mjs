@@ -21,6 +21,17 @@ const relations = {
 }
 const types = Object.keys(relations)
 
+test("plugin note types match every system package", async () => {
+  const source = await read("_system/plugin/src/contract.ts")
+  const literal = source.match(/export const NOTE_TYPES = (\[[\s\S]*?\]) as const;/)?.[1]
+  assert.ok(literal, "NOTE_TYPES source literal")
+  const pluginTypes = [...literal.matchAll(/"([^"]+)"/g)].map(match => match[1])
+  for (const system of await readdir(path.join(root, "_system/systems"))) {
+    const pkg = JSON.parse(await read(`_system/systems/${system}/package.json`))
+    assert.deepEqual([...pluginTypes].sort(), [...pkg.noteTypes].sort(), `${system} note types`)
+  }
+})
+
 test("ADR types and template frontmatter stay inside the note contract", async () => {
   const adr = await read("docs/adr/0004-note-contract.md") + await read("docs/adr/0005-system-library.md") + await read("docs/adr/0006-maps.md")
   for (const type of types) assert.ok(adr.includes(`| \`${type}\` |`), `ADR type ${type}`)

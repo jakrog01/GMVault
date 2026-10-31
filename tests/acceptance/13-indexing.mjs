@@ -126,10 +126,10 @@ test("queries do not resolve the run context per chunk", async () => {
   startObsidian(env)
   await idle(plugin, 8000)
   let calls = 0
-  const original = plugin.currentContext.bind(plugin)
-  plugin.currentContext = () => { calls++; return original() }
+  const original = plugin.context.bind(plugin)
+  plugin.context = () => { calls++; return original() }
   for (let count = 0; count < 20; count++) plugin.index.search("harbor lanterns")
-  assert.ok(calls <= 20, `currentContext called ${calls} times for 20 queries`)
+  assert.ok(calls <= 20, `context called ${calls} times for 20 queries`)
   await unload(plugin)
 })
 

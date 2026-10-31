@@ -1,10 +1,12 @@
 import { TFile } from "obsidian";
-import type TableTools from "./main";
+import { App } from "obsidian";
+import { GameContext } from "./context";
 import { Scope, ScopePolicy, SourceKind } from "./types";
+import { isBuiltInExcluded, noteFields, pathLink, resolveLink } from "./notes";
+export { isBuiltInExcluded } from "./notes";
 
 export const assistantLayerPaths = (name: string): string[] => [`_local/assistant/${name}`, `_system/assistant/${name}`];
 export const builtInExclusions = ["Archive/", "_local/", "_system/", ".obsidian/", ".gmvault/"];
-export const isBuiltInExcluded = (path: string): boolean => /^(?:Archive|_system|_local|\.obsidian|\.gmvault)(?:\/|$)/.test(path);
 const excluded = (path: string, prefixes: string[] = []): boolean => isBuiltInExcluded(path) || prefixes.some(prefix => path === prefix.replace(/\/$/, "") || path.startsWith(prefix));
 export const defaultScopePolicy: ScopePolicy = {
   version: 1,
@@ -27,26 +29,23 @@ const add = (roots: { path: string; kind: SourceKind }[], enabled: SourceKind[],
 
 export function sourceKind(scope: Scope, path: string): SourceKind | null {
   if (excluded(path, scope.exclude) || !path.endsWith(".md")) return null;
-  const root = scope.roots.filter(entry => path === entry.path || path.startsWith(`${entry.path.replace(/\.md$/, "")}/`)).sort((left, right) => right.path.length - left.path.length)[0];
+  const root = scope.roots.filter(entry => path === entry.path || path.startsWith(`${pathLink(entry.path).slice(2, -2)}/`)).sort((left, right) => right.path.length - left.path.length)[0];
   return root?.kind ?? null;
 }
 
-export function resolveScope(plugin: TableTools): Scope {
-  const context = plugin.currentContext();
+export function resolveScope(context: GameContext | null, policy: ScopePolicy, app: App, campaignOverride = "", partyOverride = ""): Scope {
   const roots: { path: string; kind: SourceKind }[] = [];
-  const role = String(context ? plugin.app.metadataCache.getFileCache(context.run)?.frontmatter?.role ?? "gm" : "gm").toLowerCase() === "player" ? "player" : "gm";
-  const enabled = (plugin.scopePolicy ?? defaultScopePolicy)[role];
-  const exclude = [...new Set((plugin.scopePolicy ?? defaultScopePolicy).exclude ?? [])];
-  const campaign = context?.campaign ?? (plugin.app.vault.getAbstractFileByPath(plugin.settings.campaignPath) as TFile | null);
-  const party = context?.party ?? (plugin.app.vault.getAbstractFileByPath(plugin.settings.partyPath) as TFile | null);
-  const system = String(campaign ? plugin.app.metadataCache.getFileCache(campaign)?.frontmatter?.system ?? "generic" : "generic");
-  const runFolder = folderOf(context?.run);
-  const campaignFolder = folderOf(campaign);
-  const worldLink = String(campaign ? plugin.app.metadataCache.getFileCache(campaign)?.frontmatter?.world ?? "" : "");
-  const worldTarget = worldLink && campaign ? plugin.app.metadataCache.getFirstLinkpathDest(worldLink.replace(/^\[\[/, "").replace(/\]\]$/, "").split("|")[0].split("#")[0], campaign.path) : null;
-  const world = worldTarget instanceof TFile ? worldTarget : campaign;
-  const worldFolder = folderOf(world);
-  const partyFolder = folderOf(party);
+  const role = context?.role ?? "gm";
+  const enabled = (policy ?? defaultScopePolicy)[role];
+  const exclude = [...new Set((policy ?? defaultScopePolicy).exclude ?? [])];
+  const campaign = context?.campaign ?? (app.vault.getAbstractFileByPath(campaignOverride) as TFile | null);
+  const party = context?.party ?? (app.vault.getAbstractFileByPath(partyOverride) as TFile | null);
+  const system = context?.system ?? String(campaign ? noteFields(app, campaign).system ?? "generic" : "generic");
+  const runFolder = context?.folders.run ?? "";
+  const campaignFolder = context?.folders.campaign ?? folderOf(campaign);
+  const world = context?.world ?? (campaign ? resolveLink(app, noteFields(app, campaign).world, campaign) ?? campaign : null);
+  const worldFolder = context?.folders.world ?? folderOf(world);
+  const partyFolder = context?.folders.party ?? folderOf(party);
   if (context) {
     add(roots, enabled, runFolder, "run");
     add(roots, enabled, partyFolder, "party");

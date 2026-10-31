@@ -1,4 +1,5 @@
 import { Notice, TFile } from "obsidian";
+import { noteFields } from "./notes";
 import type TableTools from "./main";
 import { roll } from "./dice";
 import { AssistantIndex } from "./indexer";
@@ -46,16 +47,16 @@ export class VaultTools {
     if (name === "find_by_name") return { results: this.index.search(String(args.name ?? ""), scope, 20).map(hit => ({ citation: `[[${hit.chunk.path}#${hit.chunk.breadcrumb}]]`, title: hit.chunk.title, aliases: hit.chunk.aliases })) };
     if (name === "list_notes") {
       const files = this.plugin.app.vault.getMarkdownFiles().filter(file => this.index.byPath(file.path, scope).length > 0).filter(file => {
-        const frontmatter = this.plugin.app.metadataCache.getFileCache(file)?.frontmatter ?? {};
+        const frontmatter = noteFields(this.plugin.app, file);
         return (!args.type || frontmatter.type === args.type) && (!args.status || frontmatter.status === args.status) && (!args.folder || file.path.startsWith(String(args.folder)));
       });
-      return { results: files.slice(0, 100).map(file => ({ path: file.path, title: file.basename, frontmatter: this.plugin.app.metadataCache.getFileCache(file)?.frontmatter ?? {} })) };
+      return { results: files.slice(0, 100).map(file => ({ path: file.path, title: file.basename, frontmatter: noteFields(this.plugin.app, file) })) };
     }
     if (name === "lookup_rule") {
       return { results: this.index.search(String(args.query ?? ""), scope, 50).filter(hit => ["house-rule", "homebrew", "system"].includes(hit.chunk.kind)).sort(compareRuleHits).slice(0, 8).map(hit => ({ citation: `[[${hit.chunk.path}#${hit.chunk.breadcrumb}]]`, text: cap(hit.chunk.text), kind: hit.chunk.kind })) };
     }
     if (name === "get_run_state") {
-      const context = this.plugin.currentContext(); const read = async (file: TFile | null | undefined) => file ? await this.plugin.app.vault.cachedRead(file) : "";
+      const context = this.plugin.context(); const read = async (file: TFile | null | undefined) => file ? await this.plugin.app.vault.cachedRead(file) : "";
       return { scope, state: await read(context?.state), worldDay: await read(context?.day) };
     }
     if (name === "get_combat_state") return { combat: this.plugin.tracker.summary() };
@@ -72,7 +73,7 @@ export async function loadSkills(plugin: TableTools): Promise<Map<string, Skill>
   const result = new Map<string, Skill>();
   const invalid: string[] = [];
   for (const path of paths) for (const file of plugin.app.vault.getMarkdownFiles().filter(candidate => candidate.path.startsWith(`${path}/`))) {
-    const fields = plugin.app.metadataCache.getFileCache(file)?.frontmatter ?? {};
+    const fields = noteFields(plugin.app, file);
     const name = typeof fields.name === "string" ? fields.name : "";
     const description = typeof fields.description === "string" ? fields.description : "";
     if (!name || !description) {

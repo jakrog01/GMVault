@@ -1,0 +1,53 @@
+import { assert, boot, createVault, openAssistant, run, test, unload, until } from "./support.mjs"
+
+test("a player run without party or state keeps game context and tools available", async () => {
+  const env = createVault()
+  const runNote = env.files.get("Runs/Harbor/Run.md")
+  runNote.frontmatter.role = "player"
+  runNote.frontmatter.party = ""
+  env.files.delete("Runs/Harbor/State.md")
+  env.files.delete("Parties/Watch/Party.md")
+  env.addFile("Worlds/Coast/World.md", "# Coast", { type: "world" })
+  env.files.get("Campaigns/Glass/Campaign.md").frontmatter.world = "[[Worlds/Coast/World]]"
+  env.addFile("Worlds/Coast/Events/Arrival.md", "# Arrival", { type: "event", world: "[[Worlds/Coast/World]]", world_date: "1492" })
+  env.addFile("Campaigns/Glass/NPCs/Guide.md", "# Guide", { type: "npc" })
+  env.adapterFiles.set("_system/tables/names.txt", "Mira\n")
+  env.adapterFiles.set("_system/tables/traits.txt", "Blue scarf\n")
+  const plugin = await boot(env)
+  const context = plugin.context()
+  assert.equal(context.run.path, "Runs/Harbor/Run.md")
+  assert.equal(context.campaign.path, "Campaigns/Glass/Campaign.md")
+  assert.equal(context.world.path, "Worlds/Coast/World.md")
+  assert.equal(context.party, null)
+  assert.equal(context.state, null)
+  assert.equal(context.day, null)
+  assert.equal(context.role, "player")
+  assert.equal(context.system, "dnd5e")
+  assert.equal(plugin.index.scope().partyFolder, "")
+  assert.equal(plugin.index.scope().runFolder, "Runs/Harbor")
+  plugin.openLookup()
+  const lookup = env.modals.at(-1)
+  assert.equal(lookup.query("Guide")[0].candidate.tier, 0)
+  await plugin.openQuickNpc()
+  const npc = env.modals.at(-1)
+  await until(() => !!env.settingByName(npc.contentEl, plugin.strings.quickNpcWhere), 2000, "quick npc form")
+  assert.equal(env.settingByName(npc.contentEl, plugin.strings.quickNpcWhere).components[0].value, "Worlds/Coast/NPCs")
+  await env.buttonComponent(npc.contentEl, plugin.strings.homeCreate).click()
+  await until(() => env.files.has("Worlds/Coast/NPCs/Mira.md"), 2000, "quick npc note")
+  await plugin.openView("tt-timeline")
+  const timeline = env.leaves.find(leaf => leaf.type === "tt-timeline").view
+  assert.ok(timeline.rows().some(row => row.file.basename === "Arrival"))
+  await timeline.newEvent()
+  assert.ok(env.files.has("Worlds/Coast/Events/Event.md"))
+  await plugin.openDefaultMap()
+  assert.equal(env.leaves.find(leaf => leaf.type === "tt-map").view.getState().owner, "Worlds/Coast/World.md")
+  const assistant = await openAssistant(env, plugin)
+  assert.ok((await assistant.buildContext()).includes("Harbor run"))
+  const session = env.addFile("Runs/Harbor/Session.md", "# Session", { type: "session", run: "[[Runs/Harbor/Run]]" })
+  env.workspace.activeFile = session
+  await plugin.wrapUp()
+  assert.ok(env.notices.includes(plugin.strings.wrapUpNoRun))
+  await unload(plugin)
+})
+
+await run("64-partial-context")

@@ -1,85 +1,68 @@
-import { App, ItemView, MarkdownRenderChild, Modal, Notice, Platform, Setting, TFile, WorkspaceLeaf } from "obsidian";
+import { App, ItemView, MarkdownRenderChild, Modal, Platform, TFile, WorkspaceLeaf } from "obsidian";
 import type TableTools from "./main";
 import { format } from "./strings";
 import { RecordedUpdate, recordedUpdate, shippedPath } from "./update";
 import { newestRunSession, sessionLinks } from "./wrap-up";
-
+import { CampaignModal, CharacterModal, PartyModal, RunModal, WorldModal } from "./home-create";
+import { createNote, isGameNotePath, linkTarget, noteFields, resolveLink } from "./notes";
+import { HOME_RECENT_TYPES } from "./contract";
 export const HOME_VIEW = "tt-home";
-
 interface NoteSummary {
   file: TFile;
   fields: Record<string, unknown>;
 }
-
 interface HomeModel {
   worlds: NoteSummary[];
   campaigns: NoteSummary[];
   runs: NoteSummary[];
   parties: NoteSummary[];
-  context: ReturnType<TableTools["currentContext"]>;
+  context: ReturnType<TableTools["context"]>;
   worldDay: string;
   systems: Map<string, string>;
   members: Map<string, number>;
   update: RecordedUpdate | null;
 }
-
-const isGameNote = (file: TFile): boolean => !/^_(system|local)\//.test(file.path);
-
-const folderName = (file: TFile): string => file.parent?.path.split("/").at(-1) ?? file.basename;
-
-export async function homeTemplate(app: App, kind: string): Promise<string> {
-  for (const root of ["_local/", "_system/"]) {
-    try { return await app.vault.adapter.read(`${root}templates/${kind}.md`); } catch { continue; }
-  }
-  return "";
-}
-
-function mergeHomeFrontmatter(frontmatter: string, values: Record<string, string>): string {
-  const lines = frontmatter ? frontmatter.split("\n") : [];
-  const output: string[] = [];
-  const replaced = new Set<string>();
-  for (let index = 0; index < lines.length;) {
-    const field = lines[index].match(/^([A-Za-z][\w-]*):/);
-    if (!field) { output.push(lines[index]); index++; continue; }
-    let end = index + 1;
-    while (end < lines.length && (/^[ \t]/.test(lines[end]) || /^\s*-/.test(lines[end]))) end++;
-    const value = values[field[1]];
-    if (value === undefined) output.push(...lines.slice(index, end));
-    else { output.push(`${field[1]}: ${value}`); replaced.add(field[1]); }
-    index = end;
-  }
-  for (const [key, value] of Object.entries(values)) if (!replaced.has(key)) output.push(`${key}: ${value}`);
-  return output.join("\n");
-}
-
-export function mergeHomeTemplate(template: string, title: string, folder: string, values: Record<string, string>, date?: string): string {
-  const rendered = template.replace(/<%\s*tp\.file\.title\s*%>/g, title)
-    .replace(/<%\s*tp\.file\.folder\(true\)\s*%>/g, folder)
-    .replace(/<%\s*tp\.date\.now\([^%]*?\)\s*%>/g, date ?? "")
-    .replace(/<%[\s\S]*?%>/g, "");
-  const match = rendered.match(/^---\n([\s\S]*?)\n---\n?/);
-  const frontmatter = mergeHomeFrontmatter(match?.[1] ?? "", values);
-  const body = match ? rendered.slice(match[0].length) : rendered;
-  return `---\n${frontmatter}\n---\n\n${body}`;
-}
-
-export const linkPath = (value: unknown): string => String(value ?? "").trim().replace(/^\[\[/, "").replace(/\]\]$/, "").split("|")[0].split("#")[0].trim();
-
+export const folderName = (file: TFile): string => file.parent?.path.split("/").at(-1) ?? file.basename;
 export class HomePanel {
   private readonly memberCounts = new Map<string, Promise<number>>();
   private readonly dayLines = new Map<string, Promise<string>>();
   private renderGeneration = 0;
   private renderedPaths = new Set<string>();
   private maintenance?: HTMLElement;
+  private unsubscribe?: () => void;
+  private timer?: number;
+  private changedPaths = new Set<string>();
   constructor(readonly app: App, readonly plugin: TableTools, readonly contentEl: HTMLElement, private readonly showTitle = true) {}
-
+  load(): Promise<void> {
+    this.plugin.homeViews.add(this);
+    this.unsubscribe = this.plugin.onNotesChanged(paths => {
+      this.refreshMaintenance();
+      if (!paths.some(path => {
+        const file = this.app.vault.getAbstractFileByPath(path);
+        return this.plugin.homeChangeAffects(file instanceof TFile ? file : undefined, path);
+      })) return;
+      paths.forEach(path => this.changedPaths.add(path));
+      if (this.timer) return;
+      this.timer = setTimeout(() => {
+        this.timer = undefined;
+        this.changedPaths.forEach(path => this.invalidate(path));
+        this.changedPaths.clear();
+        void this.render();
+      }, 200) as unknown as number;
+    });
+    return this.render();
+  }
+  unload(): void {
+    this.unsubscribe?.();
+    this.plugin.homeViews.delete(this);
+    if (this.timer) clearTimeout(this.timer);
+    this.timer = undefined;
+  }
   invalidate(path: string): void {
     this.memberCounts.clear();
     this.dayLines.delete(path);
   }
-
   hasRenderedPath(path: string): boolean { return this.renderedPaths.has(path); }
-
   async render(): Promise<void> {
     const generation = ++this.renderGeneration;
     const root = this.contentEl;
@@ -104,11 +87,9 @@ export class HomePanel {
     if (model.update) this.renderUpdate(root, model.update);
     this.maintenance = root.createDiv("tt-home-maintenance");
     this.refreshMaintenance();
-
     const { worlds, campaigns, runs, parties, context, worldDay, systems, members } = model;
     if (context) this.renderActive(root, context, worldDay, systems.get(context.campaign.path) ?? "generic", this.notes());
     if (!worlds.length && !campaigns.length && !runs.length && !parties.length) root.createDiv({ cls: "tt-empty", text: s.homeEmpty });
-
     const worldSection = root.createDiv("tt-home-section");
     worldSection.createEl("h3", { text: s.homeWorlds });
     for (const world of worlds) {
@@ -118,11 +99,9 @@ export class HomePanel {
       this.button(card, s.homeOpenWorld, () => this.openNote(world.file.path));
       this.button(card, s.mapOpen, () => void this.plugin.openMap(world.file));
     }
-
     const campaignSection = root.createDiv("tt-home-section");
     campaignSection.createEl("h3", { text: s.homeCampaigns });
     for (const campaign of campaigns) this.renderCampaign(campaignSection, campaign, runs, systems.get(campaign.file.path) ?? "generic");
-
     const assigned = new Set<string>();
     for (const campaign of campaigns) {
       const group = runs.filter(run => this.resolvesTo(run.fields.campaign, run.file, campaign.file));
@@ -135,7 +114,6 @@ export class HomePanel {
       group.createEl("h3", { text: s.homeUnassignedRuns });
       this.renderRuns(group, loose, context?.run.path ?? "");
     }
-
     const partySection = root.createDiv("tt-home-section");
     partySection.createEl("h3", { text: s.homeParties });
     for (const party of parties) this.renderParty(partySection, party, members.get(party.file.path) ?? 0);
@@ -144,10 +122,9 @@ export class HomePanel {
       ...campaigns.map(note => note.file.path),
       ...runs.map(note => note.file.path),
       ...parties.map(note => note.file.path),
-      ...(context ? [context.run.path, context.campaign.path, context.party.path, context.state.path, context.day?.path ?? ""] : []),
+      ...(context ? [context.run.path, context.campaign.path, context.party?.path ?? "", context.state?.path ?? "", context.day?.path ?? ""] : []),
     ].filter(Boolean));
   }
-
   private async model(): Promise<HomeModel> {
     const updatePromise = recordedUpdate(this.app.vault.adapter);
     const notes = this.notes();
@@ -155,8 +132,8 @@ export class HomePanel {
     const campaigns = notes.filter(note => note.fields.type === "campaign");
     const runs = notes.filter(note => note.fields.type === "run");
     const parties = notes.filter(note => note.fields.type === "party");
-    const context = this.plugin.currentContext();
-    const systemNotes = context ? [...campaigns, { file: context.campaign, fields: this.app.metadataCache.getFileCache(context.campaign)?.frontmatter ?? {} }]
+    const context = this.plugin.context();
+    const systemNotes = context ? [...campaigns, { file: context.campaign, fields: noteFields(this.app, context.campaign) }]
       : campaigns;
     const entries = await Promise.all(systemNotes.map(async note => [note.file.path, await this.systemName(note.fields.system)] as const));
     const memberEntries = await Promise.all(parties.map(async party => [party.file.path, await this.memberCountFor(party.file)] as const));
@@ -164,7 +141,6 @@ export class HomePanel {
     const update = await updatePromise;
     return { worlds, campaigns, runs, parties, context, worldDay, systems: new Map(entries), members: new Map(memberEntries), update };
   }
-
   private renderUpdate(root: HTMLElement, update: RecordedUpdate): void {
     const banner = root.createDiv("tt-home-update");
     banner.createDiv({ text: format(this.plugin.strings.homeUpdateAvailable, { version: update.latestVersion, installed: update.installedVersion }) });
@@ -173,54 +149,46 @@ export class HomePanel {
       this.button(banner, this.plugin.strings.homeUpdateInstall, () => new UpdateModal(this.app, this.plugin).open());
     }
   }
-
   private notes(): NoteSummary[] {
-    return this.app.vault.getMarkdownFiles().filter(isGameNote).map(file => ({
+    return this.app.vault.getMarkdownFiles().filter(file => isGameNotePath(file.path)).map(file => ({
       file,
-      fields: this.app.metadataCache.getFileCache(file)?.frontmatter ?? {},
+      fields: noteFields(this.app, file),
     }));
   }
-
   resolvesTo(value: unknown, source: TFile, target: TFile): boolean {
-    const path = linkPath(value);
-    return !!path && this.app.metadataCache.getFirstLinkpathDest(path, source.path)?.path === target.path;
+    return resolveLink(this.app, value, source)?.path === target.path;
   }
-
   private role(value: unknown): string {
     return value === "player" ? this.plugin.strings.homeRolePlayer : this.plugin.strings.homeRoleGm;
   }
-
   private button(parent: HTMLElement, label: string, action: () => void): void {
     const button = parent.createEl("button", { cls: "tt-btn", text: label, attr: { "aria-label": label } });
     button.onclick = action;
   }
-
   private openNote(path: string): void { void this.app.workspace.openLinkText(path, ""); }
-
   private async systemName(id: unknown): Promise<string> { return this.plugin.systemName(String(id || "generic")); }
-
-  private renderActive(root: HTMLElement, context: NonNullable<ReturnType<TableTools["currentContext"]>>, day: string, system: string, notes: NoteSummary[]): void {
+  private renderActive(root: HTMLElement, context: NonNullable<ReturnType<TableTools["context"]>>, day: string, system: string, notes: NoteSummary[]): void {
     const s = this.plugin.strings;
     const card = root.createDiv("tt-home-active");
     card.createEl("h3", { text: s.homeActiveRun });
     card.createDiv({ cls: "tt-home-name", text: folderName(context.run) });
-    card.createDiv({ cls: "tt-home-role", text: this.role(this.app.metadataCache.getFileCache(context.run)?.frontmatter?.role) });
+    card.createDiv({ cls: "tt-home-role", text: this.role(noteFields(this.app, context.run).role) });
     card.createDiv({ text: folderName(context.campaign) });
     card.createDiv({ cls: "tt-muted", text: system });
-    card.createDiv({ text: folderName(context.party) });
+    if (context.party) card.createDiv({ text: folderName(context.party) });
     if (day) card.createDiv({ cls: "tt-home-day", text: day });
     const actions = card.createDiv("tt-home-actions");
     this.button(actions, s.homeOpenRun, () => this.openNote(context.run.path));
     this.button(actions, s.homeOpenCampaign, () => this.openNote(context.campaign.path));
-    this.button(actions, s.homeOpenParty, () => this.openNote(context.party.path));
+    if (context.party) { const party = context.party; this.button(actions, s.homeOpenParty, () => this.openNote(party.path)); }
     this.button(actions, s.homeOpenAssistant, () => void this.plugin.openView("tt-assistant"));
     this.button(actions, s.homeOpenCombat, () => void this.plugin.openView("tt-combat"));
     this.button(actions, s.homeOpenTimeline, () => void this.plugin.openView("tt-timeline"));
     this.button(actions, s.lookUp, () => this.plugin.openLookup());
     this.button(actions, s.quickNpc, () => void this.plugin.openQuickNpc());
     const last = newestRunSession(this.app, context.run);
-    const linked = last ? sessionLinks(this.app, last).filter(file => ["npc", "location", "faction"].includes(String(this.app.metadataCache.getFileCache(file)?.frontmatter?.type ?? ""))).slice(0, 8) : [];
-    const quests = notes.filter(note => note.fields.type === "quest" && !["done", "failed"].includes(String(note.fields.status ?? "").toLowerCase()) && (this.resolvesTo(note.fields.campaign, note.file, context.campaign) || !linkPath(note.fields.campaign) && note.file.parent?.path.startsWith(`${context.campaign.parent?.path}/`))).slice(0, 8);
+    const linked = last ? sessionLinks(this.app, last).filter(file => HOME_RECENT_TYPES.includes(String(noteFields(this.app, file).type ?? ""))).slice(0, 8) : [];
+    const quests = notes.filter(note => note.fields.type === "quest" && !["done", "failed"].includes(String(note.fields.status ?? "").toLowerCase()) && (this.resolvesTo(note.fields.campaign, note.file, context.campaign) || !linkTarget(note.fields.campaign) && note.file.parent?.path.startsWith(`${context.campaign.parent?.path}/`))).slice(0, 8);
     const claims = notes.filter(note => note.fields.type === "claim" && note.file.parent?.path === context.run.parent?.path && ["", "current"].includes(String(note.fields.status ?? "").toLowerCase()));
     const next = card.createDiv("tt-home-next");
     next.createEl("h4", { text: s.homeNextSession });
@@ -231,7 +199,7 @@ export class HomePanel {
       for (const file of files) this.button(section, file.basename, () => this.openNote(file.path));
     };
     if (last) {
-      const date = this.app.metadataCache.getFileCache(last)?.frontmatter?.date;
+      const date = noteFields(this.app, last).date;
       list(s.homeLastSession + (date ? `: ${date}` : ""), [last]);
     }
     list(s.homeLastPeoplePlaces, linked);
@@ -241,23 +209,19 @@ export class HomePanel {
     this.button(nextActions, s.homeNewSession, () => void this.createSession(context.run));
     this.button(nextActions, s.wrapUp, () => void this.plugin.wrapUp());
   }
-
   private async firstDayLine(file: TFile): Promise<string> {
     const content = await this.app.vault.cachedRead(file);
     const lines = content.split("\n").map(line => line.trim());
     const body = lines[0] === "---" ? lines.slice((lines.indexOf("---", 1) + 1) || lines.length) : lines;
     return body.find(line => line && !line.startsWith("#")) ?? "";
   }
-
   brokenLinks(): { source: string; target: string }[] {
     const cache = this.app.metadataCache as typeof this.app.metadataCache & { unresolvedLinks?: Record<string, Record<string, number>> };
-    const excluded = (path: string): boolean => path.split("/").some(part => part.startsWith(".") || ["_system", "_local", "Archive"].includes(part));
     return Object.entries(cache.unresolvedLinks ?? {}).flatMap(([source, targets]) => {
-      if (excluded(source) || !this.app.vault.getAbstractFileByPath(source)) return [];
+      if (!isGameNotePath(source) || !this.app.vault.getAbstractFileByPath(source)) return [];
       return Object.entries(targets).filter(([, count]) => count > 0).map(([target]) => ({ source, target }));
     }).sort((a, b) => a.source.localeCompare(b.source) || a.target.localeCompare(b.target));
   }
-
   refreshMaintenance(): void {
     if (!this.maintenance) return;
     const rows = this.brokenLinks();
@@ -268,7 +232,6 @@ export class HomePanel {
     line.createSpan({ text: s.homeMaintenance + ": " });
     this.button(line, format(s.homeBrokenLinks, { count: rows.length }), () => new BrokenLinksModal(this.app, this.plugin, rows).open());
   }
-
   private dayLine(file: TFile): Promise<string> {
     const cached = this.dayLines.get(file.path);
     if (cached) return cached;
@@ -277,7 +240,6 @@ export class HomePanel {
     result.catch(() => this.dayLines.delete(file.path));
     return result;
   }
-
   private renderCampaign(parent: HTMLElement, campaign: NoteSummary, runs: NoteSummary[], system: string): void {
     const s = this.plugin.strings;
     const card = parent.createDiv({ cls: "tt-home-campaign", attr: { "data-path": campaign.file.path } });
@@ -287,13 +249,12 @@ export class HomePanel {
     card.createDiv({ cls: "tt-muted", text: format(s.homeRunCount, { count }) });
     this.button(card, s.homeOpenCampaign, () => this.openNote(campaign.file.path));
   }
-
   private renderRuns(parent: HTMLElement, runs: NoteSummary[], activePath: string): void {
     for (const run of runs) {
       const card = parent.createDiv({ cls: "tt-home-run" + (run.file.path === activePath ? " tt-active" : ""), attr: { "data-path": run.file.path } });
       card.createDiv({ cls: "tt-home-name", text: folderName(run.file) });
       card.createDiv({ cls: "tt-home-role", text: this.role(run.fields.role) });
-      const path = linkPath(run.fields.party);
+      const path = linkTarget(run.fields.party);
       const party = path ? this.app.metadataCache.getFirstLinkpathDest(path, run.file.path) : null;
       if (party) card.createDiv({ cls: "tt-muted", text: folderName(party) });
       this.button(card, this.plugin.strings.homeMakeActive, () => void this.plugin.setActiveRun(run.file.path));
@@ -301,21 +262,14 @@ export class HomePanel {
       this.button(card, this.plugin.strings.wrapUp, () => void this.plugin.wrapUp(run.file));
     }
   }
-
   private async createSession(run: TFile): Promise<void> {
     const folder = run.parent?.path ?? run.path.slice(0, run.path.lastIndexOf("/"));
     const now = new Date();
     const date = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
     const base = `Session ${date}`;
-    let title = base;
-    for (let number = 2; this.app.vault.getAbstractFileByPath(`${folder}/${title}.md`); number++) title = `${base} ${number}`;
-    const content = mergeHomeTemplate(await homeTemplate(this.app, "session"), title, folder, {
-      type: "session", run: `"[[${folder}/Run]]"`, date,
-    }, date);
-    const file = await this.app.vault.create(`${folder}/${title}.md`, content);
+    const file = await createNote(this.app, { template: "session", folder, name: base, values: { type: "session", run: `"[[${folder}/Run]]"`, date }, date });
     await this.app.workspace.openLinkText(file.path, "");
   }
-
   private renderParty(parent: HTMLElement, party: NoteSummary, members: number): void {
     const s = this.plugin.strings;
     const card = parent.createDiv({ cls: "tt-home-party", attr: { "data-path": party.file.path } });
@@ -324,10 +278,9 @@ export class HomePanel {
     this.button(card, s.homeOpenParty, () => this.openNote(party.file.path));
     this.button(card, s.homeNewCharacter, () => new CharacterModal(this.app, this.plugin, this, party.file).open());
   }
-
   private async memberCount(file: TFile): Promise<number> {
     const linked = this.app.vault.getMarkdownFiles().filter(candidate => {
-      const fields = this.app.metadataCache.getFileCache(candidate)?.frontmatter ?? {};
+      const fields = noteFields(this.app, candidate);
       return (fields.type === "pc" || fields.type === "npc" && fields.subtype === "pc") && this.resolvesTo(fields.party, candidate, file);
     });
     if (linked.length) return linked.length;
@@ -342,7 +295,6 @@ export class HomePanel {
     }
     return count;
   }
-
   private memberCountFor(file: TFile): Promise<number> {
     const cached = this.memberCounts.get(file.path);
     if (cached) return cached;
@@ -352,34 +304,30 @@ export class HomePanel {
     return result;
   }
 }
-
 export class HomeView extends ItemView {
   readonly panel: HomePanel;
   constructor(leaf: WorkspaceLeaf, readonly plugin: TableTools) {
     super(leaf);
     this.panel = new HomePanel(this.app, plugin, this.contentEl);
   }
-
   getViewType(): string { return HOME_VIEW; }
   getDisplayText(): string { return this.plugin.strings.homeTitle; }
   getIcon(): string { return "home"; }
-  async onOpen(): Promise<void> { this.plugin.homeViews.add(this.panel); await this.panel.render(); }
-  async onClose(): Promise<void> { this.plugin.homeViews.delete(this.panel); }
+  async onOpen(): Promise<void> { await this.panel.load(); }
+  async onClose(): Promise<void> { this.panel.unload(); }
   render(): Promise<void> { return this.panel.render(); }
   invalidate(path: string): void { this.panel.invalidate(path); }
   resolvesTo(value: unknown, source: TFile, target: TFile): boolean { return this.panel.resolvesTo(value, source, target); }
 }
-
 export class HomeBlock extends MarkdownRenderChild {
   readonly panel: HomePanel;
   constructor(container: HTMLElement, app: App, plugin: TableTools) {
     super(container);
     this.panel = new HomePanel(app, plugin, container, false);
   }
-  onload(): void { this.panel.plugin.homeViews.add(this.panel); void this.panel.render(); }
-  onunload(): void { this.panel.plugin.homeViews.delete(this.panel); }
+  onload(): void { void this.panel.load(); }
+  onunload(): void { this.panel.unload(); }
 }
-
 class BrokenLinksModal extends Modal {
   constructor(app: App, private readonly plugin: TableTools, private readonly rows: { source: string; target: string }[]) { super(app); }
   onOpen(): void {
@@ -390,10 +338,8 @@ class BrokenLinksModal extends Modal {
     }
   }
 }
-
 class UpdateModal extends Modal {
   constructor(app: App, private readonly plugin: TableTools) { super(app); }
-
   async onOpen(): Promise<void> {
     const s = this.plugin.strings;
     this.contentEl.createEl("h3", { text: s.homeUpdateRunning });
@@ -404,216 +350,5 @@ class UpdateModal extends Modal {
     } catch (error) {
       output.appendText(`\n${s.homeUpdateFailed}\n${error instanceof Error ? error.message : String(error)}`);
     }
-  }
-}
-
-abstract class HomeCreateModal extends Modal {
-  protected name = "";
-
-  constructor(app: App, protected readonly plugin: TableTools, protected readonly view: HomePanel) { super(app); }
-
-  protected nameField(): void {
-    new Setting(this.contentEl).setName(this.plugin.strings.homeFieldName).addText(text => {
-      text.setValue(this.name).onChange(value => { this.name = value; });
-    });
-  }
-
-  protected submit(action: () => Promise<void>): void {
-    new Setting(this.contentEl).addButton(button => button.setButtonText(this.plugin.strings.homeCreate).setCta().onClick(() => void action()));
-  }
-
-  protected validName(): string | null {
-    const name = this.name.trim();
-    if (!name || /[\\/:*?"<>|#^\[\]]/.test(name)) {
-      new Notice(this.plugin.strings.homeInvalidName);
-      return null;
-    }
-    return name;
-  }
-
-  protected folderAvailable(folder: string): boolean {
-    if (this.app.vault.getAbstractFileByPath(folder)) return false;
-    return !this.app.vault.getMarkdownFiles().some(file => file.path.startsWith(`${folder}/`));
-  }
-
-  protected async createFolder(folder: string): Promise<void> {
-    const vault = this.app.vault as typeof this.app.vault & { createFolder?: (path: string) => Promise<void> };
-    let current = "";
-    for (const part of folder.split("/")) {
-      current = current ? `${current}/${part}` : part;
-      if (this.app.vault.getAbstractFileByPath(current)) continue;
-      await vault.createFolder?.(current);
-    }
-  }
-
-  protected async createFromTemplate(kind: "world" | "campaign" | "party" | "pc" | "run", folder: string, fileName: string, values: Record<string, string>): Promise<TFile> {
-    const content = mergeHomeTemplate(await homeTemplate(this.app, kind), this.name.trim(), folder, values);
-    await this.createFolder(folder);
-    return this.app.vault.create(`${folder}/${fileName}`, content);
-  }
-
-  protected async complete(file: TFile): Promise<void> {
-    this.close();
-    await this.app.workspace.openLinkText(file.path, "");
-    await this.view.render();
-  }
-}
-
-class WorldModal extends HomeCreateModal {
-  private system = "generic";
-
-  async onOpen(): Promise<void> {
-    this.contentEl.createEl("h3", { text: this.plugin.strings.homeNewWorld });
-    this.nameField();
-    const systems = await this.plugin.systemPackages();
-    const campaign = this.app.vault.getMarkdownFiles().find(file => this.app.metadataCache.getFileCache(file)?.frontmatter?.type === "campaign");
-    const preferred = campaign ? String(this.app.metadataCache.getFileCache(campaign)?.frontmatter?.system ?? "") : "";
-    this.system = systems.some(system => system.id === preferred) ? preferred : systems[0]?.id ?? "generic";
-    new Setting(this.contentEl).setName(this.plugin.strings.homeFieldSystem).addDropdown(dropdown => {
-      systems.forEach(system => dropdown.addOption(system.id, system.name));
-      dropdown.setValue(this.system).onChange(value => { this.system = value; });
-    });
-    this.submit(() => this.create());
-  }
-
-  private async create(): Promise<void> {
-    const name = this.validName();
-    if (!name) return;
-    const folder = `Library/${this.system}/Worlds/${name}`;
-    if (!this.folderAvailable(folder)) { new Notice(this.plugin.strings.homeExists); return; }
-    const file = await this.createFromTemplate("world", folder, "World.md", { type: "world", system: this.system });
-    for (const section of ["Locations", "Factions", "NPCs", "Events", "Mechanics", "Lore", ...["Religion", "History", "Culture", "Peoples", "Languages", "Magic", "Cosmology", "Economy", "Creatures", "Other"].map(name => `Lore/${name}`)]) await this.createFolder(`${folder}/${section}`);
-    await this.complete(file);
-  }
-}
-
-class CharacterModal extends HomeCreateModal {
-  constructor(app: App, plugin: TableTools, view: HomePanel, private readonly party: TFile) { super(app, plugin, view); }
-
-  onOpen(): void {
-    this.contentEl.createEl("h3", { text: this.plugin.strings.homeNewCharacter });
-    this.nameField();
-    this.submit(() => this.create());
-  }
-
-  private async create(): Promise<void> {
-    const name = this.validName();
-    if (!name) return;
-    const folder = this.party.parent?.path ?? "";
-    if (this.app.vault.getAbstractFileByPath(`${folder}/${name}.md`)) { new Notice(this.plugin.strings.homeExists); return; }
-    const file = await this.createFromTemplate("pc", folder, `${name}.md`, { type: "pc", party: `"[[${this.party.path.replace(/\.md$/, "")}]]"` });
-    await this.complete(file);
-  }
-}
-
-class CampaignModal extends HomeCreateModal {
-  private system = "generic";
-  private world = "";
-
-  async onOpen(): Promise<void> {
-    this.contentEl.createEl("h3", { text: this.plugin.strings.homeNewCampaign });
-    this.nameField();
-    const systems = await this.plugin.systemPackages();
-    if (!systems.some(system => system.id === this.system)) this.system = systems[0]?.id ?? "generic";
-    let systemDropdown: { setValue: (value: string) => unknown } | null = null;
-    new Setting(this.contentEl).setName(this.plugin.strings.homeFieldSystem).addDropdown(dropdown => {
-      systemDropdown = dropdown;
-      systems.forEach(system => dropdown.addOption(system.id, system.name));
-      dropdown.setValue(this.system).onChange(value => { this.system = value; });
-    });
-    new Setting(this.contentEl).setName(this.plugin.strings.homeFieldWorld).addDropdown(dropdown => {
-      dropdown.addOption("", this.plugin.strings.homeNoWorld);
-      this.app.vault.getMarkdownFiles().filter(file => isGameNote(file) && this.app.metadataCache.getFileCache(file)?.frontmatter?.type === "world")
-        .forEach(file => dropdown.addOption(file.path, folderName(file)));
-      dropdown.setValue(this.world).onChange(value => {
-        this.world = value;
-        const file = this.app.vault.getAbstractFileByPath(value);
-        if (file instanceof TFile) {
-          const system = String(this.app.metadataCache.getFileCache(file)?.frontmatter?.system ?? "");
-          if (system && systems.some(entry => entry.id === system)) { this.system = system; systemDropdown?.setValue(system); }
-        }
-      });
-    });
-    this.submit(() => this.create());
-  }
-
-  private async create(): Promise<void> {
-    const name = this.validName();
-    if (!name) return;
-    const folder = `Campaigns/${name}`;
-    if (!this.folderAvailable(folder)) { new Notice(this.plugin.strings.homeExists); return; }
-    const world = this.world ? `"[[${this.world.replace(/\.md$/, "")}]]"` : '""';
-    const file = await this.createFromTemplate("campaign", folder, "Campaign.md", { type: "campaign", system: this.system, world });
-    for (const section of this.world ? ["Quests", "Encounters", "Handouts"] : ["NPCs", "Locations", "Quests", "Factions", "Encounters", "Handouts"]) await this.createFolder(`${folder}/${section}`);
-    await this.complete(file);
-  }
-}
-
-class PartyModal extends HomeCreateModal {
-  onOpen(): void {
-    this.contentEl.createEl("h3", { text: this.plugin.strings.homeNewParty });
-    this.nameField();
-    this.submit(() => this.create());
-  }
-
-  private async create(): Promise<void> {
-    const name = this.validName();
-    if (!name) return;
-    const folder = `Parties/${name}`;
-    if (!this.folderAvailable(folder)) { new Notice(this.plugin.strings.homeExists); return; }
-    const file = await this.createFromTemplate("party", folder, "Party.md", { type: "party" });
-    await this.complete(file);
-  }
-}
-
-class RunModal extends HomeCreateModal {
-  private role = "gm";
-  private campaign = "";
-  private party = "";
-  private makeActive = true;
-
-  onOpen(): void {
-    const s = this.plugin.strings;
-    this.contentEl.createEl("h3", { text: s.homeNewRun });
-    this.nameField();
-    new Setting(this.contentEl).setName(s.homeFieldRole).addDropdown(dropdown => {
-      dropdown.addOption("gm", s.homeRoleGm).addOption("player", s.homeRolePlayer);
-      dropdown.setValue(this.role).onChange(value => { this.role = value; });
-    });
-    this.noteDropdown(s.homeFieldCampaign, "campaign", value => { this.campaign = value; });
-    this.noteDropdown(s.homeFieldParty, "party", value => { this.party = value; });
-    new Setting(this.contentEl).setName(s.homeFieldMakeActive).addToggle(toggle => {
-      toggle.setValue(this.makeActive).onChange(value => { this.makeActive = value; });
-    });
-    this.submit(() => this.create());
-  }
-
-  private noteDropdown(label: string, type: string, change: (value: string) => void): void {
-    new Setting(this.contentEl).setName(label).addDropdown(dropdown => {
-      dropdown.addOption("", "");
-      this.app.vault.getMarkdownFiles().filter(file => isGameNote(file) && this.app.metadataCache.getFileCache(file)?.frontmatter?.type === type)
-        .forEach(file => dropdown.addOption(file.path, folderName(file)));
-      dropdown.setValue("").onChange(change);
-    });
-  }
-
-  private async create(): Promise<void> {
-    const name = this.validName();
-    if (!name) return;
-    if (!this.campaign || !this.party) { new Notice(this.plugin.strings.homeRunNeedsCampaignParty); return; }
-    const folder = `Runs/${name}`;
-    if (!this.folderAvailable(folder)) { new Notice(this.plugin.strings.homeExists); return; }
-    const campaign = linkPath(this.campaign);
-    const party = linkPath(this.party);
-    const run = await this.createFromTemplate("run", folder, "Run.md", {
-      type: "run",
-      role: this.role,
-      campaign: `"[[${campaign.replace(/\.md$/, "")}]]"`,
-      party: `"[[${party.replace(/\.md$/, "")}]]"`,
-    });
-    await this.app.vault.create(`${folder}/State.md`, `---\ntype: state\nrun: "[[${folder}/Run]]"\n---\n\n# State\n\n## What players know\n\n## World changes\n`);
-    await this.app.vault.create(`${folder}/World Day.md`, "---\ntype: world-day\n---\n\n# World Day\n");
-    if (this.makeActive) await this.plugin.setActiveRun(run.path);
-    await this.complete(run);
   }
 }

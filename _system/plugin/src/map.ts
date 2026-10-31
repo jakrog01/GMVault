@@ -1,26 +1,23 @@
 import { App, FuzzySuggestModal, ItemView, MarkdownRenderChild, Modal, Setting, TFile, WorkspaceLeaf, setIcon } from "obsidian";
 import type TableTools from "./main";
-import { homeTemplate, linkPath, mergeHomeTemplate } from "./home";
-import { LookupCard, LookupModal, noteLink } from "./lookup";
+import { createNote, linkTarget, noteFields, pathLink, resolveLink, wikilink } from "./notes";
+import { LookupCard, LookupModal } from "./lookup";
+import { MAP_TYPES } from "./contract";
 
 export const MAP_VIEW = "tt-map";
 interface Pin { note: string; x: number; y: number }
 const imageTypes = new Set(["png", "jpg", "jpeg", "webp", "gif", "svg"]);
 const clamp = (value: number, low: number, high: number): number => Math.min(high, Math.max(low, value));
 const rounded = (value: number): number => Number(clamp(value, 0, 1).toFixed(4));
-const fieldsOf = (app: App, file: TFile): Record<string, unknown> => app.metadataCache.getFileCache(file)?.frontmatter ?? {};
-const resolve = (app: App, value: unknown, source: TFile): TFile | null => {
-  const path = linkPath(value);
-  return path ? app.metadataCache.getFirstLinkpathDest(path, source.path) : null;
-};
+const resolve = resolveLink;
 const pinsOf = (app: App, owner: TFile): Pin[] => {
-  const pins = fieldsOf(app, owner).pins;
+  const pins = noteFields(app, owner).pins;
   return Array.isArray(pins) ? pins.filter(pin => pin && typeof pin.note === "string" && Number.isFinite(pin.x) && Number.isFinite(pin.y)) as Pin[] : [];
 };
-export const hasMap = (app: App, file: TFile): boolean => !!linkPath(fieldsOf(app, file).map);
+export const hasMap = (app: App, file: TFile): boolean => !!linkTarget(noteFields(app, file).map);
 
 export function mapOwnersFor(app: App, note: TFile): TFile[] {
-  return app.vault.getMarkdownFiles().filter(owner => ["world", "location"].includes(String(fieldsOf(app, owner).type)) && hasMap(app, owner)
+  return app.vault.getMarkdownFiles().filter(owner => MAP_TYPES.includes(String(noteFields(app, owner).type)) && hasMap(app, owner)
     && pinsOf(app, owner).some(pin => resolve(app, pin.note, owner)?.path === note.path));
 }
 
@@ -37,7 +34,7 @@ class MapOwnerPicker extends FuzzySuggestModal<TFile> {
 }
 
 class MapImagePicker extends FuzzySuggestModal<TFile> {
-  constructor(app: App, private readonly plugin: TableTools, private readonly owner: TFile, private readonly done: () => void) { super(app); this.setPlaceholder(plugin.strings.mapChooseImage); }
+  constructor(app: App, plugin: TableTools, private readonly owner: TFile, private readonly done: () => void) { super(app); this.setPlaceholder(plugin.strings.mapChooseImage); }
   getItems(): TFile[] { return this.app.vault.getFiles().filter(file => imageTypes.has(file.extension.toLowerCase())).sort((a, b) => a.path.localeCompare(b.path)); }
   getItemText(file: TFile): string { return file.path; }
   onChooseItem(file: TFile): void { void this.app.fileManager.processFrontMatter(this.owner, fields => { fields.map = `[[${file.path}]]`; }).then(this.done); }
@@ -56,16 +53,14 @@ class NewLocationModal extends Modal {
     if (!name || /[\\/:*?"<>|]/.test(name)) { this.contentEl.createDiv({ cls: "tt-muted", text: this.plugin.strings.homeInvalidName }); return; }
     const parent = this.owner.parent?.path ?? "";
     const folderNote = parent.split("/").at(-1) === this.owner.basename;
-    const worldFolder = fieldsOf(this.app, this.owner).type === "world" ? parent : parent.includes("/Locations/") ? parent.split("/Locations/")[0] : parent.replace(/\/Locations$/, "");
-    const folder = folderNote && fieldsOf(this.app, this.owner).type === "location" ? parent : `${worldFolder}/Locations`;
+    const worldFolder = noteFields(this.app, this.owner).type === "world" ? parent : parent.includes("/Locations/") ? parent.split("/Locations/")[0] : parent.replace(/\/Locations$/, "");
+    const folder = folderNote && noteFields(this.app, this.owner).type === "location" ? parent : `${worldFolder}/Locations`;
     const path = `${folder}/${name}.md`;
     if (this.app.vault.getAbstractFileByPath(path)) { this.contentEl.createDiv({ cls: "tt-muted", text: this.plugin.strings.homeExists }); return; }
-    if (!this.app.vault.getAbstractFileByPath(folder)) await this.app.vault.createFolder(folder).catch(() => {});
     const inferredWorld = this.app.vault.getAbstractFileByPath(`${worldFolder}/World.md`);
-    const world = fieldsOf(this.app, this.owner).type === "world" ? this.owner : resolve(this.app, fieldsOf(this.app, this.owner).world, this.owner) ?? (inferredWorld instanceof TFile ? inferredWorld : null);
-    const values: Record<string, string> = { type: "location", world: JSON.stringify(world ? noteLink(this.app, world, path) : ""), location: JSON.stringify(fieldsOf(this.app, this.owner).type === "location" ? noteLink(this.app, this.owner, path) : ""), campaign: '""' };
-    const content = mergeHomeTemplate(await homeTemplate(this.app, "location"), name, folder, values);
-    const file = await this.app.vault.create(path, content);
+    const world = noteFields(this.app, this.owner).type === "world" ? this.owner : resolve(this.app, noteFields(this.app, this.owner).world, this.owner) ?? (inferredWorld instanceof TFile ? inferredWorld : null);
+    const values: Record<string, string> = { type: "location", world: JSON.stringify(world ? wikilink(this.app, world, path) : ""), location: JSON.stringify(noteFields(this.app, this.owner).type === "location" ? wikilink(this.app, this.owner, path) : ""), campaign: '""' };
+    const file = await createNote(this.app, { template: "location", folder, name, values, exact: true });
     this.close();
     this.done(file);
   }
@@ -79,6 +74,7 @@ export class MapPanel {
   private width = 1000;
   private height = 1000;
   private timer?: number;
+  private unsubscribe?: () => void;
   private viewport?: HTMLElement;
   private layer?: HTMLElement;
   private pinLayer?: HTMLElement;
@@ -87,15 +83,16 @@ export class MapPanel {
   private pointer?: { x: number; y: number; startX: number; startY: number; pin?: number; onPin: boolean; moved: boolean };
   private suppressPinClick = false;
   constructor(readonly app: App, readonly plugin: TableTools, readonly container: HTMLElement, public owner: TFile, readonly inline = false, public highlight?: TFile) {}
-  load(): void { this.plugin.mapPanels.add(this); this.render(); }
-  unload(): void { this.plugin.mapPanels.delete(this); if (this.timer) clearTimeout(this.timer); }
-  schedule(file: TFile): void {
-    const path = file.path.replace(/\.md$/, "");
-    if (file.path !== this.owner.path && !pinsOf(this.app, this.owner).some(pin => { const link = linkPath(pin.note); return link === path || link === file.basename; })) return;
+  load(): void { this.plugin.mapPanels.add(this); this.unsubscribe = this.plugin.onNotesChanged(paths => paths.forEach(path => this.schedule(path))); this.render(); }
+  unload(): void { this.unsubscribe?.(); this.plugin.mapPanels.delete(this); if (this.timer) clearTimeout(this.timer); }
+  schedule(changedPath: string): void {
+    const path = pathLink(changedPath).slice(2, -2);
+    const basename = path.split("/").at(-1);
+    if (changedPath !== this.owner.path && !pinsOf(this.app, this.owner).some(pin => { const link = linkTarget(pin.note); return link === path || link === basename; })) return;
     if (this.timer) clearTimeout(this.timer);
     this.timer = setTimeout(() => {
       this.timer = undefined;
-      const image = resolve(this.app, fieldsOf(this.app, this.owner).map, this.owner);
+      const image = resolve(this.app, noteFields(this.app, this.owner).map, this.owner);
       if ((image?.path ?? "") === this.imagePath) this.renderPins();
       else this.render();
     }, 200) as unknown as number;
@@ -111,7 +108,7 @@ export class MapPanel {
     const seen = new Set([this.owner.path]);
     let file = this.owner;
     while (true) {
-      const field = fieldsOf(this.app, file);
+      const field = noteFields(this.app, file);
       const parent = resolve(this.app, field.type === "location" ? field.location || field.world : field.world, file);
       if (!parent || seen.has(parent.path)) break;
       seen.add(parent.path);
@@ -136,7 +133,7 @@ export class MapPanel {
     crumbs.createSpan({ text: this.owner.basename });
     const actions = head.createDiv("tt-map-actions");
     if (this.inline) this.button(actions, s.mapOpen, () => void this.plugin.openMap(this.owner));
-    const image = resolve(this.app, fieldsOf(this.app, this.owner).map, this.owner);
+    const image = resolve(this.app, noteFields(this.app, this.owner).map, this.owner);
     this.imagePath = image?.path ?? "";
     if (!image || !imageTypes.has(image.extension.toLowerCase())) {
       this.container.createDiv({ cls: "tt-empty", text: s.mapNoImage });
@@ -236,7 +233,7 @@ export class MapPanel {
     this.button(menu, this.plugin.strings.mapAttachNote, () => { menu.remove(); new LookupModal(this.app, this.plugin, file => void this.addPin(file, point)).open(); });
     this.button(menu, this.plugin.strings.mapNewLocation, () => { menu.remove(); new NewLocationModal(this.app, this.plugin, this.owner, file => void this.addPin(file, point)).open(); });
   }
-  private async addPin(file: TFile, point: { x: number; y: number }): Promise<void> { await this.writePins(pins => { pins.push({ note: noteLink(this.app, file, this.owner.path), ...point }); }); }
+  private async addPin(file: TFile, point: { x: number; y: number }): Promise<void> { await this.writePins(pins => { pins.push({ note: wikilink(this.app, file, this.owner.path), ...point }); }); }
   private async writePins(change: (pins: Pin[]) => void): Promise<void> {
     await this.app.fileManager.processFrontMatter(this.owner, fields => {
       const pins = Array.isArray(fields.pins) ? fields.pins.map((pin: Pin) => ({ ...pin })) : [];
@@ -250,7 +247,7 @@ export class MapPanel {
     this.pinLayer.empty();
     pinsOf(this.app, this.owner).forEach((pin, index) => {
       const target = resolve(this.app, pin.note, this.owner);
-      const type = target ? String(fieldsOf(this.app, target).type ?? "") : "";
+      const type = target ? String(noteFields(this.app, target).type ?? "") : "";
       const icon = type === "location" ? "map-pin" : type === "npc" || type === "pc" ? "user" : type === "faction" ? "flag" : type === "event" ? "calendar" : "scroll";
       const marker = this.pinLayer!.createDiv({ cls: `tt-map-pin${target ? "" : " is-missing"}${target?.path === this.highlight?.path ? " is-highlighted" : ""}`, attr: { title: target?.basename ?? `${this.plugin.strings.mapMissingNote}: ${pin.note}`, "data-index": String(index), tabindex: "0", role: "button" } });
       marker.style.left = `${pin.x * 100}%`;

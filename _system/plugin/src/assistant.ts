@@ -5,6 +5,7 @@ import { StringKey, Strings } from "./strings";
 import { ChatMessage, Settings } from "./types";
 import { declarations, VaultTools } from "./tools";
 import { compareRuleHits } from "./indexer";
+import { isGameNotePath, noteStem } from "./notes";
 
 export const ASSISTANT_VIEW = "tt-assistant";
 
@@ -140,7 +141,7 @@ export class AssistantView extends ItemView {
     if (!element) return;
     element.empty();
     for (const path of this.attachments) {
-      const chip = element.createSpan({ cls: "tt-chip tt-chip-attachment", text: (path.split("/").pop() ?? path).replace(/\.md$/, "") });
+      const chip = element.createSpan({ cls: "tt-chip tt-chip-attachment", text: noteStem(path.split("/").pop() ?? path) });
       const remove = chip.createSpan({ cls: "tt-chip-remove", text: " \u00d7", attr: { title: this.strings.removeAttachment } });
       remove.onclick = () => { this.attachments = this.attachments.filter(entry => entry !== path); this.renderAttachments(); };
     }
@@ -220,7 +221,7 @@ export class AssistantView extends ItemView {
       const file = this.app.vault.getAbstractFileByPath(path);
       return file instanceof TFile ? this.app.vault.cachedRead(file) : "";
     };
-    const run = this.plugin.currentContext();
+    const run = this.plugin.context();
     const cap = (text: string, limit: number, path: string): string => {
       if (Math.ceil(text.length / 4) <= limit) return text;
       const body = text.replace(/^---[\s\S]*?---\s*/, "");
@@ -230,11 +231,11 @@ export class AssistantView extends ItemView {
     if (settings.includeCampaign) {
       const campaign = await read(settings.campaignPath || run?.campaign.path || "");
       const runNote = run ? await read(run.run.path) : "";
-      const state = run ? await read(run.state.path) : "";
+      const state = run?.state ? await read(run.state.path) : "";
       if (campaign) pinned.add(settings.campaignPath || run?.campaign.path || "");
       if (runNote) pinned.add(run?.run.path ?? "");
-      if (state) pinned.add(run?.state.path ?? "");
-      if (campaign || runNote || state) add(`## Run context\nThe run state records what happened at this table. Where it differs from world or campaign notes, the run state is true.\n\n${cap(campaign, 750, run?.campaign.path ?? "")}\n\n${cap(runNote, 375, run?.run.path ?? "")}\n\n${cap(state, 375, run?.state.path ?? "")}`);
+      if (state) pinned.add(run?.state?.path ?? "");
+      if (campaign || runNote || state) add(`## Run context\nThe run state records what happened at this table. Where it differs from world or campaign notes, the run state is true.\n\n${cap(campaign, 750, run?.campaign.path ?? "")}\n\n${cap(runNote, 375, run?.run.path ?? "")}\n\n${cap(state, 375, run?.state?.path ?? "")}`);
     }
     if (settings.includeWorldDay) {
       const day = await read(settings.worldDayPath || run?.day?.path || "");
@@ -366,7 +367,7 @@ class NotePickerModal extends FuzzySuggestModal<TFile> {
     super(app);
     this.setPlaceholder(strings.attachNotePlaceholder);
   }
-  getItems(): TFile[] { return this.app.vault.getMarkdownFiles().filter(file => file.path.split("/")[0] !== "_system"); }
+  getItems(): TFile[] { return this.app.vault.getMarkdownFiles().filter(file => isGameNotePath(file.path)); }
   getItemText(file: TFile): string { return file.path; }
   onChooseItem(file: TFile): void { this.onPick(file); }
 }
