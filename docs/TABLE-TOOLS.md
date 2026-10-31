@@ -15,8 +15,10 @@ The assistant ribbon is **Table Tools: Assistant** and opens the assistant.
 | `open-combat` | **Open combat** | Opens the combat view. |
 | `open-assistant` | **Open assistant** | Opens the assistant view. |
 | `open-home` | **Open Home** | Opens the home view. |
+| `open-timeline` | **Open timeline** | Opens the active run's Timeline. |
 | `look-up` | **Look up** | Finds a game note and opens its card. |
 | `quick-npc` | **Quick NPC** | Creates an NPC in the active campaign or world. |
+| `wrap-up-session` | **Wrap up session** | Proposes run state changes and rumours from a session note. |
 | `assistant-rebuild-index` | **Assistant: rebuild index** | Rebuilds the assistant index. |
 | `combat-next-turn` | **Combat: next turn** | Advances the active combat turn. |
 | `combat-previous-turn` | **Combat: previous turn** | Moves the active combat turn back. |
@@ -68,6 +70,7 @@ The **Log** panel shows the most recent combat events, including additions, init
 An encounter set is a saved list of source-backed enemies prepared before a session.
 Open **Encounter sets** to load a set, delete one, or **Save the current enemies as a set** with a name and description.
 Loading adds the set's enemies to the current combat; saving stores encounter sets in Table Tools plugin data.
+The same menu has **Start encounter** for `type: encounter` notes and **Save as encounter note** for the current non-player participants. Starting a note loads its `creatures` entries and adds missing party players once. Missing creature links are reported together while valid creatures still load. The note writer creates `Campaigns/<campaign>/Encounters/<name>.md`, adds a number to a duplicate name, groups source-backed creatures as `creature` and `count` entries, and lists manual participants below the title. Each legacy set also has **Save as note** to copy it into a note while keeping the set. An encounter note's **Look up** card has **Start encounter**.
 **Save to the active note** appends a combat callout with the initiative table and recent log to the active Markdown note.
 If no note is open, the same export is copied to the clipboard and reports **No open note; the combat was copied to the clipboard.**
 
@@ -88,6 +91,10 @@ Save an encounter set when a group should recur later.
 Export the combat to an open session note before clearing it.
 The Settings reference documents bestiary, party, hit-point, group-initiative, and attack-roll controls.
 See [Assistant](ASSISTANT.md) for how combat state can be attached to a request.
+
+## Timeline
+
+Use **Open timeline** or **Timeline** on the active run card. It shows dated events from the campaign and its world, plus sessions from the run. Each row shows the world date, note name, type, and the real session date when present. Numeric world dates such as `-200`, `1492`, `1492-03`, and `1492-03-14 DR` sort by year, month, and day. Free-text or empty dates appear under **Undated**. Click a note name to open it. **New event** creates an event note in the world's `Events/` folder, or the campaign's when no world is linked, and fills `world_date` from `World Day.md` when available.
 
 ## GMVault updates
 

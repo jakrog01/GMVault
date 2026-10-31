@@ -229,6 +229,7 @@ export function createEnvironment() {
       getMarkdownFiles: () => [...files.values()].filter(entry => entry.file.extension === "md").map(entry => entry.file),
       getAbstractFileByPath: filePath => files.get(filePath)?.file ?? null,
       cachedRead: async file => files.get(file.path)?.content ?? "",
+      modify: async (file, content) => { files.get(file.path).content = content; emit("modify", file); emit("changed", file) },
       create: async (filePath, content) => addFile(filePath, content),
       createFolder: async () => {},
       append: async (file, text) => { files.get(file.path).content += text; appended.push(text); record(text) },

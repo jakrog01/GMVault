@@ -5,6 +5,7 @@ import { CONDITIONS, DifficultyLevel, encounterMultiplier, THRESHOLDS } from "./
 import { armorClass, creatureFiles, dexterityModifier, experienceForChallenge, playerFiles, readStatblock, savesText } from "./statblock";
 import { conditionDescription, conditionLabel, format, Strings } from "./strings";
 import { Combat, EncounterMember, EncounterSet, Participant, ParticipantKind, Trait } from "./types";
+import { homeTemplate, linkPath, mergeHomeTemplate } from "./home";
 
 export const COMBAT_VIEW = "tt-combat";
 
@@ -304,6 +305,53 @@ export class CombatTracker {
       if (file instanceof TFile) await this.addCreature(file, member.quantity, member.group);
       else new Notice(format(this.strings.noteMissing, { path: member.source }));
     }
+  }
+
+  async loadEncounterNote(note: TFile): Promise<void> {
+    const entries = this.plugin.app.metadataCache.getFileCache(note)?.frontmatter?.creatures;
+    const missing: string[] = [];
+    if (Array.isArray(entries)) for (const entry of entries) {
+      const path = linkPath(entry?.creature);
+      const file = path ? this.plugin.app.metadataCache.getFirstLinkpathDest(path, note.path) : null;
+      const count = Number(entry?.count);
+      if (file instanceof TFile && this.plugin.app.metadataCache.getFileCache(file)?.frontmatter?.type === "creature") await this.addCreature(file, Number.isFinite(count) && count > 0 ? Math.floor(count) : 1, true);
+      else if (path) missing.push(path);
+    }
+    const context = this.plugin.currentContext();
+    if (context) for (const file of playerFiles(this.plugin.app, this.plugin.partyPath())) {
+      if (this.combat.participants.some(participant => participant.kind === "player" && (participant.source === file.path || participant.name === file.basename))) continue;
+      const fields = this.plugin.app.metadataCache.getFileCache(file)?.frontmatter ?? {};
+      this.addPlayer({ name: file.basename, ac: Number(fields.ac ?? 10), hp: Number(fields.hp ?? 10), modifier: Number(fields.init_mod ?? 0), level: Number(fields.level ?? 1), source: file.path });
+    }
+    if (missing.length) new Notice(format(this.strings.encounterMissing, { links: missing.join(", ") }));
+  }
+
+  async saveEncounterNote(name: string, participants: Participant[] = this.combat.participants.filter(participant => participant.kind !== "player")): Promise<TFile | null> {
+    const title = name.trim();
+    if (!title || /[\\/:*?"<>|#^\[\]]/.test(title)) { new Notice(this.strings.homeInvalidName); return null; }
+    const campaign = this.plugin.currentContext()?.campaign;
+    if (!campaign) { new Notice(this.strings.encounterNeedsCampaign); return null; }
+    const folder = `${campaign.parent?.path ?? "Campaigns"}/Encounters`;
+    let unique = title;
+    for (let number = 2; this.plugin.app.vault.getAbstractFileByPath(`${folder}/${unique}.md`); number++) unique = `${title} ${number}`;
+    const counts = new Map<string, number>();
+    const manual: string[] = [];
+    for (const participant of participants) {
+      const source = participant.source ? this.plugin.app.vault.getAbstractFileByPath(participant.source) : null;
+      if (source instanceof TFile && this.plugin.app.metadataCache.getFileCache(source)?.frontmatter?.type === "creature") counts.set(source.path, (counts.get(source.path) ?? 0) + 1);
+      else manual.push(participant.name);
+    }
+    const rows = [...counts].map(([source, count]) => `  - creature: "[[${source.replace(/\.md$/, "")}]]"\n    count: ${count}`);
+    const content = mergeHomeTemplate(await homeTemplate(this.plugin.app, "encounter"), unique, folder, {
+      type: "encounter", campaign: `"[[${campaign.path.replace(/\.md$/, "")}]]"`, creatures: rows.length ? `\n${rows.join("\n")}` : "[]",
+    });
+    const heading = /^# [^\n]*\n/m.test(content) ? content : `${content}\n# ${unique}\n`;
+    const body = manual.length ? heading.replace(/(^# [^\n]*\n)/m, `$1\n${manual.map(value => `- ${value}`).join("\n")}\n`) : heading;
+    const vault = this.plugin.app.vault as typeof this.plugin.app.vault & { createFolder?: (path: string) => Promise<void> };
+    if (!vault.getAbstractFileByPath(folder)) await vault.createFolder?.(folder);
+    const file = await this.plugin.app.vault.create(`${folder}/${unique}.md`, body);
+    new Notice(format(this.strings.encounterNoteSaved, { name: unique }));
+    return file;
   }
 
   deleteEncounterSet(set: EncounterSet): void {
@@ -724,6 +772,8 @@ class EncounterSetsModal extends Modal {
     contentEl.empty();
     contentEl.addClass("tt-modal");
     contentEl.createEl("h3", { text: s.encounterSetsTitle });
+    new Setting(contentEl).addButton(button => button.setButtonText(s.encounterStart).onClick(() => { this.close(); new EncounterNotePicker(this.app, this.plugin).open(); }))
+      .addButton(button => button.setButtonText(s.encounterSaveCurrentNote).onClick(() => { this.close(); new EncounterNameModal(this.app, this.plugin, this.plugin.combat.name).open(); }));
     contentEl.createEl("p", { cls: "tt-muted", text: s.encounterSetsHint });
     const sets = this.plugin.encounterSets;
     if (!sets.length) contentEl.createEl("p", { text: s.noEncounterSets });
@@ -731,6 +781,7 @@ class EncounterSetsModal extends Modal {
       const members = set.members.map(member => format(s.memberSummary, { name: member.name, quantity: member.quantity })).join(", ");
       new Setting(contentEl).setName(set.name).setDesc(members + (set.description ? " \u2014 " + set.description : ""))
         .addButton(button => button.setButtonText(s.load).setCta().onClick(async () => { await tracker.loadEncounterSet(set); this.close(); }))
+        .addButton(button => button.setButtonText(s.encounterSaveAsNote).onClick(() => new EncounterNameModal(this.app, this.plugin, set.name, set.members.flatMap(member => Array.from({ length: member.quantity }, () => ({ name: member.name, kind: "enemy" as const, source: member.source } as Participant)))).open()))
         .addExtraButton(button => button.setIcon("trash").setTooltip(s.deleteEncounterSet).onClick(() => { tracker.deleteEncounterSet(set); this.onOpen(); }));
     }
     const enemies = this.plugin.combat.participants.filter(participant => participant.kind === "enemy" && participant.source);
@@ -745,6 +796,30 @@ class EncounterSetsModal extends Modal {
     }
   }
   onClose(): void { this.contentEl.empty(); }
+}
+
+class EncounterNotePicker extends FuzzySuggestModal<TFile> {
+  constructor(app: App, private readonly plugin: TableTools) { super(app); this.setPlaceholder(plugin.strings.encounterStart); }
+  getItems(): TFile[] {
+    const campaign = this.plugin.currentContext()?.campaign;
+    return this.app.vault.getMarkdownFiles().filter(file => this.app.metadataCache.getFileCache(file)?.frontmatter?.type === "encounter")
+      .sort((a, b) => Number(!!campaign && b.path.startsWith(`${campaign.parent?.path}/`)) - Number(!!campaign && a.path.startsWith(`${campaign.parent?.path}/`)) || a.basename.localeCompare(b.basename));
+  }
+  getItemText(file: TFile): string { return file.basename; }
+  onChooseItem(file: TFile): void { void this.plugin.tracker.loadEncounterNote(file); }
+}
+
+class EncounterNameModal extends Modal {
+  constructor(app: App, private readonly plugin: TableTools, private name: string, private readonly participants?: Participant[]) { super(app); }
+  onOpen(): void {
+    const s = this.plugin.strings;
+    this.contentEl.createEl("h3", { text: s.encounterSaveCurrentNote });
+    new Setting(this.contentEl).setName(s.nameLabel).addText(text => text.setValue(this.name).onChange(value => { this.name = value; }));
+    new Setting(this.contentEl).addButton(button => button.setButtonText(s.save).setCta().onClick(async () => {
+      const file = await this.plugin.tracker.saveEncounterNote(this.name, this.participants);
+      if (file) { this.close(); await this.app.workspace.openLinkText(file.path, ""); }
+    }));
+  }
 }
 
 export class ConfirmModal extends Modal {

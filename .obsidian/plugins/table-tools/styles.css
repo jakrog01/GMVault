@@ -33,6 +33,12 @@
 .tt-home-role { color: var(--text-accent); font-size: .9em; }
 .tt-home-day { margin-top: 6px; color: var(--text-muted); }
 .tt-home-actions { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 10px; }
+.tt-home-next { margin-top: 12px; padding-top: 10px; border-top: 1px solid var(--background-modifier-border); }
+.tt-home-next h4 { margin: 0 0 6px; font-size: 1em; }
+.tt-home-next-part { margin-top: 7px; }
+.tt-home-next-part .tt-btn { margin: 3px 4px 0 0; padding: 3px 6px; }
+.tt-wrap-item { display: flex; align-items: center; gap: 8px; margin: 6px 0; }
+.tt-wrap-item input[type="text"] { flex: 1; min-width: 0; }
 .tt-lookup-card { max-width: 700px; max-height: 80vh; overflow-y: auto; font-size: var(--font-ui-small); }
 .tt-lookup-card h2 { display: inline; margin: 0 6px 0 0; font-size: 1.3em; }
 .tt-lookup-card .tt-chip { margin-left: 0; }
@@ -164,3 +170,10 @@
 .tt-as-input { flex: 1; resize: none; border-radius: 8px; font-size: .95em; }
 .tt-as-send { height: 34px; width: 38px; justify-content: center; padding: 0; }
 .tt-as-status { padding: 0 12px 8px; font-size: .8em; color: var(--text-muted); min-height: 18px; display: flex; gap: 8px; align-items: center; }
+.tt-timeline { padding: 14px; overflow-y: auto; }
+.tt-timeline-row { display: flex; align-items: center; gap: 8px; padding: 6px 0; border-bottom: 1px solid var(--background-modifier-border); }
+.tt-timeline-date { min-width: 90px; color: var(--text-muted); font-family: var(--font-monospace); font-size: .85em; }
+.tt-timeline-row .tt-btn { background: transparent; box-shadow: none; text-align: left; }
+.tt-timeline-row .tt-chip { margin-left: auto; }
+.tt-home-maintenance:not(:empty) { margin: 8px 0; color: var(--text-muted); font-size: .85em; }
+.tt-maintenance-line { display: flex; align-items: center; gap: 6px; }

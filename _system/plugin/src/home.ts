@@ -2,6 +2,7 @@ import { App, ItemView, MarkdownRenderChild, Modal, Notice, Platform, Setting, T
 import type TableTools from "./main";
 import { format } from "./strings";
 import { RecordedUpdate, recordedUpdate, shippedPath } from "./update";
+import { newestRunSession, sessionLinks } from "./wrap-up";
 
 export const HOME_VIEW = "tt-home";
 
@@ -26,7 +27,7 @@ const isGameNote = (file: TFile): boolean => !/^_(system|local)\//.test(file.pat
 
 const folderName = (file: TFile): string => file.parent?.path.split("/").at(-1) ?? file.basename;
 
-async function homeTemplate(app: App, kind: string): Promise<string> {
+export async function homeTemplate(app: App, kind: string): Promise<string> {
   for (const root of ["_local/", "_system/"]) {
     try { return await app.vault.adapter.read(`${root}templates/${kind}.md`); } catch { continue; }
   }
@@ -69,6 +70,7 @@ export class HomePanel {
   private readonly dayLines = new Map<string, Promise<string>>();
   private renderGeneration = 0;
   private renderedPaths = new Set<string>();
+  private maintenance?: HTMLElement;
   constructor(readonly app: App, readonly plugin: TableTools, readonly contentEl: HTMLElement, private readonly showTitle = true) {}
 
   invalidate(path: string): void {
@@ -100,9 +102,11 @@ export class HomePanel {
     }
     if (generation !== this.renderGeneration) return;
     if (model.update) this.renderUpdate(root, model.update);
+    this.maintenance = root.createDiv("tt-home-maintenance");
+    this.refreshMaintenance();
 
     const { worlds, campaigns, runs, parties, context, worldDay, systems, members } = model;
-    if (context) this.renderActive(root, context, worldDay, systems.get(context.campaign.path) ?? "generic");
+    if (context) this.renderActive(root, context, worldDay, systems.get(context.campaign.path) ?? "generic", this.notes());
     if (!worlds.length && !campaigns.length && !runs.length && !parties.length) root.createDiv({ cls: "tt-empty", text: s.homeEmpty });
 
     const worldSection = root.createDiv("tt-home-section");
@@ -194,7 +198,7 @@ export class HomePanel {
 
   private async systemName(id: unknown): Promise<string> { return this.plugin.systemName(String(id || "generic")); }
 
-  private renderActive(root: HTMLElement, context: NonNullable<ReturnType<TableTools["currentContext"]>>, day: string, system: string): void {
+  private renderActive(root: HTMLElement, context: NonNullable<ReturnType<TableTools["currentContext"]>>, day: string, system: string, notes: NoteSummary[]): void {
     const s = this.plugin.strings;
     const card = root.createDiv("tt-home-active");
     card.createEl("h3", { text: s.homeActiveRun });
@@ -210,8 +214,31 @@ export class HomePanel {
     this.button(actions, s.homeOpenParty, () => this.openNote(context.party.path));
     this.button(actions, s.homeOpenAssistant, () => void this.plugin.openView("tt-assistant"));
     this.button(actions, s.homeOpenCombat, () => void this.plugin.openView("tt-combat"));
+    this.button(actions, s.homeOpenTimeline, () => void this.plugin.openView("tt-timeline"));
     this.button(actions, s.lookUp, () => this.plugin.openLookup());
     this.button(actions, s.quickNpc, () => void this.plugin.openQuickNpc());
+    const last = newestRunSession(this.app, context.run);
+    const linked = last ? sessionLinks(this.app, last).filter(file => ["npc", "location", "faction"].includes(String(this.app.metadataCache.getFileCache(file)?.frontmatter?.type ?? ""))).slice(0, 8) : [];
+    const quests = notes.filter(note => note.fields.type === "quest" && !["done", "failed"].includes(String(note.fields.status ?? "").toLowerCase()) && (this.resolvesTo(note.fields.campaign, note.file, context.campaign) || !linkPath(note.fields.campaign) && note.file.parent?.path.startsWith(`${context.campaign.parent?.path}/`))).slice(0, 8);
+    const claims = notes.filter(note => note.fields.type === "claim" && note.file.parent?.path === context.run.parent?.path && ["", "current"].includes(String(note.fields.status ?? "").toLowerCase()));
+    const next = card.createDiv("tt-home-next");
+    next.createEl("h4", { text: s.homeNextSession });
+    const list = (label: string, files: TFile[], count = 0): void => {
+      if (!files.length && !count) return;
+      const section = next.createDiv("tt-home-next-part");
+      section.createDiv({ cls: "tt-muted", text: count ? format(label, { count }) : label });
+      for (const file of files) this.button(section, file.basename, () => this.openNote(file.path));
+    };
+    if (last) {
+      const date = this.app.metadataCache.getFileCache(last)?.frontmatter?.date;
+      list(s.homeLastSession + (date ? `: ${date}` : ""), [last]);
+    }
+    list(s.homeLastPeoplePlaces, linked);
+    list(s.homeOpenQuests, quests.map(note => note.file));
+    list(s.homeRumours, claims.slice(0, 5).map(note => note.file), claims.length);
+    const nextActions = next.createDiv("tt-home-actions");
+    this.button(nextActions, s.homeNewSession, () => void this.createSession(context.run));
+    this.button(nextActions, s.wrapUp, () => void this.plugin.wrapUp());
   }
 
   private async firstDayLine(file: TFile): Promise<string> {
@@ -219,6 +246,26 @@ export class HomePanel {
     const lines = content.split("\n").map(line => line.trim());
     const body = lines[0] === "---" ? lines.slice((lines.indexOf("---", 1) + 1) || lines.length) : lines;
     return body.find(line => line && !line.startsWith("#")) ?? "";
+  }
+
+  brokenLinks(): { source: string; target: string }[] {
+    const cache = this.app.metadataCache as typeof this.app.metadataCache & { unresolvedLinks?: Record<string, Record<string, number>> };
+    const excluded = (path: string): boolean => path.split("/").some(part => part.startsWith(".") || ["_system", "_local", "Archive"].includes(part));
+    return Object.entries(cache.unresolvedLinks ?? {}).flatMap(([source, targets]) => {
+      if (excluded(source) || !this.app.vault.getAbstractFileByPath(source)) return [];
+      return Object.entries(targets).filter(([, count]) => count > 0).map(([target]) => ({ source, target }));
+    }).sort((a, b) => a.source.localeCompare(b.source) || a.target.localeCompare(b.target));
+  }
+
+  refreshMaintenance(): void {
+    if (!this.maintenance) return;
+    const rows = this.brokenLinks();
+    this.maintenance.empty();
+    if (!rows.length) return;
+    const s = this.plugin.strings;
+    const line = this.maintenance.createDiv("tt-maintenance-line");
+    line.createSpan({ text: s.homeMaintenance + ": " });
+    this.button(line, format(s.homeBrokenLinks, { count: rows.length }), () => new BrokenLinksModal(this.app, this.plugin, rows).open());
   }
 
   private dayLine(file: TFile): Promise<string> {
@@ -250,6 +297,7 @@ export class HomePanel {
       if (party) card.createDiv({ cls: "tt-muted", text: folderName(party) });
       this.button(card, this.plugin.strings.homeMakeActive, () => void this.plugin.setActiveRun(run.file.path));
       this.button(card, this.plugin.strings.homeNewSession, () => void this.createSession(run.file));
+      this.button(card, this.plugin.strings.wrapUp, () => void this.plugin.wrapUp(run.file));
     }
   }
 
@@ -329,6 +377,17 @@ export class HomeBlock extends MarkdownRenderChild {
   }
   onload(): void { this.panel.plugin.homeViews.add(this.panel); void this.panel.render(); }
   onunload(): void { this.panel.plugin.homeViews.delete(this.panel); }
+}
+
+class BrokenLinksModal extends Modal {
+  constructor(app: App, private readonly plugin: TableTools, private readonly rows: { source: string; target: string }[]) { super(app); }
+  onOpen(): void {
+    this.contentEl.createEl("h3", { text: this.plugin.strings.homeMaintenance });
+    for (const row of this.rows) {
+      const button = this.contentEl.createEl("button", { cls: "tt-btn", text: `${row.source} -> ${row.target}` });
+      button.onclick = () => { this.close(); void this.app.workspace.openLinkText(row.source, ""); };
+    }
+  }
 }
 
 class UpdateModal extends Modal {

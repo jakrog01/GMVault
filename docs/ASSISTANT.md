@@ -78,6 +78,8 @@ Select a source path to open that note in Obsidian.
 Breadcrumb citations use the full heading path; headings inside fenced code blocks are not treated as headings.
 The assistant may warn about blocked responses, an invalid key, unavailable model, access denial, rate limits, or another provider error.
 
+**Wrap up session** uses the same configured Gemini chat model and API key in a separate non-streaming request. It proposes **World changes**, **What players know**, and **Rumours** for review. **Apply** writes selected outcomes only to the run's `State.md` and new claim notes; see [Sessions and runs](RUNS.md).
+
 ## Local index and semantic search
 
 The assistant always keeps a local keyword (lexical) index of the Markdown it may see. Semantic search with embeddings is optional and finds notes by meaning, not only by words.
@@ -92,7 +94,7 @@ Run **Assistant: rebuild index** after large note or provider changes.
 
 ### Turn on semantic search
 
-Choose a provider in **Settings → Table Tools → Embedding provider**, then press **Test embedding provider**.
+Choose a provider in **Settings > Table Tools > Embedding provider**, then press **Test embedding provider**.
 
 === "None (default)"
 

@@ -4,50 +4,50 @@ Use this map when deciding where to create a note. Names in angle brackets stand
 
 ```text
 GMVault/
-├── Active.md                    active run pointer
-├── Home.md                      the Home screen as a note
-├── Worlds/                     earlier world layout, still supported
-├── Campaigns/
-│   └── <campaign>/
-│       ├── Campaign.md          premise, factions, locations
-│       ├── Quests/              tasks and leads
-│       ├── Encounters/, Handouts/
-│       ├── NPCs/, Locations/, Factions/ (when no world)
-│       └── Mechanics/           campaign homebrew rules and bestiary
-├── Parties/
-│   └── <party>/
-│       ├── Party.md             party record
-│       └── <character>.md       player character
-├── Runs/
-│   └── <run>/
-│       ├── Run.md               role, campaign, party
-│       ├── State.md             lasting facts, resources, world changes
-│       ├── World Day.md         current in-world date
-│       ├── Session YYYY-MM-DD.md
-│       └── <claim>.md           optional player claim
-├── Library/
-│   ├── <system>/
-│   │   ├── Mechanics/
-│   │   │   ├── Classes/<class>/<class>.md (class), <subclass>.md (subclass)
-│   │   │   ├── Races/<race>/<race>.md (race), <subrace>.md (subrace)
-│   │   │   ├── Backgrounds/ (background), Feats/ (feat), Rules/<chapter>/
-│   │   │   └── Spells/, Bestiary/, Items/
-│   │   └── Worlds/<world>/
-│   │       ├── World.md
-│   │       ├── Locations/<place>/<place>.md
-│   │       ├── Lore/<category>/
-│   │       └── Factions/, NPCs/, Events/, Mechanics/
-│   ├── Mechanics/<system>/      earlier mechanics layout, still supported
-│   └── Assets/
-├── Calendar/                    calendar content
-├── Archive/                     retired material
-├── _local/
-│   ├── templates/               your template overrides
-│   ├── scripts/                 your scripts
-│   └── assistant/               optional policy and skills
-├── _system/                     shipped files
-├── .obsidian/                   Obsidian settings and plugins
-└── .gmvault/                    state, cache, backups
+|-- Active.md                    active run pointer
+|-- Home.md                      the Home screen as a note
+|-- Worlds/                     earlier world layout, still supported
+|-- Campaigns/
+|   `-- <campaign>/
+|       |-- Campaign.md          premise, factions, locations
+|       |-- Quests/              tasks and leads
+|       |-- Encounters/, Handouts/
+|       |-- NPCs/, Locations/, Factions/ (when no world)
+|       `-- Mechanics/           campaign homebrew rules and bestiary
+|-- Parties/
+|   `-- <party>/
+|       |-- Party.md             party record
+|       `-- <character>.md       player character
+|-- Runs/
+|   `-- <run>/
+|       |-- Run.md               role, campaign, party
+|       |-- State.md             lasting facts, resources, world changes
+|       |-- World Day.md         current in-world date
+|       |-- Session YYYY-MM-DD.md
+|       `-- <claim>.md           optional player claim
+|-- Library/
+|   |-- <system>/
+|   |   |-- Mechanics/
+|   |   |   |-- Classes/<class>/<class>.md (class), <subclass>.md (subclass)
+|   |   |   |-- Races/<race>/<race>.md (race), <subrace>.md (subrace)
+|   |   |   |-- Backgrounds/ (background), Feats/ (feat), Rules/<chapter>/
+|   |   |   `-- Spells/, Bestiary/, Items/
+|   |   `-- Worlds/<world>/
+|   |       |-- World.md
+|   |       |-- Locations/<place>/<place>.md
+|   |       |-- Lore/<category>/
+|   |       `-- Factions/, NPCs/, Events/, Mechanics/
+|   |-- Mechanics/<system>/      earlier mechanics layout, still supported
+|   `-- Assets/
+|-- Calendar/                    calendar content
+|-- Archive/                     retired material
+|-- _local/
+|   |-- templates/               your template overrides
+|   |-- scripts/                 your scripts
+|   `-- assistant/               optional policy and skills
+|-- _system/                     shipped files
+|-- .obsidian/                   Obsidian settings and plugins
+`-- .gmvault/                    state, cache, backups
 ```
 
 | I want to add... | Put it in... | Template it gets |
@@ -61,7 +61,7 @@ GMVault/
 | Location | `Campaigns/<campaign>/Locations/<name>.md` | Automatic `location.md` |
 | Quest | `Campaigns/<campaign>/Quests/<name>.md` | Automatic `quest.md` |
 | Faction | `Campaigns/<campaign>/Factions/<name>.md` | Automatic `faction.md` |
-| Encounter or handout | `Campaigns/<campaign>/Encounters/` or `Handouts/` | Automatic matching template |
+| Encounter or handout | `Campaigns/<campaign>/Encounters/` or `Handouts/` | Automatic matching template; **Save as note** in Combat also writes encounters here |
 | Party and roster | `Parties/<party>/Party.md` | **New party** uses `party.md` |
 | Player character | `Parties/<party>/<name>.md` | **New character** uses `pc.md` |
 | Run | `Runs/<run>/Run.md` | **New run** uses `run.md` |
