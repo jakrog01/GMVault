@@ -1,14 +1,14 @@
 import { App, MarkdownRenderChild, MarkdownRenderer, MarkdownView, Modal, SuggestModal, TFile, prepareFuzzySearch } from "obsidian";
 import type TableTools from "./main";
-import { linkPath } from "./home";
+import { isGameNotePath, linkTarget, noteFields, wikilink } from "./notes";
 import { mapOwnersFor, chooseMapOwner } from "./map";
+import { MAP_TYPES, NOTE_TYPES } from "./contract";
 
 interface Candidate { file: TFile; type: string; context: string; names: string[]; tier: number }
 interface Match { candidate: Candidate; score: number; bucket: number }
 const normal = (value: string): string => value.normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[\u0141\u0142]/g, "l").toLowerCase();
-export const noteLink = (app: App, file: TFile, source = ""): string => `[[${app.metadataCache.getFirstLinkpathDest(file.basename, source)?.path === file.path ? file.basename : file.path.replace(/\.md$/, "")}]]`;
-const excluded = (path: string): boolean => path.split("/").some(part => part.startsWith(".") || ["_system", "_local", "Archive"].includes(part));
-const validTypes = new Set(["world", "campaign", "party", "pc", "run", "session", "state", "world-day", "npc", "location", "faction", "lore", "event", "quest", "encounter", "handout", "item", "creature", "spell", "rules", "claim", "class", "subclass", "race", "background", "feat"]);
+export const noteLink = wikilink;
+const validTypes = new Set<string>(NOTE_TYPES);
 
 export class LookupModal extends SuggestModal<Match> {
   readonly candidates: Candidate[];
@@ -17,15 +17,14 @@ export class LookupModal extends SuggestModal<Match> {
   constructor(app: App, private readonly plugin: TableTools, private readonly pick?: (file: TFile) => void) {
     super(app);
     this.setPlaceholder(plugin.strings.lookupPlaceholder);
-    const run = plugin.currentContext();
+    const run = plugin.context();
     const campaign = run?.campaign;
-    const worldPath = campaign ? linkPath(app.metadataCache.getFileCache(campaign)?.frontmatter?.world) : "";
-    const world = worldPath && campaign ? app.metadataCache.getFirstLinkpathDest(worldPath, campaign.path) : null;
-    const system = String(campaign ? app.metadataCache.getFileCache(campaign)?.frontmatter?.system ?? "" : "");
-    const folders = [run?.run.parent?.path, campaign?.parent?.path, run?.party.parent?.path, world?.parent?.path,
+    const world = run?.world.path === campaign?.path ? null : run?.world;
+    const system = run?.system ?? "";
+    const folders = [run?.folders.run, run?.folders.campaign, run?.folders.party, world?.parent?.path,
       system ? `Library/${system}` : "", system ? `Library/Mechanics/${system}` : ""].filter((value): value is string => !!value);
-    this.candidates = app.vault.getMarkdownFiles().filter(file => !excluded(file.path)).flatMap(file => {
-      const fields = app.metadataCache.getFileCache(file)?.frontmatter;
+    this.candidates = app.vault.getMarkdownFiles().filter(file => isGameNotePath(file.path)).flatMap(file => {
+      const fields = noteFields(app, file);
       const type = String(fields?.type ?? "");
       if (!validTypes.has(type)) return [];
       const alias = fields?.aliases;
@@ -33,7 +32,7 @@ export class LookupModal extends SuggestModal<Match> {
       const parent = file.parent?.path.split("/").at(-1);
       if (parent && parent !== file.basename) names.push(parent);
       const context = [fields?.status, fields?.location, fields?.faction, fields?.system, fields?.campaign, fields?.world]
-        .map(value => Array.isArray(value) ? value.join(", ") : String(value ?? "")).filter(Boolean).map(value => linkPath(value).split("/").at(-1) ?? value);
+        .map(value => Array.isArray(value) ? value.join(", ") : String(value ?? "")).filter(Boolean).map(value => linkTarget(value).split("/").at(-1) ?? value);
       if (!context.length && parent) context.push(parent);
       const tier = folders.some(folder => file.path.startsWith(`${folder}/`) || file.path === `${folder}.md`) ? 0 : 1;
       return [{ file, type, names: names.map(normal), context: context.join(" / "), tier }];
@@ -93,7 +92,7 @@ export class LookupCard extends Modal {
     if (type === "session") this.button(s.wrapUp, () => { this.close(); void this.plugin.wrapUp(undefined, file); }, actions);
     if (type === "encounter") this.button(s.encounterStart, () => { this.close(); void this.plugin.tracker.loadEncounterNote(file); }, actions);
     if (type === "creature" || type === "npc") this.button(s.lookupAddCombat, () => { void this.plugin.tracker.addCreature(file, 1, true); this.close(); }, actions);
-    if (["world", "location"].includes(type) && linkPath(this.app.metadataCache.getFileCache(file)?.frontmatter?.map)) this.button(s.mapOpen, () => { this.close(); void this.plugin.openMap(file); }, actions);
+    if (MAP_TYPES.includes(type) && linkTarget(noteFields(this.app, file).map)) this.button(s.mapOpen, () => { this.close(); void this.plugin.openMap(file); }, actions);
     const owners = mapOwnersFor(this.app, file);
     if (owners.length) this.button(s.mapShowOn, () => { this.close(); chooseMapOwner(this.app, this.plugin, owners, file); }, actions);
   }
@@ -112,16 +111,17 @@ export class LookupCard extends Modal {
   }
 
   private async renderMentions(parent: HTMLElement): Promise<void> {
-    const run = this.plugin.currentContext();
+    const run = this.plugin.context();
     if (!run) return;
-    const sessions = this.app.vault.getMarkdownFiles().filter(file => file.parent?.path === run.run.parent?.path && this.app.metadataCache.getFileCache(file)?.frontmatter?.type === "session" && this.linked(file))
+    const sessions = this.app.vault.getMarkdownFiles().filter(file => file.parent?.path === run.run.parent?.path && noteFields(this.app, file).type === "session" && this.linked(file))
       .sort((a, b) => b.path.localeCompare(a.path)).slice(0, 3);
     for (const file of [run.state, ...sessions]) {
+      if (!file) continue;
       if (!this.linked(file)) continue;
       const raw = await this.app.vault.cachedRead(file);
       for (const line of raw.split("\n")) {
         if (!/\[\[[^\]]+\]\]/.test(line)) continue;
-        const targets = [...line.matchAll(/\[\[([^\]]+)\]\]/g)].map(match => this.app.metadataCache.getFirstLinkpathDest(linkPath(match[1]), file.path)?.path);
+        const targets = [...line.matchAll(/\[\[([^\]]+)\]\]/g)].map(match => this.app.metadataCache.getFirstLinkpathDest(linkTarget(match[1]), file.path)?.path);
         if (targets.includes(this.note.file.path)) parent.createDiv({ cls: "tt-lookup-mention", text: `${file.basename}: ${line.trim()}` });
       }
     }

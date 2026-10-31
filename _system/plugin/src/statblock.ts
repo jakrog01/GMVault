@@ -1,12 +1,13 @@
 import { App, TFile, parseYaml } from "obsidian";
 import { EXPERIENCE_BY_CHALLENGE } from "./rules";
 import { Statblock } from "./types";
+import { isGameNotePath, noteFields, resolveLink } from "./notes";
 
 
 export async function readStatblock(app: App, file: TFile, onInvalid?: (path: string) => void): Promise<Statblock | null> {
   const text = await app.vault.cachedRead(file);
   const block = text.match(/```statblock\s*\n([\s\S]*?)```/);
-  const fields = app.metadataCache.getFileCache(file)?.frontmatter ?? {};
+  const fields = noteFields(app, file);
   let statblock: Statblock | null = null;
   if (block) {
     try { statblock = parseYaml(block[1]) as Statblock; } catch { onInvalid?.(file.path); }
@@ -38,8 +39,8 @@ const byName = (left: TFile, right: TFile): number => left.basename.localeCompar
 
 
 export function creatureFiles(app: App, folders: string[]): TFile[] {
-  return app.vault.getMarkdownFiles().filter(file => {
-    const fields = app.metadataCache.getFileCache(file)?.frontmatter;
+  return app.vault.getMarkdownFiles().filter(file => isGameNotePath(file.path)).filter(file => {
+    const fields = noteFields(app, file);
     return fields?.type === "creature" || folders.some(folder => file.path.startsWith(folder + "/"));
   }).sort(byName);
 }
@@ -47,16 +48,15 @@ export function creatureFiles(app: App, folders: string[]): TFile[] {
 
 export function playerFiles(app: App, folder: string): TFile[] {
   const party = app.vault.getMarkdownFiles().find(file => file.path === `${folder}/Party.md` || file.path === `${folder}/${folder.split("/").pop()}.md`);
-  const linked = party ? app.vault.getMarkdownFiles().filter(file => {
-    const fields = app.metadataCache.getFileCache(file)?.frontmatter;
+  const linked = party ? app.vault.getMarkdownFiles().filter(file => isGameNotePath(file.path)).filter(file => {
+    const fields = noteFields(app, file);
     if (fields?.type !== "pc" && !(fields?.type === "npc" && fields?.subtype === "pc")) return false;
-    const path = String(fields.party ?? "").replace(/^\[\[/, "").replace(/\]\]$/, "").split("|")[0].split("#")[0];
-    return !!path && app.metadataCache.getFirstLinkpathDest(path, file.path)?.path === party.path;
+    return resolveLink(app, fields.party, file)?.path === party.path;
   }) : [];
   if (linked.length) return linked.sort(byName);
   const folderName = folder.split("/").pop() ?? "";
-  return app.vault.getMarkdownFiles().filter(file => {
-    const fields = app.metadataCache.getFileCache(file)?.frontmatter;
+  return app.vault.getMarkdownFiles().filter(file => isGameNotePath(file.path)).filter(file => {
+    const fields = noteFields(app, file);
     if (fields?.type === "npc" && fields?.subtype === "pc") return true;
     if (!folder || !file.path.startsWith(folder + "/")) return false;
     return file.path !== `${folder}/${folderName}.md` && file.path !== `${folder}/Party.md`;

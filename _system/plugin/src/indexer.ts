@@ -7,6 +7,8 @@ import { Chunk, Scope } from "./types";
 import { format } from "./strings";
 import { cosine, EmbeddingProvider, GeminiEmbeddingProvider, NoneEmbeddingProvider, OllamaEmbeddingProvider } from "./embeddings";
 import { Extractor, loadExtractor, LocalEmbeddingProvider, LocalHooks } from "./local-embeddings";
+import { PARTY_TYPES, RULE_TYPES, RUN_TYPES, SCOPED_RULE_TYPES, WORLD_TYPES } from "./contract";
+import { noteFields, resolveLink } from "./notes";
 
 const cachePath = ".gmvault/cache/assistant/manifest.json";
 const vectorsPath = ".gmvault/cache/assistant/vectors.bin";
@@ -22,6 +24,8 @@ export class AssistantIndex {
   readonly lexical = new LexicalIndex();
   private records = new Map<string, Chunk[]>();
   private stamps = new Map<string, Stamp>();
+  private allowedLinks = new Map<string, { campaign: string; world: string }>();
+  private allowedScopeKey = "";
   private timers = new Map<string, number>();
   busy = 0;
   private indexedFiles = 0;
@@ -66,7 +70,7 @@ export class AssistantIndex {
     };
     const resolved = this.plugin.app.metadataCache.on("resolved", launch);
     this.plugin.registerEvent(resolved);
-    this.plugin.registerEvent(this.plugin.app.metadataCache.on("changed", file => this.schedule(file)));
+    this.plugin.registerEvent(this.plugin.app.metadataCache.on("changed", file => { this.allowedLinks.clear(); this.schedule(file); }));
     this.plugin.registerEvent(this.plugin.app.vault.on("delete", file => { if (file instanceof TFile) this.drop(file.path); }));
     this.plugin.registerEvent(this.plugin.app.vault.on("rename", (file, oldPath) => { this.drop(oldPath); if (file instanceof TFile) this.schedule(file); }));
     const workspace = this.plugin.app.workspace as typeof this.plugin.app.workspace & { onLayoutReady?: (callback: () => void) => void };
@@ -84,7 +88,7 @@ export class AssistantIndex {
     await this.persist();
   }
 
-  scope(): Scope { return resolveScope(this.plugin); }
+  scope(): Scope { return resolveScope(this.plugin.context(), this.plugin.scopePolicy, this.plugin.app, this.plugin.settings.campaignPath, this.plugin.settings.partyPath); }
   whenIdle(): Promise<void> { return this.running || this.starting || this.timers.size ? new Promise(resolve => this.idleWaiters.push(resolve)) : Promise.resolve(); }
   stats(): { notes: number; chunks: number; pending: number } {
     const scope = this.scope();
@@ -214,6 +218,7 @@ export class AssistantIndex {
   }
 
   async update(file: TFile, persist = true, force = false): Promise<void> {
+    this.allowedLinks.delete(file.path);
     const global = this.globalKind(file);
     if (!global) { this.drop(file.path); return; }
     const stamp = { mtime: file.stat?.mtime ?? 0, size: file.stat?.size ?? 0 };
@@ -235,15 +240,15 @@ export class AssistantIndex {
 
   private globalKind(file: TFile): Chunk["kind"] | null {
     if (/^(?:Archive|_system|_local|\.obsidian|\.gmvault)(?:\/|$)/.test(file.path)) return null;
-    const frontmatter = this.plugin.app.metadataCache.getFileCache(file)?.frontmatter ?? {};
+    const frontmatter = noteFields(this.plugin.app, file);
     if (frontmatter.assistant === "exclude") return null;
     const type = String(frontmatter.type ?? "");
-    if (type === "npc" && frontmatter.subtype === "pc" || ["pc", "party"].includes(type)) return "party";
-    if (["run", "session", "world-day"].includes(type)) return "run";
+    if (type === "npc" && frontmatter.subtype === "pc" || PARTY_TYPES.includes(type)) return "party";
+    if (RUN_TYPES.includes(type)) return "run";
     if (type === "state") return "state";
     if (type === "rules" && frontmatter.subtype === "house-rule") return "house-rule";
-    if (["creature", "item", "spell", "rules", "class", "subclass", "race", "background", "feat"].includes(type)) return frontmatter.campaign || frontmatter.world || /^Campaigns\/[^/]+\/Mechanics\//.test(file.path) ? "homebrew" : frontmatter.system ? "system" : "note";
-    if (["world", "campaign", "npc", "location", "faction", "lore", "event", "quest", "encounter", "handout"].includes(type)) return "campaign";
+    if (RULE_TYPES.includes(type)) return frontmatter.campaign || frontmatter.world || /^Campaigns\/[^/]+\/Mechanics\//.test(file.path) ? "homebrew" : frontmatter.system ? "system" : "note";
+    if (WORLD_TYPES.includes(type)) return "campaign";
     if (type) return "note";
     if (/^Runs\//.test(file.path)) return file.basename === "State" ? "state" : "run";
     if (/^Campaigns\//.test(file.path)) return file.path.includes("/Mechanics/") ? "homebrew" : "campaign";
@@ -259,6 +264,7 @@ export class AssistantIndex {
     for (const chunk of chunks) this.vectors.delete(chunk.id);
   }
   private drop(path: string, persist = true): void {
+    this.allowedLinks.delete(path);
     const chunks = this.records.get(path);
     if (!chunks) return;
     for (const chunk of chunks) this.lexical.remove(chunk.id);
@@ -272,12 +278,11 @@ export class AssistantIndex {
   private allowed(scope: Scope, chunk: Chunk): boolean {
     if (chunk.excluded || isBuiltInExcluded(chunk.path) || scope.exclude.some(prefix => chunk.path === prefix.replace(/\/$/, "") || chunk.path.startsWith(prefix)) || !scope.kinds.includes(chunk.kind) || (scope.role === "player" && chunk.gmOnly)) return false;
     if (scope.role === "gm" && scope.runFolder && ["campaign", "homebrew", "house-rule"].includes(chunk.kind)) {
-      const file = this.plugin.app.vault.getAbstractFileByPath(chunk.path);
-      const resolve = (value: string): string => file instanceof TFile && value ? this.plugin.app.metadataCache.getFirstLinkpathDest(this.linkPath(value), file.path)?.path ?? "" : "";
+      const links = this.linksFor(scope, chunk);
       if (chunk.path === scope.campaignPath || chunk.path === scope.worldPath) return true;
       if (chunk.type === "campaign" || chunk.type === "world") return false;
-      if (chunk.campaignLink) return resolve(chunk.campaignLink) === scope.campaignPath;
-      if (chunk.worldLink) return resolve(chunk.worldLink) === scope.worldPath;
+      if (chunk.campaignLink) return links.campaign === scope.campaignPath;
+      if (chunk.worldLink) return links.world === scope.worldPath;
       const inFolder = (folder: string): boolean => !!folder && chunk.path.startsWith(`${folder}/`);
       if (chunk.kind === "campaign") return inFolder(scope.campaignFolder) || inFolder(scope.worldFolder);
       if (inFolder(`${scope.campaignFolder}/Mechanics`) || inFolder(`${scope.worldFolder}/Mechanics`)) return true;
@@ -286,21 +291,24 @@ export class AssistantIndex {
     }
     const rooted = sourceKind(scope, chunk.path);
     if (rooted) return true;
-    if (!scope.runFolder || scope.role !== "gm" || !["rules", "class", "subclass", "race", "background", "feat"].includes(chunk.type)) return false;
+    if (!scope.runFolder || scope.role !== "gm" || !SCOPED_RULE_TYPES.includes(chunk.type)) return false;
     if (chunk.path.startsWith("Campaigns/")) return false;
     if (/^Library\/Mechanics\//.test(chunk.path)) return false;
-    if (chunk.campaignLink) {
-      const file = this.plugin.app.vault.getAbstractFileByPath(chunk.path);
-      const target = file instanceof TFile
-        ? this.plugin.app.metadataCache.getFirstLinkpathDest(this.linkPath(chunk.campaignLink), file.path)
-        : null;
-      return target?.path === scope.campaignPath;
-    }
+    if (chunk.campaignLink) return this.linksFor(scope, chunk).campaign === scope.campaignPath;
     return chunk.system === scope.system;
   }
 
-  private linkPath(value: string): string {
-    return value.replace(/^\[\[/, "").replace(/\]\]$/, "").split("|")[0].split("#")[0];
+  private linksFor(scope: Scope, chunk: Chunk): { campaign: string; world: string } {
+    if (this.allowedScopeKey !== scope.key) { this.allowedScopeKey = scope.key; this.allowedLinks.clear(); }
+    const cached = this.allowedLinks.get(chunk.path);
+    if (cached) return cached;
+    const file = this.plugin.app.vault.getAbstractFileByPath(chunk.path);
+    const links = file instanceof TFile ? {
+      campaign: resolveLink(this.plugin.app, chunk.campaignLink, file)?.path ?? "",
+      world: resolveLink(this.plugin.app, chunk.worldLink, file)?.path ?? "",
+    } : { campaign: "", world: "" };
+    this.allowedLinks.set(chunk.path, links);
+    return links;
   }
   search(query: string, scope = this.scope(), limit = 50): { chunk: Chunk; score: number }[] {
     const exact = this.lexical.findByName(query, chunk => this.allowed(scope, chunk));

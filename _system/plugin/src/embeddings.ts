@@ -26,14 +26,14 @@ export class OllamaEmbeddingProvider implements EmbeddingProvider {
   readonly id: string;
   dimensions = 0;
   constructor(private readonly baseUrl = "http://127.0.0.1:11434", private readonly model = "embeddinggemma") { this.id = `ollama:${model}`; }
-  async embedDocuments(texts: string[], signal?: AbortSignal): Promise<Float32Array[]> { return this.embed(texts.map(text => this.documentText(text)), signal); }
-  async embedQuery(text: string, signal?: AbortSignal): Promise<Float32Array> { return (await this.embed([this.queryText(text)], signal))[0]; }
+  async embedDocuments(texts: string[]): Promise<Float32Array[]> { return this.embed(texts.map(text => this.documentText(text))); }
+  async embedQuery(text: string): Promise<Float32Array> { return (await this.embed([this.queryText(text)]))[0]; }
   private queryText(text: string): string { return this.model.startsWith("embeddinggemma") ? `task: search result | query: ${text}` : this.model.startsWith("qwen3") ? `Instruct: Given a web search query, retrieve relevant passages that answer the query\nQuery: ${text}` : text; }
   private documentText(text: string): string {
     const [title, body] = text.split("\u0000", 2);
     return this.model.startsWith("embeddinggemma") ? `title: ${body === undefined ? "document" : title} | text: ${body ?? title}` : body ?? title;
   }
-  private async embed(input: string[], signal?: AbortSignal): Promise<Float32Array[]> {
+  private async embed(input: string[]): Promise<Float32Array[]> {
     let response;
     try { response = await requestUrl({ url: `${this.baseUrl.replace(/\/$/, "")}/api/embed`, method: "POST", contentType: "application/json", body: JSON.stringify({ model: this.model, input }), throw: false }); }
     catch (error) { throw new Error(`Ollama host is unreachable: ${error instanceof Error ? error.message : String(error)}`); }

@@ -1,23 +1,18 @@
-import { App, FuzzySuggestModal, ItemView, MarkdownView, Modal, Notice, Setting, TFile, WorkspaceLeaf, setIcon } from "obsidian";
+import { MarkdownView, Notice, TFile } from "obsidian";
 import type TableTools from "./main";
-import { abilityModifier, describeRoll, dicePattern, highlightDice, roll, Roll, signed } from "./dice";
-import { CONDITIONS, DifficultyLevel, encounterMultiplier, THRESHOLDS } from "./rules";
-import { armorClass, creatureFiles, dexterityModifier, experienceForChallenge, playerFiles, readStatblock, savesText } from "./statblock";
-import { conditionDescription, conditionLabel, format, Strings } from "./strings";
-import { Combat, EncounterMember, EncounterSet, Participant, ParticipantKind, Trait } from "./types";
-import { homeTemplate, linkPath, mergeHomeTemplate } from "./home";
-
+import { describeRoll, roll, Roll, signed } from "./dice";
+import { DifficultyLevel, encounterMultiplier, THRESHOLDS } from "./rules";
+import { armorClass, dexterityModifier, experienceForChallenge, playerFiles, readStatblock } from "./statblock";
+import { conditionLabel, format, Strings } from "./strings";
+import { Combat, EncounterMember, EncounterSet, Participant } from "./types";
+import { createNote, linkTarget, noteFields, pathLink, quotedLink, resolveLink } from "./notes";
 export const COMBAT_VIEW = "tt-combat";
-
 const DYING = "dying";
 const LOG_LIMIT = 200;
-
 const uid = (): string => globalThis.crypto?.randomUUID?.() ?? `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`;
-
 export function newCombat(name = "Encounter"): Combat {
   return { name, active: false, round: 0, turn: 0, participants: [], log: [] };
 }
-
 export function sortedParticipants(combat: Combat): Participant[] {
   return [...combat.participants].sort((left, right) => {
     const leftInitiative = left.initiative ?? -999, rightInitiative = right.initiative ?? -999;
@@ -26,30 +21,23 @@ export function sortedParticipants(combat: Combat): Participant[] {
     return right.modifier - left.modifier;
   });
 }
-
 export interface Difficulty { xp: number; adjustedXp: number; level: DifficultyLevel; thresholds: number[]; players: number }
-
 export interface PlayerInput { name: string; ac: number; hp: number; modifier: number; level: number; source?: string }
-
 export class CombatTracker {
   constructor(private readonly plugin: TableTools) {}
-
   get combat(): Combat { return this.plugin.combat; }
   private get strings(): Strings { return this.plugin.strings; }
-
   private changed(): void {
     void this.plugin.save();
     this.plugin.refreshViews();
   }
-
   log(entry: string): void {
     this.combat.log.push(entry);
     if (this.combat.log.length > LOG_LIMIT) this.combat.log.shift();
   }
-
   async addCreature(file: TFile, quantity: number, shareInitiative: boolean): Promise<void> {
     const statblock = await readStatblock(this.plugin.app, file, path => new Notice(format(this.strings.invalidStatblock, { path })));
-    const fields = this.plugin.app.metadataCache.getFileCache(file)?.frontmatter ?? {};
+    const fields = noteFields(this.plugin.app, file);
     const baseName = statblock?.name ?? file.basename;
     const existing = this.combat.participants.filter(participant => participant.group === baseName || participant.name === baseName).length;
     const modifier = dexterityModifier(statblock ?? undefined);
@@ -77,7 +65,6 @@ export class CombatTracker {
     this.log(format(this.strings.logAdded, { name: baseName, quantity }));
     this.changed();
   }
-
   addPlayer(input: PlayerInput): boolean {
     if (this.combat.participants.some(participant => participant.name === input.name && participant.kind === "player")) {
       new Notice(format(this.strings.playerAlreadyInCombat, { name: input.name }));
@@ -90,7 +77,6 @@ export class CombatTracker {
     this.changed();
     return true;
   }
-
   rollInitiative(onlyMissing = false): void {
     const groups = new Map<string, number>();
     for (const participant of this.combat.participants) {
@@ -103,7 +89,6 @@ export class CombatTracker {
     this.log(this.strings.logInitiative);
     this.changed();
   }
-
   start(): void {
     const missing = this.combat.participants.filter(participant => participant.initiative == null);
     if (missing.length) {
@@ -116,7 +101,6 @@ export class CombatTracker {
     this.log(format(this.strings.logRound, { round: 1 }));
     this.changed();
   }
-
   advance(step = 1): void {
     if (!this.combat.active) return;
     const order = sortedParticipants(this.combat);
@@ -132,7 +116,6 @@ export class CombatTracker {
     this.combat.selected = order[turn].id;
     this.changed();
   }
-
   applyDamage(participant: Participant, amount: number): void {
     if (amount > 0) {
       let remaining = amount;
@@ -154,13 +137,11 @@ export class CombatTracker {
     }
     this.changed();
   }
-
   setTemporaryHitPoints(participant: Participant, amount: number): void {
     participant.temporaryHp = Math.max(participant.temporaryHp, amount);
     this.log(format(this.strings.logTemporary, { name: participant.name, amount: participant.temporaryHp }));
     this.changed();
   }
-
   applyRowInput(participant: Participant, raw: string, heal = false): boolean {
     const value = raw.trim().toLowerCase();
     if (!value) return true;
@@ -171,36 +152,30 @@ export class CombatTracker {
     this.applyDamage(participant, value.startsWith("+") || heal ? -amount : amount);
     return true;
   }
-
   toggleCondition(participant: Participant, condition: string): void {
     participant.conditions = participant.conditions.includes(condition)
       ? participant.conditions.filter(value => value !== condition)
       : [...participant.conditions, condition];
     this.changed();
   }
-
   setHidden(participant: Participant, hidden: boolean): void {
     participant.hidden = hidden;
     this.changed();
   }
-
   update(participant: Participant, changes: Partial<Pick<Participant, "name" | "ac" | "hpMax" | "modifier" | "level" | "kind" | "note">>): void {
     Object.assign(participant, changes);
     participant.hp = Math.min(participant.hp, participant.hpMax);
     this.changed();
   }
-
   setInitiative(participant: Participant, initiative: number | null): void {
     participant.initiative = initiative;
     this.changed();
   }
-
   select(participant: Participant): void {
     this.combat.selected = participant.id;
     void this.plugin.save();
     this.plugin.refreshViews();
   }
-
   remove(participant: Participant): void {
     const order = sortedParticipants(this.combat);
     const index = order.findIndex(entry => entry.id === participant.id);
@@ -211,19 +186,16 @@ export class CombatTracker {
     this.log(format(this.strings.logRemoved, { name: participant.name }));
     this.changed();
   }
-
   clear(): void {
     this.plugin.combat = newCombat(this.strings.defaultCombatName);
     this.changed();
   }
-
   logRoll(participant: Participant, result: Roll): string {
     const description = describeRoll(result, { critical: this.strings.rollCritical, naturalOne: this.strings.rollNaturalOne });
     this.log(format(this.strings.logRoll, { name: participant.name, roll: description }));
     this.changed();
     return description;
   }
-
   difficulty(): Difficulty | null {
     const players = this.combat.participants.filter(participant => participant.kind === "player");
     const enemies = this.combat.participants.filter(participant => participant.kind === "enemy");
@@ -239,11 +211,9 @@ export class CombatTracker {
       : adjustedXp >= thresholds[1] ? "medium" : adjustedXp >= thresholds[0] ? "easy" : "trivial";
     return { xp, adjustedXp, level, thresholds, players: players.length };
   }
-
   difficultyLabel(level: DifficultyLevel): string {
     return { trivial: this.strings.difficultyTrivial, easy: this.strings.difficultyEasy, medium: this.strings.difficultyMedium, hard: this.strings.difficultyHard, deadly: this.strings.difficultyDeadly }[level];
   }
-
   summary(): string {
     if (!this.combat.participants.length) return "";
     const lines = sortedParticipants(this.combat).map((participant, index) => {
@@ -256,10 +226,9 @@ export class CombatTracker {
     const status = this.combat.active ? "" : " (not started)";
     return `Combat "${this.combat.name}", round ${this.combat.round}${status}:\n${lines.join("\n")}\nRecent events:\n${this.combat.log.slice(-8).join("\n")}`;
   }
-
   exportMarkdown(): string {
     const rows = sortedParticipants(this.combat).map(participant => {
-      const name = participant.source ? `[[${(participant.source.split("/").pop() ?? "").replace(/\.md$/, "")}\\|${participant.name}]]` : participant.name;
+      const name = participant.source ? `${pathLink(participant.source.split("/").pop() ?? "").slice(0, -2)}\\|${participant.name}]]` : participant.name;
       const conditions = participant.conditions.map(condition => conditionLabel(this.strings, condition)).join(", ");
       return `| ${participant.initiative ?? ""} | ${name} | ${participant.ac} | ${participant.hp}/${participant.hpMax} | ${conditions} |`;
     });
@@ -269,7 +238,6 @@ export class CombatTracker {
     const log = this.combat.log.slice(-12).map(entry => `- ${entry}`).join("\n> ");
     return `\n> [!note]- ${heading}${difficultyText}\n> ${this.strings.exportColumns}\n> |---|---|---|---|---|\n${rows.map(row => "> " + row).join("\n")}\n>\n> ${log}\n`;
   }
-
   async exportToActiveNote(): Promise<void> {
     const markdown = this.exportMarkdown();
     const view = this.plugin.app.workspace.getActiveViewOfType(MarkdownView);
@@ -282,7 +250,6 @@ export class CombatTracker {
     await this.plugin.app.vault.append(file, markdown);
     new Notice(format(this.strings.exportSaved, { note: file.basename }));
   }
-
   saveEncounterSet(name: string, description: string): boolean {
     const enemies = this.combat.participants.filter(participant => participant.kind === "enemy" && participant.source);
     if (!enemies.length) return false;
@@ -298,7 +265,6 @@ export class CombatTracker {
     new Notice(this.strings.encounterSetSaved);
     return true;
   }
-
   async loadEncounterSet(set: EncounterSet): Promise<void> {
     for (const member of set.members) {
       const file = this.plugin.app.vault.getAbstractFileByPath(member.source);
@@ -306,531 +272,46 @@ export class CombatTracker {
       else new Notice(format(this.strings.noteMissing, { path: member.source }));
     }
   }
-
   async loadEncounterNote(note: TFile): Promise<void> {
-    const entries = this.plugin.app.metadataCache.getFileCache(note)?.frontmatter?.creatures;
+    const entries = noteFields(this.plugin.app, note).creatures;
     const missing: string[] = [];
     if (Array.isArray(entries)) for (const entry of entries) {
-      const path = linkPath(entry?.creature);
-      const file = path ? this.plugin.app.metadataCache.getFirstLinkpathDest(path, note.path) : null;
+      const path = linkTarget(entry?.creature);
+      const file = resolveLink(this.plugin.app, entry?.creature, note);
       const count = Number(entry?.count);
-      if (file instanceof TFile && this.plugin.app.metadataCache.getFileCache(file)?.frontmatter?.type === "creature") await this.addCreature(file, Number.isFinite(count) && count > 0 ? Math.floor(count) : 1, true);
+      if (file instanceof TFile && noteFields(this.plugin.app, file).type === "creature") await this.addCreature(file, Number.isFinite(count) && count > 0 ? Math.floor(count) : 1, true);
       else if (path) missing.push(path);
     }
-    const context = this.plugin.currentContext();
+    const context = this.plugin.context();
     if (context) for (const file of playerFiles(this.plugin.app, this.plugin.partyPath())) {
       if (this.combat.participants.some(participant => participant.kind === "player" && (participant.source === file.path || participant.name === file.basename))) continue;
-      const fields = this.plugin.app.metadataCache.getFileCache(file)?.frontmatter ?? {};
+      const fields = noteFields(this.plugin.app, file);
       this.addPlayer({ name: file.basename, ac: Number(fields.ac ?? 10), hp: Number(fields.hp ?? 10), modifier: Number(fields.init_mod ?? 0), level: Number(fields.level ?? 1), source: file.path });
     }
     if (missing.length) new Notice(format(this.strings.encounterMissing, { links: missing.join(", ") }));
   }
-
   async saveEncounterNote(name: string, participants: Participant[] = this.combat.participants.filter(participant => participant.kind !== "player")): Promise<TFile | null> {
     const title = name.trim();
     if (!title || /[\\/:*?"<>|#^\[\]]/.test(title)) { new Notice(this.strings.homeInvalidName); return null; }
-    const campaign = this.plugin.currentContext()?.campaign;
+    const campaign = this.plugin.context()?.campaign;
     if (!campaign) { new Notice(this.strings.encounterNeedsCampaign); return null; }
     const folder = `${campaign.parent?.path ?? "Campaigns"}/Encounters`;
-    let unique = title;
-    for (let number = 2; this.plugin.app.vault.getAbstractFileByPath(`${folder}/${unique}.md`); number++) unique = `${title} ${number}`;
     const counts = new Map<string, number>();
     const manual: string[] = [];
     for (const participant of participants) {
       const source = participant.source ? this.plugin.app.vault.getAbstractFileByPath(participant.source) : null;
-      if (source instanceof TFile && this.plugin.app.metadataCache.getFileCache(source)?.frontmatter?.type === "creature") counts.set(source.path, (counts.get(source.path) ?? 0) + 1);
+      if (source instanceof TFile && noteFields(this.plugin.app, source).type === "creature") counts.set(source.path, (counts.get(source.path) ?? 0) + 1);
       else manual.push(participant.name);
     }
-    const rows = [...counts].map(([source, count]) => `  - creature: "[[${source.replace(/\.md$/, "")}]]"\n    count: ${count}`);
-    const content = mergeHomeTemplate(await homeTemplate(this.plugin.app, "encounter"), unique, folder, {
-      type: "encounter", campaign: `"[[${campaign.path.replace(/\.md$/, "")}]]"`, creatures: rows.length ? `\n${rows.join("\n")}` : "[]",
-    });
-    const heading = /^# [^\n]*\n/m.test(content) ? content : `${content}\n# ${unique}\n`;
-    const body = manual.length ? heading.replace(/(^# [^\n]*\n)/m, `$1\n${manual.map(value => `- ${value}`).join("\n")}\n`) : heading;
-    const vault = this.plugin.app.vault as typeof this.plugin.app.vault & { createFolder?: (path: string) => Promise<void> };
-    if (!vault.getAbstractFileByPath(folder)) await vault.createFolder?.(folder);
-    const file = await this.plugin.app.vault.create(`${folder}/${unique}.md`, body);
-    new Notice(format(this.strings.encounterNoteSaved, { name: unique }));
+    const rows = [...counts].map(([source, count]) => `  - creature: "${pathLink(source)}"\n    count: ${count}`);
+    const file = await createNote(this.plugin.app, { template: "encounter", folder, name: title, values: {
+      type: "encounter", campaign: quotedLink(campaign), creatures: rows.length ? `\n${rows.join("\n")}` : "[]",
+    }, body: manual.map(value => `- ${value}`).join("\n") });
+    new Notice(format(this.strings.encounterNoteSaved, { name: file.basename }));
     return file;
   }
-
   deleteEncounterSet(set: EncounterSet): void {
     this.plugin.encounterSets = this.plugin.encounterSets.filter(entry => entry !== set);
     void this.plugin.save();
   }
-}
-
-function appendLogEntry(list: HTMLElement, entry: string): void {
-  const item = list.createEl("li");
-  entry.split(/(\*\*.+?\*\*)/g).forEach(part => {
-    if (!part) return;
-    if (part.startsWith("**") && part.endsWith("**")) item.createEl("b", { text: part.slice(2, -2) });
-    else item.appendText(part);
-  });
-}
-
-export class CombatView extends ItemView {
-  constructor(leaf: WorkspaceLeaf, readonly plugin: TableTools) { super(leaf); }
-
-  getViewType(): string { return COMBAT_VIEW; }
-  getDisplayText(): string { return this.plugin.strings.combatTitle; }
-  getIcon(): string { return "swords"; }
-
-  async onOpen(): Promise<void> { this.plugin.views.add(this); this.render(); }
-  async onClose(): Promise<void> { this.plugin.views.delete(this); }
-
-  private get tracker(): CombatTracker { return this.plugin.tracker; }
-  private get strings(): Strings { return this.plugin.strings; }
-
-  render(): void {
-    const root = this.contentEl;
-    root.empty();
-    root.addClass("tt-combat");
-    const combat = this.plugin.combat;
-    const s = this.strings;
-    const order = sortedParticipants(combat);
-
-    const toolbar = root.createDiv("tt-toolbar");
-    const button = (icon: string, label: string, onClick: () => void, cls = ""): HTMLElement => {
-      const element = toolbar.createEl("button", { cls: "tt-btn " + cls, attr: { "aria-label": label } });
-      setIcon(element.createSpan("tt-btn-icon"), icon);
-      element.createSpan({ text: label });
-      element.onclick = onClick;
-      return element;
-    };
-    button("users", s.toolbarPlayers, () => new AddPlayersModal(this.app, this.plugin).open());
-    button("skull", s.toolbarEnemy, () => new CreaturePickerModal(this.app, this.plugin).open());
-    button("dices", s.toolbarInitiative, () => this.tracker.rollInitiative(false));
-    if (!combat.active) button("play", s.toolbarStart, () => this.tracker.start(), "tt-btn-primary");
-    else {
-      button("skip-back", s.toolbarPrevious, () => this.tracker.advance(-1));
-      button("skip-forward", s.toolbarNext, () => this.tracker.advance(1), "tt-btn-primary");
-    }
-    const round = toolbar.createDiv("tt-round");
-    round.createSpan({ cls: "tt-round-label", text: s.roundLabel });
-    round.createSpan({ cls: "tt-round-number", text: combat.round ? String(combat.round) : "\u2014" });
-    const right = toolbar.createDiv("tt-toolbar-right");
-    const iconButton = (icon: string, title: string, onClick: () => void): void => {
-      const element = right.createEl("button", { cls: "tt-btn tt-btn-icon-only", attr: { "aria-label": title, title } });
-      setIcon(element, icon);
-      element.onclick = onClick;
-    };
-    iconButton("layers", s.encounterSetsTitle, () => new EncounterSetsModal(this.app, this.plugin).open());
-    iconButton("file-down", s.exportToNote, () => void this.tracker.exportToActiveNote());
-    iconButton("rotate-ccw", s.newCombat, () => {
-      if (!combat.participants.length) this.tracker.clear();
-      else new ConfirmModal(this.app, s, s.confirmClear, s.confirmClearAction, () => this.tracker.clear()).open();
-    });
-
-    const difficulty = this.tracker.difficulty();
-    if (difficulty) {
-      const bar = root.createDiv("tt-difficulty tt-difficulty-" + difficulty.level);
-      bar.createSpan({ cls: "tt-difficulty-level", text: this.tracker.difficultyLabel(difficulty.level) });
-      bar.createSpan({ text: " " + format(s.difficultyDetail, { xp: difficulty.xp, adjusted: difficulty.adjustedXp, players: difficulty.players, thresholds: difficulty.thresholds.join(" / ") }) });
-    }
-
-    if (!order.length) {
-      const empty = root.createDiv("tt-empty");
-      empty.createEl("p", { text: s.emptyCombat });
-      empty.createEl("p", { cls: "tt-muted", text: s.emptyCombatHint });
-    } else {
-      const table = root.createEl("table", { cls: "tt-table" });
-      const head = table.createEl("thead").createEl("tr");
-      for (const title of ["", s.columnInitiative, s.columnName, s.columnAc, s.columnHp, s.columnDamage, s.columnConditions, ""]) head.createEl("th", { text: title });
-      const body = table.createEl("tbody");
-      order.forEach((participant, index) => this.renderRow(body, participant, combat.active && index === combat.turn));
-    }
-
-    const bottom = root.createDiv("tt-bottom");
-    const card = bottom.createDiv("tt-card");
-    const selected = combat.participants.find(participant => participant.id === combat.selected);
-    if (selected?.statblock) this.renderCard(card, selected);
-    else if (selected) {
-      card.createDiv({ cls: "tt-card-header" }).createEl("h3", { text: selected.name });
-      card.createEl("p", { cls: "tt-muted", text: selected.source ? s.noStatblock : s.manualParticipant });
-      if (selected.source) {
-        const link = card.createEl("a", { text: s.openNote, href: "#" });
-        const source = selected.source;
-        link.onclick = () => void this.app.workspace.openLinkText(source, "", true);
-      }
-    } else card.createEl("p", { cls: "tt-muted", text: s.selectRowHint });
-    const log = bottom.createDiv("tt-log");
-    log.createDiv({ cls: "tt-log-title", text: s.logTitle });
-    const list = log.createEl("ul");
-    for (const entry of [...combat.log].reverse().slice(0, 40)) appendLogEntry(list, entry);
-  }
-
-  private renderRow(body: HTMLElement, participant: Participant, current: boolean): void {
-    const s = this.strings;
-    const combat = this.plugin.combat;
-    const classes = ["tt-row", `tt-${participant.kind}`];
-    if (current) classes.push("tt-current");
-    if (participant.hp <= 0) classes.push("tt-defeated");
-    if (combat.selected === participant.id) classes.push("tt-selected");
-    if (participant.hidden) classes.push("tt-hidden");
-    const row = body.createEl("tr", { cls: classes.join(" ") });
-    row.onclick = event => {
-      if ((event.target as HTMLElement | null)?.closest?.("input,button,select")) return;
-      this.tracker.select(participant);
-    };
-
-    const marker = row.createEl("td", { cls: "tt-col-marker" });
-    if (current) setIcon(marker.createSpan("tt-arrow"), "chevron-right");
-
-    const initiativeCell = row.createEl("td", { cls: "tt-col-initiative" });
-    const initiative = initiativeCell.createEl("input", {
-      type: "number", cls: "tt-input-initiative", value: participant.initiative == null ? "" : String(participant.initiative),
-      attr: { placeholder: "\u2014", title: format(s.modifierTitle, { modifier: signed(participant.modifier) }) },
-    });
-    initiative.onchange = () => this.tracker.setInitiative(participant, initiative.value === "" ? null : Number(initiative.value));
-
-    const nameCell = row.createEl("td", { cls: "tt-col-name" });
-    const name = nameCell.createDiv("tt-name");
-    name.createSpan({ cls: "tt-kind-dot tt-dot-" + participant.kind });
-    name.createSpan({ cls: "tt-name-text", text: participant.name });
-    if (participant.cr) name.createSpan({ cls: "tt-chip tt-chip-cr", text: format(s.chipCr, { cr: participant.cr }) });
-    if (participant.level) name.createSpan({ cls: "tt-chip", text: format(s.chipLevel, { level: participant.level }) });
-    if (participant.note) nameCell.createDiv({ cls: "tt-note", text: participant.note });
-
-    row.createEl("td", { cls: "tt-col-ac" }).createSpan({ cls: "tt-shield", text: String(participant.ac) });
-
-    const hpCell = row.createEl("td", { cls: "tt-col-hp" });
-    const bar = hpCell.createDiv("tt-hp-bar");
-    const percent = participant.hpMax ? Math.max(0, Math.min(100, Math.round(participant.hp / participant.hpMax * 100))) : 0;
-    const fill = bar.createDiv("tt-hp-fill");
-    fill.style.width = percent + "%";
-    fill.addClass(percent > 50 ? "tt-hp-healthy" : percent > 25 ? "tt-hp-wounded" : "tt-hp-critical");
-    const hpText = hpCell.createDiv("tt-hp-text");
-    hpText.createSpan({ cls: "tt-hp-current", text: String(participant.hp) });
-    hpText.createSpan({ cls: "tt-muted", text: ` / ${participant.hpMax}` });
-    if (participant.temporaryHp) hpText.createSpan({ cls: "tt-chip tt-chip-temporary", text: `+${participant.temporaryHp}` });
-
-    const damageCell = row.createEl("td", { cls: "tt-col-damage" });
-    const damage = damageCell.createEl("input", { type: "text", cls: "tt-input-damage", attr: { placeholder: s.damagePlaceholder, title: s.damageTitle } });
-    damage.onkeydown = event => {
-      if (event.key !== "Enter") return;
-      if (this.tracker.applyRowInput(participant, damage.value, event.shiftKey)) damage.value = "";
-    };
-
-    const conditionsCell = row.createEl("td", { cls: "tt-col-conditions" });
-    for (const condition of participant.conditions) {
-      const chip = conditionsCell.createSpan({
-        cls: "tt-chip tt-chip-condition", text: conditionLabel(s, condition),
-        attr: { title: format(s.conditionChipTitle, { description: conditionDescription(s, condition) }) },
-      });
-      chip.onclick = event => { event.stopPropagation(); this.tracker.toggleCondition(participant, condition); };
-    }
-    const add = conditionsCell.createEl("button", { cls: "tt-btn-mini", attr: { title: s.addCondition, "aria-label": s.addCondition } });
-    setIcon(add, "plus");
-    add.onclick = event => { event.stopPropagation(); new ConditionsModal(this.app, this.plugin, participant).open(); };
-
-    const actions = row.createEl("td", { cls: "tt-col-actions" });
-    const mini = (icon: string, title: string, onClick: () => void): void => {
-      const element = actions.createEl("button", { cls: "tt-btn-mini", attr: { title, "aria-label": title } });
-      setIcon(element, icon);
-      element.onclick = event => { event.stopPropagation(); onClick(); };
-    };
-    mini("pencil", s.editParticipant, () => new EditParticipantModal(this.app, this.plugin, participant).open());
-    mini(participant.hidden ? "eye-off" : "eye", participant.hidden ? s.hiddenFromPlayers : s.visibleToPlayers, () => this.tracker.setHidden(participant, !participant.hidden));
-    mini("x", s.removeParticipant, () => this.tracker.remove(participant));
-  }
-
-  private renderCard(element: HTMLElement, participant: Participant): void {
-    const s = this.strings;
-    const statblock = participant.statblock;
-    if (!statblock) return;
-    const pattern = dicePattern(this.plugin.settings.attackBonusPhrases);
-    const onRoll = (_expression: string, result: Roll): void => {
-      const description = this.tracker.logRoll(participant, result);
-      new Notice(description.replace(/\*\*/g, ""));
-    };
-    const highlight = (target: HTMLElement, text: string): void => highlightDice(target, text, pattern, s.clickToRoll, onRoll);
-
-    const header = element.createDiv("tt-card-header");
-    header.createEl("h3", { text: statblock.name ?? participant.name });
-    header.createDiv({ cls: "tt-card-subtitle", text: [statblock.size, statblock.type, statblock.subtype ? `(${statblock.subtype})` : "", statblock.alignment].filter(Boolean).join(" ") });
-    if (participant.source) {
-      const source = participant.source;
-      const link = header.createEl("a", { cls: "tt-card-link", text: s.cardNoteLink });
-      link.onclick = () => void this.app.workspace.openLinkText(source, "", true);
-    }
-
-    const key = element.createDiv("tt-card-key");
-    const keyValue = (label: string, value: string): void => {
-      const item = key.createDiv("tt-key-value");
-      item.createSpan({ cls: "tt-key", text: label });
-      highlight(item.createSpan("tt-value"), value);
-    };
-    keyValue(s.cardAc, `${statblock.ac ?? "?"}${statblock.ac_class ? ` (${statblock.ac_class})` : ""}`);
-    keyValue(s.cardHp, `${participant.hp}/${participant.hpMax}${statblock.hit_dice ? ` (${statblock.hit_dice})` : ""}`);
-    if (statblock.speed) keyValue(s.cardSpeed, String(statblock.speed));
-
-    const stats = statblock.stats;
-    if (stats?.length === 6) {
-      const grid = element.createDiv("tt-abilities");
-      [s.abilityStrength, s.abilityDexterity, s.abilityConstitution, s.abilityIntelligence, s.abilityWisdom, s.abilityCharisma].forEach((label, index) => {
-        const cell = grid.createDiv("tt-ability");
-        cell.createDiv({ cls: "tt-ability-name", text: label });
-        cell.createDiv({ cls: "tt-ability-score", text: String(stats[index]) });
-        const modifier = abilityModifier(stats[index]);
-        const bonus = cell.createDiv({ cls: "tt-ability-modifier tt-die", text: signed(modifier), attr: { title: s.rollAbilityTitle } });
-        bonus.onclick = () => onRoll(`d20${signed(modifier)}`, roll(signed(modifier)));
-      });
-    }
-
-    const info = element.createDiv("tt-card-info");
-    const line = (label: string, value?: string): void => {
-      if (!value) return;
-      const item = info.createDiv("tt-line");
-      item.createSpan({ cls: "tt-line-label", text: label + " " });
-      highlight(item.createSpan(), value);
-    };
-    line(s.lineSaves, savesText(statblock.saves));
-    line(s.lineSkills, savesText(statblock.skillsaves));
-    line(s.lineVulnerabilities, statblock.damage_vulnerabilities);
-    line(s.lineResistances, statblock.damage_resistances);
-    line(s.lineImmunities, statblock.damage_immunities);
-    line(s.lineConditionImmunities, statblock.condition_immunities);
-    line(s.lineSenses, statblock.senses);
-    line(s.lineLanguages, statblock.languages);
-    if (statblock.cr != null) line(s.lineChallenge, format(s.challengeValue, { cr: statblock.cr, xp: experienceForChallenge(statblock.cr) }));
-
-    const section = (title: string, traits?: Trait[]): void => {
-      if (!traits?.length) return;
-      const block = element.createDiv("tt-section");
-      block.createDiv({ cls: "tt-section-title", text: title });
-      for (const trait of traits) {
-        const paragraph = block.createDiv("tt-trait");
-        paragraph.createSpan({ cls: "tt-trait-name", text: (trait.name ?? "") + ". " });
-        highlight(paragraph.createSpan(), String(trait.desc ?? ""));
-      }
-    };
-    section(s.sectionTraits, statblock.traits);
-    section(s.sectionActions, statblock.actions);
-    section(s.sectionBonusActions, statblock.bonus_actions);
-    section(s.sectionReactions, statblock.reactions);
-    section(s.sectionLegendaryActions, statblock.legendary_actions);
-    section(s.sectionLairActions, statblock.lair_actions);
-    section(s.sectionHomebrew, statblock.homebrew_notes);
-  }
-}
-
-class CreaturePickerModal extends FuzzySuggestModal<TFile> {
-  constructor(app: App, private readonly plugin: TableTools) {
-    super(app);
-    this.setPlaceholder(plugin.strings.searchBestiary);
-  }
-  getItems(): TFile[] { return creatureFiles(this.app, this.plugin.bestiaryPaths()); }
-  getItemText(file: TFile): string {
-    const cr = this.app.metadataCache.getFileCache(file)?.frontmatter?.cr;
-    return cr != null ? format(this.plugin.strings.creatureOption, { name: file.basename, cr }) : file.basename;
-  }
-  onChooseItem(file: TFile): void { new QuantityModal(this.app, this.plugin, file).open(); }
-}
-
-class QuantityModal extends Modal {
-  constructor(app: App, private readonly plugin: TableTools, private readonly file: TFile) { super(app); }
-  onOpen(): void {
-    const s = this.plugin.strings;
-    const { contentEl } = this;
-    contentEl.addClass("tt-modal");
-    contentEl.createEl("h3", { text: this.file.basename });
-    let quantity = 1, shareInitiative = true;
-    new Setting(contentEl).setName(s.quantity).addSlider(slider => slider.setLimits(1, 12, 1).setValue(1).setDynamicTooltip().onChange(value => { quantity = value; }));
-    new Setting(contentEl).setName(s.sharedInitiativeForGroup).addToggle(toggle => toggle.setValue(true).onChange(value => { shareInitiative = value; }));
-    new Setting(contentEl).addButton(button => button.setButtonText(s.add).setCta().onClick(async () => {
-      await this.plugin.tracker.addCreature(this.file, quantity, shareInitiative);
-      this.close();
-    }));
-  }
-  onClose(): void { this.contentEl.empty(); }
-}
-
-interface TrackerPlayer { name: string; ac?: number; hp?: number; modifier?: number; level?: number; note?: string }
-
-class AddPlayersModal extends Modal {
-  constructor(app: App, private readonly plugin: TableTools) { super(app); }
-  async onOpen(): Promise<void> {
-    const s = this.plugin.strings;
-    const { contentEl } = this;
-    contentEl.addClass("tt-modal");
-    contentEl.createEl("h3", { text: s.addPlayersTitle });
-    const files = playerFiles(this.app, this.plugin.partyPath());
-    const selected = new Set<string>(files.map(file => file.path));
-    if (files.length) {
-      contentEl.createEl("p", { cls: "tt-muted", text: s.fromPartyNotes });
-      for (const file of files) {
-        const fields = this.app.metadataCache.getFileCache(file)?.frontmatter ?? {};
-        new Setting(contentEl).setName(file.basename)
-          .setDesc(format(s.playerSummary, { ac: fields.ac ?? "?", hp: fields.hp ?? "?", modifier: signed(Number(fields.init_mod ?? 0)), level: fields.level ?? "?" }))
-          .addToggle(toggle => toggle.setValue(true).onChange(value => { if (value) selected.add(file.path); else selected.delete(file.path); }));
-      }
-    }
-    let trackerPlayers: TrackerPlayer[] = [];
-    try {
-      const raw = await this.app.vault.adapter.read(this.app.vault.configDir + "/plugins/initiative-tracker/data.json");
-      trackerPlayers = (JSON.parse(raw) as { players?: TrackerPlayer[] }).players ?? [];
-    } catch {}
-    const selectedTracker = new Set<string>();
-    if (trackerPlayers.length) {
-      contentEl.createEl("p", { cls: "tt-muted", text: s.fromInitiativeTracker });
-      for (const player of trackerPlayers) {
-        new Setting(contentEl).setName(player.name)
-          .setDesc(format(s.playerSummary, { ac: player.ac ?? "?", hp: player.hp ?? "?", modifier: signed(player.modifier ?? 0), level: player.level ?? "?" }))
-          .addToggle(toggle => toggle.setValue(false).onChange(value => { if (value) selectedTracker.add(player.name); else selectedTracker.delete(player.name); }));
-      }
-    }
-    contentEl.createEl("p", { cls: "tt-muted", text: s.manualEntry });
-    let name = "", ac = 14, hp = 30, modifier = 2, level = 3;
-    new Setting(contentEl).setName(s.nameLabel).addText(text => text.onChange(value => { name = value; }));
-    new Setting(contentEl).setName(s.playerNumbers)
-      .addText(text => text.setValue("14").onChange(value => { ac = Number(value); }))
-      .addText(text => text.setValue("30").onChange(value => { hp = Number(value); }))
-      .addText(text => text.setValue("2").onChange(value => { modifier = Number(value); }))
-      .addText(text => text.setValue("3").onChange(value => { level = Number(value); }));
-    new Setting(contentEl).addButton(button => button.setButtonText(s.addSelected).setCta().onClick(() => {
-      const tracker = this.plugin.tracker;
-      for (const file of files) {
-        if (!selected.has(file.path)) continue;
-        const fields = this.app.metadataCache.getFileCache(file)?.frontmatter ?? {};
-        tracker.addPlayer({ name: file.basename, ac: Number(fields.ac ?? 10), hp: Number(fields.hp ?? 10), modifier: Number(fields.init_mod ?? 0), level: Number(fields.level ?? 1), source: file.path });
-      }
-      for (const player of trackerPlayers) {
-        if (selectedTracker.has(player.name)) tracker.addPlayer({ name: player.name, ac: Number(player.ac ?? 10), hp: Number(player.hp ?? 10), modifier: Number(player.modifier ?? 0), level: Number(player.level ?? 1), source: player.note });
-      }
-      if (name.trim()) tracker.addPlayer({ name: name.trim(), ac, hp, modifier, level });
-      this.close();
-    }));
-  }
-  onClose(): void { this.contentEl.empty(); }
-}
-
-class ConditionsModal extends Modal {
-  constructor(app: App, private readonly plugin: TableTools, private readonly participant: Participant) { super(app); }
-  onOpen(): void {
-    const s = this.plugin.strings;
-    const { contentEl } = this;
-    contentEl.addClass("tt-modal");
-    contentEl.createEl("h3", { text: format(s.conditionsTitle, { name: this.participant.name }) });
-    const grid = contentEl.createDiv("tt-conditions-grid");
-    const pending = new Set(this.participant.conditions);
-    for (const condition of CONDITIONS) {
-      const toggle = grid.createEl("button", {
-        cls: "tt-condition-button" + (pending.has(condition) ? " tt-condition-on" : ""),
-        text: conditionLabel(s, condition), attr: { title: conditionDescription(s, condition) },
-      });
-      toggle.onclick = () => {
-        if (pending.has(condition)) pending.delete(condition); else pending.add(condition);
-        toggle.toggleClass("tt-condition-on", pending.has(condition));
-      };
-    }
-    new Setting(contentEl).addButton(button => button.setButtonText(s.done).setCta().onClick(() => {
-      for (const condition of CONDITIONS) {
-        if (pending.has(condition) !== this.participant.conditions.includes(condition)) this.plugin.tracker.toggleCondition(this.participant, condition);
-      }
-      this.close();
-    }));
-  }
-  onClose(): void { this.contentEl.empty(); }
-}
-
-class EditParticipantModal extends Modal {
-  constructor(app: App, private readonly plugin: TableTools, private readonly participant: Participant) { super(app); }
-  onOpen(): void {
-    const s = this.plugin.strings;
-    const participant = this.participant;
-    const changes: { name: string; ac: number; hpMax: number; modifier: number; level?: number; kind: ParticipantKind; note: string } = {
-      name: participant.name, ac: participant.ac, hpMax: participant.hpMax, modifier: participant.modifier, level: participant.level, kind: participant.kind, note: participant.note,
-    };
-    const { contentEl } = this;
-    contentEl.addClass("tt-modal");
-    contentEl.createEl("h3", { text: s.editTitle });
-    new Setting(contentEl).setName(s.nameLabel).addText(text => text.setValue(changes.name).onChange(value => { changes.name = value; }));
-    new Setting(contentEl).setName(s.cardAc).addText(text => text.setValue(String(changes.ac)).onChange(value => { changes.ac = Number(value) || 10; }));
-    new Setting(contentEl).setName(s.editMaximumHp).addText(text => text.setValue(String(changes.hpMax)).onChange(value => { changes.hpMax = Number(value) || 1; }));
-    new Setting(contentEl).setName(s.editInitiativeModifier).addText(text => text.setValue(String(changes.modifier)).onChange(value => { changes.modifier = Number(value) || 0; }));
-    if (participant.kind === "player") new Setting(contentEl).setName(s.editLevel).addText(text => text.setValue(String(changes.level ?? 1)).onChange(value => { changes.level = Number(value) || 1; }));
-    new Setting(contentEl).setName(s.editKind).addDropdown(dropdown => dropdown
-      .addOptions({ player: s.kindPlayer, enemy: s.kindEnemy, ally: s.kindAlly })
-      .setValue(changes.kind)
-      .onChange(value => { changes.kind = value as ParticipantKind; }));
-    new Setting(contentEl).setName(s.editNote).setDesc(s.editNoteHint).addTextArea(text => text.setValue(changes.note).onChange(value => { changes.note = value; }));
-    new Setting(contentEl).addButton(button => button.setButtonText(s.save).setCta().onClick(() => {
-      this.plugin.tracker.update(participant, changes);
-      this.close();
-    }));
-  }
-  onClose(): void { this.contentEl.empty(); }
-}
-
-class EncounterSetsModal extends Modal {
-  constructor(app: App, private readonly plugin: TableTools) { super(app); }
-  onOpen(): void {
-    const s = this.plugin.strings;
-    const tracker = this.plugin.tracker;
-    const { contentEl } = this;
-    contentEl.empty();
-    contentEl.addClass("tt-modal");
-    contentEl.createEl("h3", { text: s.encounterSetsTitle });
-    new Setting(contentEl).addButton(button => button.setButtonText(s.encounterStart).onClick(() => { this.close(); new EncounterNotePicker(this.app, this.plugin).open(); }))
-      .addButton(button => button.setButtonText(s.encounterSaveCurrentNote).onClick(() => { this.close(); new EncounterNameModal(this.app, this.plugin, this.plugin.combat.name).open(); }));
-    contentEl.createEl("p", { cls: "tt-muted", text: s.encounterSetsHint });
-    const sets = this.plugin.encounterSets;
-    if (!sets.length) contentEl.createEl("p", { text: s.noEncounterSets });
-    for (const set of sets) {
-      const members = set.members.map(member => format(s.memberSummary, { name: member.name, quantity: member.quantity })).join(", ");
-      new Setting(contentEl).setName(set.name).setDesc(members + (set.description ? " \u2014 " + set.description : ""))
-        .addButton(button => button.setButtonText(s.load).setCta().onClick(async () => { await tracker.loadEncounterSet(set); this.close(); }))
-        .addButton(button => button.setButtonText(s.encounterSaveAsNote).onClick(() => new EncounterNameModal(this.app, this.plugin, set.name, set.members.flatMap(member => Array.from({ length: member.quantity }, () => ({ name: member.name, kind: "enemy" as const, source: member.source } as Participant)))).open()))
-        .addExtraButton(button => button.setIcon("trash").setTooltip(s.deleteEncounterSet).onClick(() => { tracker.deleteEncounterSet(set); this.onOpen(); }));
-    }
-    const enemies = this.plugin.combat.participants.filter(participant => participant.kind === "enemy" && participant.source);
-    if (enemies.length) {
-      contentEl.createEl("h4", { text: s.saveCurrentEnemies });
-      let name = this.plugin.combat.name, description = "";
-      new Setting(contentEl).setName(s.nameLabel).addText(text => text.setValue(name).onChange(value => { name = value; }));
-      new Setting(contentEl).setName(s.descriptionLabel).addText(text => text.onChange(value => { description = value; }));
-      new Setting(contentEl).addButton(button => button.setButtonText(s.saveEncounterSet).onClick(() => {
-        if (tracker.saveEncounterSet(name, description)) this.close();
-      }));
-    }
-  }
-  onClose(): void { this.contentEl.empty(); }
-}
-
-class EncounterNotePicker extends FuzzySuggestModal<TFile> {
-  constructor(app: App, private readonly plugin: TableTools) { super(app); this.setPlaceholder(plugin.strings.encounterStart); }
-  getItems(): TFile[] {
-    const campaign = this.plugin.currentContext()?.campaign;
-    return this.app.vault.getMarkdownFiles().filter(file => this.app.metadataCache.getFileCache(file)?.frontmatter?.type === "encounter")
-      .sort((a, b) => Number(!!campaign && b.path.startsWith(`${campaign.parent?.path}/`)) - Number(!!campaign && a.path.startsWith(`${campaign.parent?.path}/`)) || a.basename.localeCompare(b.basename));
-  }
-  getItemText(file: TFile): string { return file.basename; }
-  onChooseItem(file: TFile): void { void this.plugin.tracker.loadEncounterNote(file); }
-}
-
-class EncounterNameModal extends Modal {
-  constructor(app: App, private readonly plugin: TableTools, private name: string, private readonly participants?: Participant[]) { super(app); }
-  onOpen(): void {
-    const s = this.plugin.strings;
-    this.contentEl.createEl("h3", { text: s.encounterSaveCurrentNote });
-    new Setting(this.contentEl).setName(s.nameLabel).addText(text => text.setValue(this.name).onChange(value => { this.name = value; }));
-    new Setting(this.contentEl).addButton(button => button.setButtonText(s.save).setCta().onClick(async () => {
-      const file = await this.plugin.tracker.saveEncounterNote(this.name, this.participants);
-      if (file) { this.close(); await this.app.workspace.openLinkText(file.path, ""); }
-    }));
-  }
-}
-
-export class ConfirmModal extends Modal {
-  constructor(app: App, private readonly strings: Strings, private readonly message: string, private readonly action: string, private readonly onConfirm: () => void) { super(app); }
-  onOpen(): void {
-    const { contentEl } = this;
-    contentEl.addClass("tt-modal");
-    contentEl.createEl("p", { text: this.message });
-    new Setting(contentEl)
-      .addButton(button => button.setButtonText(this.strings.cancel).onClick(() => this.close()))
-      .addButton(button => button.setButtonText(this.action).setWarning().onClick(() => { this.onConfirm(); this.close(); }));
-  }
-  onClose(): void { this.contentEl.empty(); }
 }
