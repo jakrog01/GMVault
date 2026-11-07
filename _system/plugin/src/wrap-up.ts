@@ -1,7 +1,7 @@
 import { App, Modal, Notice, TFile } from "obsidian";
 import type TableTools from "./main";
 import { requestResponse } from "./gemini";
-import { createNote, linkTarget, noteFields, resolveLink, uniqueName, wikilink } from "./notes";
+import { createNote, inRunFolder, linkTarget, noteFields, resolveLink, runFolderOf, uniqueName, wikilink } from "./notes";
 import { format } from "./strings";
 
 interface Fact { text: string; links?: string[] }
@@ -10,7 +10,7 @@ interface Proposals { worldChanges: Fact[]; playersKnow: Fact[]; claims: Claim[]
 interface Edit { checked: boolean; value: string; claim?: Claim; kind: "worldChanges" | "playersKnow" | "claims" }
 
 export function newestRunSession(app: App, run: TFile): TFile | null {
-  return app.vault.getMarkdownFiles().filter(file => file.parent?.path === run.parent?.path && noteFields(app, file).type === "session")
+  return app.vault.getMarkdownFiles().filter(file => inRunFolder(file, run.parent?.path) && noteFields(app, file).type === "session")
     .sort((a, b) => String(noteFields(app, b).date ?? "").localeCompare(String(noteFields(app, a).date ?? "")) || b.path.localeCompare(a.path))[0] ?? null;
 }
 
@@ -122,7 +122,7 @@ export async function wrapUp(plugin: TableTools, run?: TFile, selectedSession?: 
   if (!session) { new Notice(plugin.strings.wrapUpNoSession); return; }
   const runPath = linkTarget(noteFields(app, session).run);
   const linkedRun = runPath ? app.metadataCache.getFirstLinkpathDest(runPath, session.path) : null;
-  const runFile = linkedRun ?? app.vault.getAbstractFileByPath(`${session.parent?.path ?? ""}/Run.md`);
+  const runFile = linkedRun ?? app.vault.getAbstractFileByPath(`${runFolderOf(session)}/Run.md`);
   const folder = runFile?.parent?.path ?? "";
   const state = app.vault.getAbstractFileByPath(`${folder}/State.md`);
   if (!(runFile instanceof TFile) || !(state instanceof TFile)) { new Notice(plugin.strings.wrapUpNoRun); return; }

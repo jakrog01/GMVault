@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+- **World calendars, per-run dates.** A world's `calendar` field names a Calendarium calendar; each run keeps its own `world_date` in `World Day.md`. The new `gmvault-day` block (in World Day, the run note and every session) shows the date, day of the week, holiday, season, moon phases and generated weather, with ±1 day / ±1 week buttons and a year/month/day picker. Home and the assistant show the same one-line summary; new sessions copy the run's date.
+- New sessions go to `Runs/<run>/Sessions/`; sessions in the run folder are still read.
+- The player character template has a full stat block (species, subclass, background, abilities, speed, proficiency, passive Perception, spell DC).
+- Map pins can point at a section (`[[Note#K13. Hall]]`): the pin shows the section name and opens the note there.
+- Assistant chunks are labelled with the rules edition (2014 / 2024); `Zasady YYYY` callouts are indexed as the older edition.
+- Statblock callouts in the fantasy snippet have readable tables and ink colours.
+- New notes in a world's `Lore/Creatures/` use the creature template.
+
 ## 2.7.2
 
 - GMVault maps need no edit mode: click an empty spot to **Attach note** or add a **New location here**, drag a pin to move it, and remove it with **Remove pin** on its card or by right-clicking it. The full map opens in a main tab.

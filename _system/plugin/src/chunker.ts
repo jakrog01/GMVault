@@ -17,6 +17,9 @@ const hash = (value: string): string => {
   return `${(first >>> 0).toString(16)}${(second >>> 0).toString(16)}`;
 };
 
+const editionLabel = (value: string): string => value === "2024" ? "D&D 2024 (5.5e)" : value === "2014" ? "D&D 2014 (5e)" : value;
+const OLD_RULES = /^>\s*\[!\w+\][-+]?\s*Zasady (\d{4})/;
+
 const stringList = (value: unknown): string[] => Array.isArray(value) ? value.map(String) : value === undefined ? [] : [String(value)];
 
 export async function chunkFile(plugin: TableTools, file: TFile, kind: SourceKind): Promise<Chunk[]> {
@@ -26,18 +29,32 @@ export async function chunkFile(plugin: TableTools, file: TFile, kind: SourceKin
   const aliases = stringList(frontmatter.aliases);
   const type = String(frontmatter.type ?? "note");
   const system = String(frontmatter.system ?? "");
+  const edition = String(frontmatter.edition ?? "");
   const body = clean(raw.replace(/^---[\s\S]*?---\s*/, ""));
   if (!body) return [];
-  const sections: { heading: string; body: string }[] = [];
+  const sections: { heading: string; body: string; edition: string }[] = [];
   const stack: string[] = [];
   let fenced = false;
   let current: string[] = [];
+  let oldRules = "";
   const flush = (): void => {
     const section = current.join("\n").trim();
-    if (section) sections.push({ heading: stack.join(" > ") || title, body: section });
+    const heading = stack.join(" > ") || title;
+    if (section) sections.push({ heading: oldRules ? `${heading} > Zasady ${oldRules}` : heading, body: section, edition: oldRules || edition });
     current = [];
   };
   for (const line of body.split("\n")) {
+    if (!fenced && oldRules && !line.startsWith(">")) {
+      flush();
+      oldRules = "";
+    }
+    const old = fenced ? null : line.match(OLD_RULES);
+    if (old) {
+      flush();
+      oldRules = old[1];
+      current.push(line);
+      continue;
+    }
     if (/^\s*```/.test(line)) {
       fenced = !fenced;
       current.push(line);
@@ -54,9 +71,10 @@ export async function chunkFile(plugin: TableTools, file: TFile, kind: SourceKin
     stack[level - 1] = match[2].trim();
   }
   flush();
-  if (!sections.length) sections.push({ heading: title, body });
+  if (!sections.length) sections.push({ heading: title, body, edition });
   const whole = /```statblock[\s\S]*?```/i.test(body) || (type === "creature" && tokens(body) <= 2000);
-  const pieces: { heading: string; body: string }[] = whole ? [{ heading: title, body }] : [];
+  const mixed = edition && sections.some(section => section.edition !== edition) ? `${editionLabel(edition)}; "Zasady <year>" blocks are an older edition` : "";
+  const pieces: { heading: string; body: string; edition: string }[] = whole ? [{ heading: title, body, edition: mixed || edition }] : [];
   if (!whole) for (const section of sections) {
     if (tokens(section.body) <= 600) {
       const previous = pieces[pieces.length - 1];
@@ -66,15 +84,15 @@ export async function chunkFile(plugin: TableTools, file: TFile, kind: SourceKin
     }
     let current = "";
     for (const paragraph of section.body.split(/\n\s*\n/)) {
-      if (current && tokens(`${current}\n\n${paragraph}`) > 600) { pieces.push({ heading: section.heading, body: current }); current = paragraph; }
+      if (current && tokens(`${current}\n\n${paragraph}`) > 600) { pieces.push({ heading: section.heading, body: current, edition: section.edition }); current = paragraph; }
       else current += `${current ? "\n\n" : ""}${paragraph}`;
     }
-    if (current) pieces.push({ heading: section.heading, body: current });
+    if (current) pieces.push({ heading: section.heading, body: current, edition: section.edition });
   }
   const metadata = JSON.stringify({ type, system, status: frontmatter.status, aliases, tags: frontmatter.tags, gmOnly: frontmatter["gm-only"], assistant: frontmatter.assistant, campaign: frontmatter.campaign, world: frontmatter.world, subtype: frontmatter.subtype });
   return pieces.map((piece, ordinal) => {
     const breadcrumb = piece.heading || title;
-    const text = piece.body;
+    const text = piece.edition ? `[Edycja: ${editionLabel(piece.edition)}]\n${piece.body}` : piece.body;
     const indexedText = `${file.path} > ${breadcrumb} | type: ${type}${system ? ` | system: ${system}` : ""}\n${text}`;
     return { id: `${file.path}#${breadcrumb}#${ordinal}`, path: file.path, breadcrumb, ordinal, text, indexedText, hash: hash(`${text}\n${metadata}`), title, aliases, type, system, status: String(frontmatter.status ?? ""), tags: stringList(frontmatter.tags), links: stringList(frontmatter.links), kind, gmOnly: frontmatter["gm-only"] === true, excluded: frontmatter.assistant === "exclude", campaignLink: String(frontmatter.campaign ?? ""), worldLink: String(frontmatter.world ?? "") };
   });

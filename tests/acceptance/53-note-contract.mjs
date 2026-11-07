@@ -9,7 +9,7 @@ const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..")
 const read = relative => readFile(path.join(root, relative), "utf8")
 const relations = {
   world: ["calendar", "system", "map", "pins"], campaign: ["world", "system", "calendar"], party: ["campaign"],
-  pc: ["party", "player", "class", "level", "ac", "hp", "init_mod"],
+  pc: ["party", "player", "species", "class", "subclass", "background", "alignment", "level", "ac", "hp", "hp_max", "speed", "init_mod", "prof_bonus", "passive_perception", "spell_dc", "str", "dex", "con", "int", "wis", "cha"],
   run: ["campaign", "party", "role"], session: ["run", "date", "world_date"], state: ["run"], "world-day": ["run"],
   npc: ["world", "campaign", "faction", "location", "status"], location: ["world", "campaign", "location", "status", "map", "pins"],
   faction: ["world", "campaign", "status"], lore: ["world", "campaign"], event: ["world", "campaign", "world_date", "location"],

@@ -775,6 +775,38 @@ export async function runScenario({ override } = {}) {
   await until(() => byText(modals.at(-1).contentEl, s.mapShowOn).length > 0, "show on map action")
   byText(modals.at(-1).contentEl, s.mapShowOn)[0].click()
   modals.at(-1).close()
+  // World Day block: the world's calendar (Calendarium data) drives the run's in-world date.
+  const calendar = {
+    name: "Test Reckoning", static: { weekdays: [{ name: "One" }, { name: "Two" }], overflow: false,
+      months: [{ name: "Frost", type: "month", length: 10 }, { name: "Feast", type: "intercalary", length: 1 }, { name: "Bloom", type: "month", length: 10 }],
+      moons: [{ name: "Pale", cycle: 8, offset: 0 }], leapDays: [] },
+    seasonal: { type: "Periodic", offset: 0, seasons: [{ name: "Cold", kind: "Winter", duration: 11 }, { name: "Warm", kind: "Summer", duration: 10 }], weather: { enabled: true, seed: 7 } },
+    events: [{ name: "Feast Day", type: "Recurring", date: { month: 1, day: 1 } }],
+    current: { year: 1, month: 0, day: 1 },
+  }
+  env.adapterFiles.set(".obsidian/plugins/calendarium/data.json", JSON.stringify({ calendars: [calendar] }))
+  addFile("Worlds/Dated/World.md", "", { type: "world", calendar: "Test Reckoning" })
+  addFile("Campaigns/Dated/Campaign.md", "", { type: "campaign", world: "[[Worlds/Dated/World]]" })
+  addFile("Runs/Dated/Run.md", "", { type: "run", campaign: "[[Campaigns/Dated/Campaign]]" })
+  const datedDay = addFile("Runs/Dated/World Day.md", "", { type: "world-day", world_date: "1-01-01" })
+  const renderDay = async sourcePath => {
+    const element = new env.MockElement(); const children = []
+    plugin.markdownCodeBlockProcessors.get("gmvault-day")("", element, { sourcePath, addChild: child => children.push(child) })
+    children[0].load(); await new Promise(resolve => setTimeout(resolve, 0)); return element
+  }
+  await renderDay("Elsewhere.md")
+  addFile("Runs/Undated/Run.md", "", { type: "run", campaign: "[[Campaigns/Glass/Campaign]]" })
+  addFile("Runs/Undated/World Day.md", "", { type: "world-day" })
+  await renderDay("Runs/Undated/World Day.md")
+  let first = true
+  for (const year of [1, 2, 3]) for (const month of [0, 1, 2]) for (let day = 1; day <= (month === 1 ? 1 : 10); day++) {
+    env.files.get(datedDay.path).frontmatter.world_date = `${year}-${String(month + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`
+    const element = await renderDay(datedDay.path)
+    if (first) { first = false; for (const label of [s.dayPrevious, s.dayNext, s.dayPreviousWeek, s.dayNextWeek]) byText(element, label)[0]?.click() }
+  }
+  env.adapterFiles.set(".obsidian/plugins/calendarium/data.json", JSON.stringify({ calendars: [calendar, { ...calendar, name: "Flowing", static: { ...calendar.static, overflow: true } }] }))
+  env.files.get("Worlds/Dated/World.md").frontmatter.calendar = "Flowing"
+  await renderDay(datedDay.path)
   return { env, plugin }
 }
 

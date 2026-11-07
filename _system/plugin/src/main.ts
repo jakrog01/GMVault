@@ -15,7 +15,8 @@ import { AddPlayersModal, CreaturePickerModal, EncounterNameModal, EncounterNote
 import { QuickNpcModal } from "./quick-npc";
 import { wrapUp } from "./wrap-up";
 import { TimelineView, TIMELINE_VIEW } from "./timeline";
-import { createNote, linkTarget, noteFields, pathLink, resolveLink } from "./notes";
+import { SESSIONS_FOLDER, createNote, linkTarget, noteFields, pathLink, resolveLink } from "./notes";
+import { DayBlock } from "./day";
 import { MapBlock, MapPanel, MapView, MAP_VIEW } from "./map";
 import { HOME_TYPES, MAP_TYPES } from "./contract";
 import { GameContext, contextStamp, resolveGameContext } from "./context";
@@ -75,6 +76,9 @@ export default class TableTools extends Plugin {
       const path = source.match(/^note:\s*(.+)$/m)?.[1];
       const owner = path ? this.app.metadataCache.getFirstLinkpathDest(linkTarget(path), context.sourcePath) : this.app.vault.getAbstractFileByPath(context.sourcePath);
       if (owner instanceof TFile) context.addChild(new MapBlock(element, this.app, this, owner.path));
+    });
+    this.registerMarkdownCodeBlockProcessor("gmvault-day", (_source, element, context) => {
+      context.addChild(new DayBlock(element, this, context.sourcePath));
     });
     this.addRibbonIcon("home", s.ribbonHome, () => this.openHome());
     this.addRibbonIcon("swords", s.ribbonCombat, () => void this.openView(COMBAT_VIEW));
@@ -304,7 +308,11 @@ export default class TableTools extends Plugin {
     const folder = run.parent?.path ?? run.path.slice(0, run.path.lastIndexOf("/"));
     const now = new Date();
     const date = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
-    const file = await createNote(this.app, { template: "session", folder, name: `Session ${date}`, values: { type: "session", run: `"[[${folder}/Run]]"`, date }, date });
+    const day = this.app.vault.getAbstractFileByPath(`${folder}/World Day.md`);
+    const worldDate = day instanceof TFile ? String(noteFields(this.app, day).world_date ?? "") : "";
+    const values: Record<string, string> = { type: "session", run: `"[[${folder}/Run]]"`, date };
+    if (worldDate) values.world_date = JSON.stringify(worldDate);
+    const file = await createNote(this.app, { template: "session", folder: `${folder}/${SESSIONS_FOLDER}`, name: `Session ${date}`, values, date });
     await this.app.workspace.openLinkText(file.path, "");
   }
   openQuickNpc(): void { new QuickNpcModal(this.app, this).open(); }

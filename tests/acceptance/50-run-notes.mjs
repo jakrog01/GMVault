@@ -27,14 +27,14 @@ test("New session creates dated, linked notes without Templater commands", async
   const { plugin, button } = await home(env)
   assert.ok(button)
   await button.click()
-  const first = `Runs/Harbor/Session ${today()}.md`
+  const first = `Runs/Harbor/Sessions/Session ${today()}.md`
   await until(() => env.files.has(first), 2000, "first session")
   const content = env.files.get(first).content
   assert.match(content, /^---\ntype: session\nrun: "\[\[Runs\/Harbor\/Run\]\]"\ndate: \d{4}-\d{2}-\d{2}\nworld_date: ""\n---/)
-  assert.ok(content.includes("![[Runs/Harbor/World Day]]"))
+  assert.ok(content.includes("```gmvault-day"))
   assert.equal(content.includes("<%"), false)
   await button.click()
-  await until(() => env.files.has(`Runs/Harbor/Session ${today()} 2.md`), 2000, "second session")
+  await until(() => env.files.has(`Runs/Harbor/Sessions/Session ${today()} 2.md`), 2000, "second session")
   await unload(plugin)
 })
 
@@ -44,7 +44,7 @@ test("a local session template overrides the shipped template", async () => {
   env.adapterFiles.set("_local/templates/session.md", "---\ntype: other\nrun: wrong\ndate: old\n---\n\n# <% tp.file.title %>\n\n## Local plan\n")
   const { plugin, button } = await home(env)
   await button.click()
-  const file = `Runs/Harbor/Session ${today()}.md`
+  const file = `Runs/Harbor/Sessions/Session ${today()}.md`
   await until(() => env.files.has(file), 2000, "local session")
   const content = env.files.get(file).content
   assert.ok(content.includes("## Local plan"))

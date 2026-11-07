@@ -251,18 +251,22 @@ export class MapPanel {
     this.pinLayer.empty();
     pinsOf(this.app, this.owner).forEach((pin, index) => {
       const target = resolveLink(this.app, pin.note, this.owner);
+      // A pin may point at a section of a note ([[Note#K13. Hall]]): label and open that section.
+      const heading = String(pin.note ?? "").match(/#([^|\]]+)/)?.[1]?.trim();
+      const name = heading ?? target?.basename;
       const type = target ? String(noteFields(this.app, target).type ?? "") : "";
       const icon = type === "location" ? "map-pin" : type === "npc" || type === "pc" ? "user" : type === "faction" ? "flag" : type === "event" ? "calendar" : "scroll";
-      const marker = this.pinLayer!.createDiv({ cls: `tt-map-pin${target ? "" : " is-missing"}${target?.path === this.highlight?.path ? " is-highlighted" : ""}`, attr: { title: target?.basename ?? `${this.plugin.strings.mapMissingNote}: ${pin.note}`, "data-index": String(index), tabindex: "0", role: "button" } });
+      const marker = this.pinLayer!.createDiv({ cls: `tt-map-pin${target ? "" : " is-missing"}${target?.path === this.highlight?.path ? " is-highlighted" : ""}`, attr: { title: name ?? `${this.plugin.strings.mapMissingNote}: ${pin.note}`, "data-index": String(index), tabindex: "0", role: "button" } });
       marker.style.left = `${pin.x * 100}%`;
       marker.style.top = `${pin.y * 100}%`;
       const glyph = marker.createSpan("tt-map-pin-icon");
       setIcon(glyph, icon);
-      marker.createSpan({ cls: "tt-map-pin-label", text: target?.basename ?? pin.note });
+      marker.createSpan({ cls: "tt-map-pin-label", text: name ?? pin.note });
       const remove = { label: this.plugin.strings.mapRemovePin, icon: "trash", run: () => void this.writePins(pins => { pins.splice(index, 1); }) };
       marker.onclick = event => {
         event.stopPropagation();
         if (this.suppressPinClick) return;
+        if (target && heading) { void this.app.workspace.openLinkText(`${target.path}#${heading}`, this.owner.path); return; }
         const candidate = target && lookupCandidate(this.app, target);
         if (candidate) new LookupCard(this.app, this.plugin, candidate, undefined, [remove]).open();
         else this.pinMenu(event, target, remove);

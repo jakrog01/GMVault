@@ -154,7 +154,7 @@ test("a new run creates Run, State, and World Day notes, links campaign and part
   assert.equal(runNote.frontmatter.role, "gm")
   assert.equal(runNote.frontmatter.campaign, "[[Campaigns/Glass/Campaign]]")
   assert.equal(runNote.frontmatter.party, "[[Parties/Watch/Party]]")
-  assert.ok(runNote.content.includes("# Glass Friday") && runNote.content.includes("![[Runs/Glass Friday/World Day]]"), runNote.content)
+  assert.ok(runNote.content.includes("# Glass Friday") && runNote.content.includes("```gmvault-day"), runNote.content)
   assert.ok(!runNote.content.includes("<%"))
   assert.ok(!runNote.content.includes("suggester"), "Home writes campaign and party without running Templater")
   assert.equal(env.files.get("Runs/Glass Friday/State.md")?.frontmatter?.type, "state")

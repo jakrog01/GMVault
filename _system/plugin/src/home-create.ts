@@ -1,7 +1,7 @@
 import { App, Modal, Notice, Setting, TFile } from "obsidian";
 import type TableTools from "./main";
 import { HomePanel, folderName } from "./home";
-import { createNote, ensureFolder, isGameNotePath, linkTarget, noteFields, noteStem, quotedLink } from "./notes";
+import { SESSIONS_FOLDER, createNote, ensureFolder, isGameNotePath, linkTarget, noteFields, noteStem, quotedLink } from "./notes";
 abstract class HomeCreateModal extends Modal {
   protected name = "";
   constructor(app: App, protected readonly plugin: TableTools, protected readonly view: HomePanel) { super(app); }
@@ -173,7 +173,8 @@ export class RunModal extends HomeCreateModal {
       party: quotedLink(party),
     });
     await this.app.vault.create(`${folder}/State.md`, `---\ntype: state\nrun: "[[${folder}/Run]]"\n---\n\n# State\n\n## What players know\n\n## World changes\n`);
-    await this.app.vault.create(`${folder}/World Day.md`, "---\ntype: world-day\n---\n\n# World Day\n");
+    await this.app.vault.create(`${folder}/World Day.md`, "---\ntype: world-day\nworld_date: \"\"\n---\n\n# World Day\n\n```gmvault-day\n```\n\n## Notes\n");
+    await ensureFolder(this.app, `${folder}/${SESSIONS_FOLDER}`);
     if (this.makeActive) await this.plugin.setActiveRun(run.path);
     await this.complete(run);
   }

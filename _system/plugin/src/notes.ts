@@ -11,6 +11,15 @@ export const pathLink = (file: TFile | string): string => `[[${noteStem(typeof f
 export const quotedLink = (file: TFile | string): string => JSON.stringify(pathLink(file));
 export const wikilink = (app: App, file: TFile, sourcePath = ""): string => app.metadataCache.getFirstLinkpathDest(file.basename, sourcePath)?.path === file.path ? `[[${file.basename}]]` : pathLink(file);
 export const isBuiltInExcluded = (path: string): boolean => /^(?:Archive|_system|_local|\.obsidian|\.gmvault)(?:\/|$)/.test(path);
+export const SESSIONS_FOLDER = "Sessions";
+/** True when a note sits in a run folder or in its Sessions subfolder. */
+export const inRunFolder = (file: TFile, runFolder: string | undefined): boolean =>
+  !!runFolder && (file.parent?.path === runFolder || file.parent?.path === `${runFolder}/${SESSIONS_FOLDER}`);
+/** Run folder for a note in a run (the run folder itself or its Sessions subfolder). */
+export const runFolderOf = (file: TFile): string => {
+  const folder = file.parent?.path ?? "";
+  return folder.endsWith(`/${SESSIONS_FOLDER}`) ? folder.slice(0, -SESSIONS_FOLDER.length - 1) : folder;
+};
 export const isGameNotePath = (path: string): boolean => !isBuiltInExcluded(path) && !path.split("/").some(part => part.startsWith("."));
 
 export async function ensureFolder(app: App, folder: string): Promise<void> {

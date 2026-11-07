@@ -1,6 +1,6 @@
 import { App, MarkdownRenderChild, MarkdownRenderer, MarkdownView, Modal, SuggestModal, TFile, prepareFuzzySearch } from "obsidian";
 import type TableTools from "./main";
-import { linkTarget, noteFields, wikilink } from "./notes";
+import { inRunFolder, linkTarget, noteFields, wikilink } from "./notes";
 import { NoteAction, noteActions, noteType } from "./actions";
 
 interface Candidate { file: TFile; type: string; context: string; names: string[]; tier: number }
@@ -107,7 +107,7 @@ export class LookupCard extends Modal {
   private async renderMentions(parent: HTMLElement): Promise<void> {
     const run = this.plugin.context();
     if (!run) return;
-    const sessions = this.app.vault.getMarkdownFiles().filter(file => file.parent?.path === run.run.parent?.path && noteFields(this.app, file).type === "session" && this.linked(file))
+    const sessions = this.app.vault.getMarkdownFiles().filter(file => inRunFolder(file, run.run.parent?.path) && noteFields(this.app, file).type === "session" && this.linked(file))
       .sort((a, b) => b.path.localeCompare(a.path)).slice(0, 3);
     for (const file of [run.state, ...sessions]) {
       if (!file) continue;
