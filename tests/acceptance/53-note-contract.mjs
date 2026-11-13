@@ -84,8 +84,9 @@ test("templates and note types are only ever added to, never removed from, since
   const listed = (await exec("git", ["ls-tree", "--name-only", `${tags[0]}:_system/templates`], { cwd: root })).stdout.split("\n").filter(name => name.endsWith(".md"))
   for (const file of listed) {
     const before = keys((await exec("git", ["show", `${tags[0]}:_system/templates/${file}`], { cwd: root })).stdout)
-    const now = keys(await read(`_system/templates/${file}`).catch(() => ""))
-    assert.ok(now.length, `${file} from ${tags[0]} still ships`)
+    const body = await read(`_system/templates/${file}`).catch(() => null)
+    assert.ok(body !== null, `${file} from ${tags[0]} still ships`)
+    const now = keys(body)
     for (const key of before) assert.ok(now.includes(key), `${file} keeps the ${key} field it had in ${tags[0]}`)
   }
 })
