@@ -1,0 +1,41 @@
+name: checks
+
+on:
+  pull_request:
+    branches: [dev, master]
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    if: github.event.repository.is_template
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - run: npm test
+
+  release-version:
+    # Every merge into master is a release, so it must carry a new version.
+    if: github.event.repository.is_template && github.base_ref == 'master'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Version is new and has a changelog entry
+        run: |
+          version=$(tr -d '[:space:]' < _system/VERSION)
+          latest=$(git tag --list 'v*' --sort=-v:refname | head -n1 | sed 's/^v//')
+          echo "VERSION=$version, latest tag=v$latest"
+          if git rev-parse -q --verify "refs/tags/v$version" >/dev/null; then
+            echo "::error file=_system/VERSION::v$version is already tagged; bump _system/VERSION"; exit 1
+          fi
+          if [ -n "$latest" ] && [ "$(printf '%s\n%s\n' "$latest" "$version" | sort -V | tail -n1)" != "$version" ]; then
+            echo "::error file=_system/VERSION::$version is not newer than v$latest"; exit 1
+          fi
+          if ! grep -qx "## $version" CHANGELOG.md; then
+            echo "::error file=CHANGELOG.md::CHANGELOG.md has no '## $version' section"; exit 1
+          fi

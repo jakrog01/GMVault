@@ -116,7 +116,7 @@ test("every relative link and heading anchor in the manual resolves", async () =
   }
 })
 
-test("a workflow builds the site on every push and publishes it only for a release tag", async () => {
+test("a workflow builds the site on every push and publishes it only for a new release", async () => {
   const files = await readdir(path.join(repository, ".github/workflows"))
   const workflows = Object.fromEntries(await Promise.all(files.map(async name => [name, await read(`.github/workflows/${name}`)])))
   const building = Object.entries(workflows).filter(([, body]) => body.includes("mkdocs build"))
@@ -128,7 +128,7 @@ test("a workflow builds the site on every push and publishes it only for a relea
   const publishing = Object.entries(workflows).filter(([, body]) => body.includes("actions/deploy-pages"))
   assert.ok(publishing.length, "a workflow publishes the site to Pages")
   const [, publish] = publishing[0]
-  assert.ok(/tags:\s*\['v\*'\]|startsWith\(github\.ref, 'refs\/tags\/v'\)/.test(publish), "publishing happens for a release tag")
+  assert.ok(/tags:\s*\['v\*'\]|startsWith\(github\.ref, 'refs\/tags\/v'\)|outputs\.released == 'true'/.test(publish), "publishing happens only for a new release")
   assert.ok(/permissions:[\s\S]*pages:\s*write/.test(publish), "the publishing job may write Pages")
   assert.ok(/permissions:[\s\S]*id-token:\s*write/.test(publish), "the publishing job may claim its Pages identity")
   assert.ok(/needs:\s*\[?\s*(package|build)/.test(publish), "publishing waits for the job that runs the tests or builds the site")

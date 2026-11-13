@@ -74,7 +74,15 @@ test("the workflow builds the manifest package after tests", async () => {
   const workflow = await read(".github/workflows/release.yml")
   assert.ok(workflow.indexOf("npm test") < workflow.indexOf("package-release.mjs"))
   assert.ok(workflow.includes("GMVault.zip"))
-  assert.ok(/tags:\s*\['v\*'\]/.test(workflow))
+  assert.ok(/branches:\s*\[\s*master\s*\]/.test(workflow), "a push to master releases")
+  assert.ok(workflow.includes("tag_name: v${{ steps.version.outputs.version }}"), "the release tags the version from _system/VERSION")
+})
+
+test("pull requests into master must carry a new, documented version", async () => {
+  const checks = await read(".github/workflows/checks.yml")
+  assert.ok(/pull_request:\s*\n\s*branches:\s*\[\s*dev,\s*master\s*\]/.test(checks), "checks run on PRs into dev and master")
+  assert.ok(checks.includes("npm test"))
+  assert.ok(checks.includes("github.base_ref == 'master'") && checks.includes("_system/VERSION") && checks.includes("CHANGELOG.md"), "PRs into master check the version")
 })
 
 test("the archive contains only manifest paths", async () => {
