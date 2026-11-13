@@ -1,5 +1,11 @@
 # Changelog
 
+## 2.8.1
+
+- First published release of the 2.8 line: 2.8.0 was tagged but not published because a release check failed. 2.8.1 contains everything listed under 2.8.0.
+- GMVault releases are cut by merging `dev` into `master`; the release workflow tags the version itself.
+- Fixed the release check that treated a template without frontmatter (`auto.md`) as removed.
+
 ## 2.8.0
 
 - GMVault system packages declare their mechanics, world, campaign, and suggested lore folders. Templater uses one layout dispatcher.
