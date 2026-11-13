@@ -6,6 +6,7 @@ import { ChatMessage, Settings } from "./types";
 import { declarations, VaultTools } from "./tools";
 import { compareRuleHits } from "./indexer";
 import { isGameNotePath, noteStem } from "./notes";
+import { daySummary, describeRunDay } from "./day";
 
 export const ASSISTANT_VIEW = "tt-assistant";
 
@@ -241,7 +242,10 @@ export class AssistantView extends ItemView {
       const day = await read(settings.worldDayPath || run?.day?.path || "");
       if (day) {
         pinned.add(settings.worldDayPath || run?.day?.path || "");
-        add(`## World day\n${cap(day.replace(/^---[\s\S]*?---\s*/, ""), 500, run?.day?.path ?? "")}`);
+        const dayFile = this.app.vault.getAbstractFileByPath(settings.worldDayPath || run?.day?.path || "");
+        const info = dayFile instanceof TFile ? await describeRunDay(this.plugin, dayFile) : null;
+        const today = info ? `${daySummary(this.plugin, info)}\n\n` : "";
+        add(`## World day\n${today}${cap(day.replace(/^---[\s\S]*?---\s*/, "").replace(/```gmvault-day[\s\S]*?```\s*/, ""), 500, run?.day?.path ?? "")}`);
       }
     }
     if (settings.includeCombat) {

@@ -87,10 +87,10 @@ test("overlapping refreshes never duplicate cards", async () => {
   const modal = env.modals.at(-1)
   env.settingByName(modal.contentEl, plugin.strings.homeFieldName).components[0].change("Sunken Crown")
   await env.buttonComponent(modal.contentEl, plugin.strings.homeCreate).click()
-  await until(() => env.files.has("Campaigns/Sunken Crown/Campaign.md"), 2000, "created")
+  await until(() => env.files.has("Library/generic/Campaigns/Sunken Crown/Campaign.md"), 2000, "created")
   await sleep(600)
   const cards = byClass(view.contentEl, "tt-home-campaign").map(element => element.attributes["data-path"])
-  assert.deepEqual(cards.sort(), ["Campaigns/Glass/Campaign.md", "Campaigns/Sunken Crown/Campaign.md"])
+  assert.deepEqual(cards.sort(), ["Campaigns/Glass/Campaign.md", "Library/generic/Campaigns/Sunken Crown/Campaign.md"])
   await unload(plugin)
 })
 

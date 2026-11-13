@@ -1,0 +1,1 @@
+<%* { const kind = await tp.user.gmvault_layout(tp, "template"); if (kind) { const local = `_local/templates/${kind}.md`; const source = app.vault.getAbstractFileByPath(local) ? local : `_system/templates/${kind}.md`; tR += await tp.file.include(`[[${source}]]`); } } %>

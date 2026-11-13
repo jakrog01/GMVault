@@ -10,7 +10,7 @@ Each `Runs/<run>/` folder keeps the run record, current state, world day, and se
 ---
 type: run
 role: gm
-campaign: "[[Campaigns/Glass/Campaign]]"
+campaign: "[[Library/generic/Campaigns/Glass/Campaign]]"
 party: "[[Parties/Watch/Party]]"
 ---
 ```

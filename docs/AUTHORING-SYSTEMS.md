@@ -1,23 +1,35 @@
 # Game systems
 
-Start an experimental system package under `_local`, then ship it only when it contains structure rather than published rules text or published statblocks. A shipped package lives at `_system/systems/<id>/package.json`; its `id` and `name` identify the system.
+A package lives at `_system/systems/<id>/package.json`. It names the system, declares `noteTypes` and `requiredFrontmatter`, and describes folders in `layout`. The package contains structure, not published rules text or statblocks. Keep actual notes in `Library/<system>/`.
 
-## Describe shapes and fields
+## Layout
 
-The package's `noteTypes` lists the note shapes it supports. Its `requiredFrontmatter` maps a shape to the fields that must be present, such as `system` for a campaign or creature and `role` plus `campaign` for a run. These fields let the vault recognise the note without copying game rules into the package.
+`layout.mechanics`, `layout.world`, and `layout.campaign` are lists of `{ "folder": "...", "type": "..." }` entries. A folder may contain `/`. The longest matching folder wins. Each type must be in `noteTypes`. An optional `nested` type applies to child notes under a named parent folder; the folder's own note keeps the main type. For example, `Classes/Wizard/Wizard.md` is a class and `Classes/Wizard/Evoker.md` is a subclass.
 
-Keep shapes small and explicit. A package may describe a creature, spell, item, class, subclass, race, background, feat, campaign, party, run, or another supported note kind, but it should not embed a rulebook, monster entry, or other published rules material. Put a user's actual mechanics notes in `Library/<system>/Mechanics/`. Use `Classes/`, `Races/`, `Backgrounds/`, and `Feats/` for character options, alongside `Spells/`, `Bestiary/`, `Items/`, and `Rules/`. A subrace uses `type: race` with `subtype: subrace` and a `race` link to its parent. A subclass uses `type: subclass` and a `class` link. Worlds for that system live in `Library/<system>/Worlds/`. The older `Library/Mechanics/<system>/` path remains supported.
+`create` is optional. New world and New campaign create top-level listed folders by default and skip entries with `/`. Set `create` explicitly to change that. `layout.lore` lists suggested categories; Home does not create them. The generic package supplies any omitted layout lists.
 
-Use the same field names in templates and examples so a newly created note passes its expected shape without manual repair.
+The D&D 5e package uses Classes, Races, Backgrounds, Feats, Spells, Items, and Rules. The One Ring 2e package uses Callings, Cultures, Virtues, Rewards, Items, and Rules. Creatures belong in a world or campaign's `Lore/Creatures/`. Legacy Bestiary folders remain readable.
 
-## Templates, bases, and radar
+## Local overrides
 
-Add a template rule for every new note type so the matching path receives the intended template. Use path-qualified links for contractual names that can occur in more than one place.
+`_local/systems/<id>/package.json` merges with the shipped package. A local file can contain only a layout section. Each present layout key replaces the shipped list wholesale. For example, to rename The One Ring folders, put this in `_local/systems/tor2e/package.json`:
 
-Decide whether the shape contributes to the GM radar's campaign, party, run, or shared context, or to the player radar's recorded claims. Bulk mechanics folders can be searchable while excluded from radar completeness checks; do not make an authoring shortcut that turns player claims into GM truth.
+```json
+{
+  "layout": {
+    "mechanics": [
+      {"folder":"Rules","type":"rules"},
+      {"folder":"Callings","type":"class"},
+      {"folder":"Cultures","type":"race"},
+      {"folder":"Virtues","type":"feat"},
+      {"folder":"Treasures","type":"item"}
+    ]
+  }
+}
+```
 
-Keep package metadata, template rules, bases, and radar expectations together in the release review so their contracts stay aligned.
+Here `Treasures` replaces `Rewards` and `Items`; include every mechanics folder you still want. A local id with no shipped package needs a full package.
 
-Run `node _system/bin/gmvault.mjs doctor` after changing a package, template rule, or base. It verifies roots, owned paths, and other vault contracts before the system is shipped.
+## Templates, radar, and checks
 
-Fix every reported contract violation before publishing the package.
+Templater dispatches from the merged layout and includes `_local/templates/<kind>.md` before the shipped template. Use path-qualified links for `World.md` and `Campaign.md`. Radar checks use `requiredFrontmatter` from the merged package. Run `node _system/bin/gmvault.mjs doctor` to check layout types and vault contracts.

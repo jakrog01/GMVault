@@ -27,10 +27,10 @@ assert.equal(new Set(plugin.commands.map(item => item.name)).size, plugin.comman
 await command("new-session").callback()
 const now = new Date()
 const date = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`
-for (let attempt = 0; attempt < 100 && !files.has(`Runs/Harbor/Session ${date}.md`); attempt++) await new Promise(resolve => setTimeout(resolve, 0))
-assert.ok(files.has(`Runs/Harbor/Session ${date}.md`))
-assert.equal(opened.at(-1), `Runs/Harbor/Session ${date}.md`)
-assert.ok(files.get(`Runs/Harbor/Session ${date}.md`).content.includes("[[Runs/Harbor/Run]]"))
+for (let attempt = 0; attempt < 100 && !files.has(`Runs/Harbor/Sessions/Session ${date}.md`); attempt++) await new Promise(resolve => setTimeout(resolve, 0))
+assert.ok(files.has(`Runs/Harbor/Sessions/Session ${date}.md`))
+assert.equal(opened.at(-1), `Runs/Harbor/Sessions/Session ${date}.md`)
+assert.ok(files.get(`Runs/Harbor/Sessions/Session ${date}.md`).content.includes("[[Runs/Harbor/Run]]"))
 
 workspace.activeFile = goblin
 assert.equal(command("note-actions").checkCallback(true), true)

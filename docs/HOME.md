@@ -57,16 +57,16 @@ The top of the view has **New world**, **New campaign**, **New party**, and **Ne
 
 ### New world
 
-Asks for **Name**. It creates `Worlds/<name>/World.md` and `NPCs/`, `Locations/`, `Factions/`, `Lore/`, and `Events/`.
+Asks for **Name** and **System**. It creates `Library/<system>/Worlds/<name>/World.md` and the package's top-level world folders. Lore categories are suggestions and are not pre-created.
 
 ### New campaign
 
-Asks for **Name**, **System**, and **World**. Choose a world note or **No world**. The System dropdown lists installed system packages and starts with `generic` when available.
+Asks for **Name**, **System**, and **World**. Choose a world note or **No world**. The System dropdown lists installed system packages and starts with `generic` when available. The World dropdown shows worlds of the selected system; choosing a world also selects its system.
 
 It creates:
 
 ```text
-Campaigns/<name>/
+Library/<system>/Campaigns/<name>/
 |-- Campaign.md     type: campaign, with the chosen system and world link
 |-- Quests/
 |-- Encounters/

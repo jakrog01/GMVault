@@ -1,139 +1,30 @@
 {
+  "data_version": 2,
+  "command_timeout": 5,
   "templates_folder": "_system/templates",
+  "templates_pairs": [],
+  "trigger_on_file_creation_mode": "regex",
+  "auto_jump_to_cursor": true,
+  "jump_to_cursor_after_file_name": false,
+  "shell_path": "",
   "user_scripts_folder": "_system/scripts",
   "folder_templates": [],
   "file_templates": [
     {
-      "regex": "^Library/[^/]+/Worlds/[^/]+/World\\.md$",
-      "template": "_system/templates/world.md"
-    },
-    {
-      "regex": "^Library/[^/]+/Worlds/[^/]+/NPCs/",
-      "template": "_system/templates/npc.md"
-    },
-    {
-      "regex": "^Library/[^/]+/Worlds/[^/]+/Locations/",
-      "template": "_system/templates/location.md"
-    },
-    {
-      "regex": "^Library/[^/]+/Worlds/[^/]+/Factions/",
-      "template": "_system/templates/faction.md"
-    },
-    {
-      "regex": "^Library/[^/]+/Worlds/[^/]+/Lore/",
-      "template": "_system/templates/lore.md"
-    },
-    {
-      "regex": "^Library/[^/]+/Worlds/[^/]+/Events/",
-      "template": "_system/templates/event.md"
-    },
-    {
-      "regex": "^Library/[^/]+/Mechanics/Spells/",
-      "template": "_system/templates/spell.md"
-    },
-    {
-      "regex": "^Library/[^/]+/Mechanics/Bestiary/",
-      "template": "_system/templates/creature.md"
-    },
-    {
-      "regex": "^Library/[^/]+/Mechanics/Items/",
-      "template": "_system/templates/item.md"
-    },
-    {
-      "regex": "^Library/[^/]+/Mechanics/Classes/([^/]+)/\\1\\.md$",
-      "template": "_system/templates/class.md"
-    },
-    {
-      "regex": "^Library/[^/]+/Mechanics/Classes/[^/]+\\.md$",
-      "template": "_system/templates/class.md"
-    },
-    {
-      "regex": "^Library/[^/]+/Mechanics/Classes/[^/]+/[^/]+\\.md$",
-      "template": "_system/templates/subclass.md"
-    },
-    {
-      "regex": "^Library/[^/]+/Mechanics/Races/",
-      "template": "_system/templates/race.md"
-    },
-    {
-      "regex": "^Library/[^/]+/Mechanics/Backgrounds/",
-      "template": "_system/templates/background.md"
-    },
-    {
-      "regex": "^Library/[^/]+/Mechanics/Feats/",
-      "template": "_system/templates/feat.md"
-    },
-    {
-      "regex": "^Library/[^/]+/Mechanics/Rules/",
-      "template": "_system/templates/rules.md"
-    },
-    {
-      "regex": "^Worlds/[^/]+/World\\.md$",
-      "template": "_system/templates/world.md"
-    },
-    {
-      "regex": "^Worlds/[^/]+/NPCs/",
-      "template": "_system/templates/npc.md"
-    },
-    {
-      "regex": "^Worlds/[^/]+/Locations/",
-      "template": "_system/templates/location.md"
-    },
-    {
-      "regex": "^Worlds/[^/]+/Factions/",
-      "template": "_system/templates/faction.md"
-    },
-    {
-      "regex": "^Worlds/[^/]+/Lore/",
-      "template": "_system/templates/lore.md"
-    },
-    {
-      "regex": "^Worlds/[^/]+/Events/",
-      "template": "_system/templates/event.md"
-    },
-    {
-      "regex": "^Campaigns/[^/]+/NPCs/",
-      "template": "_system/templates/npc.md"
-    },
-    {
-      "regex": "^Campaigns/[^/]+/Locations/",
-      "template": "_system/templates/location.md"
-    },
-    {
-      "regex": "^Campaigns/[^/]+/Quests/",
-      "template": "_system/templates/quest.md"
-    },
-    {
-      "regex": "^Campaigns/[^/]+/Factions/",
-      "template": "_system/templates/faction.md"
-    },
-    {
-      "regex": "^Campaigns/[^/]+/Lore/",
-      "template": "_system/templates/lore.md"
-    },
-    {
-      "regex": "^Campaigns/[^/]+/Events/",
-      "template": "_system/templates/event.md"
-    },
-    {
-      "regex": "^Campaigns/[^/]+/Encounters/",
-      "template": "_system/templates/encounter.md"
-    },
-    {
-      "regex": "^Campaigns/[^/]+/Handouts/",
-      "template": "_system/templates/handout.md"
+      "regex": "^Library/[^/]+/",
+      "template": "_system/templates/auto.md"
     },
     {
       "regex": "^Runs/[^/]+/Run\\.md$",
       "template": "_system/templates/run.md"
     },
     {
-      "regex": "^Runs/[^/]+/[^/]+\\.md$",
+      "regex": "^Runs/[^/]+/Sessions/[^/]+\\.md$",
       "template": "_system/templates/session.md"
     },
     {
-      "regex": "^Campaigns/[^/]+/Campaign\\.md$",
-      "template": "_system/templates/campaign.md"
+      "regex": "^Runs/[^/]+/[^/]+\\.md$",
+      "template": "_system/templates/session.md"
     },
     {
       "regex": "^Parties/[^/]+/Party\\.md$",
@@ -144,48 +35,19 @@
       "template": "_system/templates/pc.md"
     },
     {
-      "regex": "^Library/Mechanics/[^/]+/Spells/",
-      "template": "_system/templates/spell.md"
+      "regex": "^Campaigns/",
+      "template": "_system/templates/auto.md"
     },
     {
-      "regex": "^Library/Mechanics/[^/]+/Bestiary/",
-      "template": "_system/templates/creature.md"
-    },
-    {
-      "regex": "^Library/Mechanics/[^/]+/Items/",
-      "template": "_system/templates/item.md"
-    },
-    {
-      "regex": "^Library/Mechanics/[^/]+/Classes/([^/]+)/\\1\\.md$",
-      "template": "_system/templates/class.md"
-    },
-    {
-      "regex": "^Library/Mechanics/[^/]+/Classes/[^/]+\\.md$",
-      "template": "_system/templates/class.md"
-    },
-    {
-      "regex": "^Library/Mechanics/[^/]+/Classes/[^/]+/[^/]+\\.md$",
-      "template": "_system/templates/subclass.md"
-    },
-    {
-      "regex": "^Library/Mechanics/[^/]+/Races/",
-      "template": "_system/templates/race.md"
-    },
-    {
-      "regex": "^Library/Mechanics/[^/]+/Backgrounds/",
-      "template": "_system/templates/background.md"
-    },
-    {
-      "regex": "^Library/Mechanics/[^/]+/Feats/",
-      "template": "_system/templates/feat.md"
-    },
-    {
-      "regex": "^Library/Mechanics/[^/]+/Rules/",
-      "template": "_system/templates/rules.md"
+      "regex": "^Worlds/",
+      "template": "_system/templates/auto.md"
     }
   ],
-  "trigger_on_file_creation": true,
-  "trigger_on_file_creation_mode": "regex",
+  "syntax_highlighting": true,
+  "syntax_highlighting_mobile": false,
+  "enabled_templates_hotkeys": [],
+  "startup_templates": [],
+  "intellisense_render": "1",
   "ignore_folders_on_creation": [
     {
       "folder": "_system"
@@ -196,5 +58,6 @@
     {
       "folder": ".gmvault"
     }
-  ]
+  ],
+  "trigger_on_file_creation": true
 }

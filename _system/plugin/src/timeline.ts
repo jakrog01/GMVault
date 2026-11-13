@@ -1,6 +1,6 @@
 import { ItemView, TFile, WorkspaceLeaf } from "obsidian";
 import type TableTools from "./main";
-import { createNote, isGameNotePath, linkTarget, noteFields, quotedLink, resolveLink } from "./notes";
+import { createNote, inRunFolder, isGameNotePath, linkTarget, noteFields, quotedLink, resolveLink } from "./notes";
 
 export const TIMELINE_VIEW = "tt-timeline";
 
@@ -35,7 +35,7 @@ export class TimelineView extends ItemView {
       const folder = file.parent?.path ?? "";
       const event = type === "event" && (belongs(fields.world, file, world) || belongs(fields.campaign, file, campaign)
         || (!linkTarget(fields.world) && !linkTarget(fields.campaign) && (folder.startsWith(`${campaign.parent?.path}/`) || !!world && folder.startsWith(`${world.parent?.path}/`))));
-      const session = type === "session" && (belongs(fields.run, file, context.run) || !linkTarget(fields.run) && folder === context.run.parent?.path);
+      const session = type === "session" && (belongs(fields.run, file, context.run) || !linkTarget(fields.run) && inRunFolder(file, context.run.parent?.path));
       if (!event && !session) return [];
       const worldDate = String(fields.world_date ?? "");
       return [{ file, type: session ? "session" as const : "event" as const, worldDate, date: session ? String(fields.date ?? "") : "", sort: timelineDate(worldDate) }];

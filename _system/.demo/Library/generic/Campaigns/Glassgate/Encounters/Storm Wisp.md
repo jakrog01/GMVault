@@ -1,10 +1,10 @@
 ---
 type: encounter
 origin: demo
-campaign: "[[Campaigns/Glassgate/Campaign]]"
+campaign: "[[Library/generic/Campaigns/Glassgate/Campaign]]"
 location: "[[Library/generic/Worlds/Glass Coast/Locations/Storm Gate]]"
 creatures:
-  - creature: "[[Library/generic/Mechanics/Bestiary/Storm Wisp]]"
+  - creature: "[[Library/generic/Worlds/Glass Coast/Lore/Creatures/Storm Wisp]]"
     count: 2
 ---
 

@@ -189,6 +189,7 @@ export function createEnvironment() {
     constructor(containerEl) { this.containerEl = containerEl }
     load() { this.onload?.() }
     unload() { this.onunload?.() }
+    registerEvent(ref) { (this.events ??= []).push(ref) }
   }
   class PluginSettingTab { constructor(app) { this.app = app; this.containerEl = new MockElement("div") } }
 

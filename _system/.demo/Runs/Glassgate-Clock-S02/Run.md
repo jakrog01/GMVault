@@ -2,7 +2,7 @@
 type: run
 origin: demo
 role: gm
-campaign: "[[Campaigns/Glassgate/Campaign]]"
+campaign: "[[Library/generic/Campaigns/Glassgate/Campaign]]"
 party: "[[Parties/Clockmakers/Party]]"
 ---
 

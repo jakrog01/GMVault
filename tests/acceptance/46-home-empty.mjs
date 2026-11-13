@@ -77,7 +77,7 @@ test("New campaign then Create writes and lists the first campaign", async () =>
   await until(() => env.buttonComponent(modal.contentEl, plugin.strings.homeCreate), 2000, "campaign form")
   env.settingByName(modal.contentEl, plugin.strings.homeFieldName).components[0].change("First Light")
   await env.buttonComponent(modal.contentEl, plugin.strings.homeCreate).click()
-  const target = "Campaigns/First Light/Campaign.md"
+  const target = "Library/generic/Campaigns/First Light/Campaign.md"
   await until(() => env.files.has(target), 2000, "campaign written")
   assert.equal(env.files.get(target).frontmatter.type, "campaign")
   assert.equal(env.files.get(target).frontmatter.system, "generic")

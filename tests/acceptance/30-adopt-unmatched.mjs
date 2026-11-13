@@ -26,7 +26,8 @@ function adopt(vault, source, map) {
   return new Promise(async resolve => {
     const mapPath = path.join(os.tmpdir(), `gmvault-adopt22-map-${process.pid}-${Date.now()}.json`)
     await writeFile(mapPath, JSON.stringify(map))
-    execFile("node", [path.join(vault, "_system/bin/gmvault.mjs"), "adopt", source, "--map", mapPath], { cwd: vault, timeout: 60000 }, (error, stdout, stderr) => {
+    execFile("node", [path.join(vault, "_system/bin/gmvault.mjs"), "adopt", source, "--map", mapPath], { cwd: vault, timeout: 60000 }, async (error, stdout, stderr) => {
+      await rm(mapPath, { force: true })
       resolve({ code: error ? (error.code ?? 1) : 0, stdout, stderr })
     })
   })

@@ -27,11 +27,11 @@ Every GMVault note is identified by its `type` frontmatter. Folders are a recomm
 | `world` | A setting shared by campaigns | `calendar` |
 | `campaign` | A story told in a world | `world`, `system`, `calendar` |
 | `party` | A group of player characters | `campaign` |
-| `pc` | A player character | `party`, `player`, `class`, `level`, `ac`, `hp`, `init_mod` |
+| `pc` | A player character | `party`, `player`, `species`, `class`, `subclass`, `background`, `alignment`, `level`, `ac`, `hp`, `hp_max`, `speed`, `init_mod`, `prof_bonus`, `passive_perception`, `spell_dc`, `str`, `dex`, `con`, `int`, `wis`, `cha` |
 | `run` | One table playing a campaign with a party | `campaign`, `party`, `role` |
 | `session` | One play session | `run`, `date`, `world_date` |
 | `state` | Lasting facts and resources of a run | `run` |
-| `world-day` | The current in-world date of a run | `run` |
+| `world-day` | The current in-world date of a run | `run`, `world_date` |
 | `npc` | A non-player character | `world` or `campaign`, `faction`, `location`, `status` |
 | `location` | A place | `world` or `campaign`, `location` (parent place), `status` |
 | `faction` | A group or organisation | `world` or `campaign`, `status` |
@@ -74,3 +74,8 @@ A note in another folder with a correct `type` and links is equally valid. An `n
 ## Consequences
 
 Existing notes keep working without a migration. Assistant scope, party members, and combat players move from path and body rules to `type` and links, with the old rules kept as fallbacks. New types arrive as templates and create buttons; features that use them, such as timelines or encounter notes in the combat tracker, can follow in later releases without changing notes. An acceptance test pins the contract: every shipped template has a known `type`, and every relation field it writes is listed here.
+
+## Addendum: world calendars and session folders
+
+- A world's `calendar` names a Calendarium calendar. Each run keeps its own date in `World Day.md` as `world_date: YYYY-MM-DD`, where the month is the 1-based index into that calendar's month list (intercalary days included), so dates sort as plain numbers. The `gmvault-day` block shows and changes it (holiday, season, moons, weather). New sessions copy the run's `world_date`.
+- New sessions are created in `Runs/<run>/Sessions/`. Sessions directly in the run folder are still read.

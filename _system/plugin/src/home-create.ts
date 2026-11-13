@@ -1,7 +1,7 @@
 import { App, Modal, Notice, Setting, TFile } from "obsidian";
 import type TableTools from "./main";
 import { HomePanel, folderName } from "./home";
-import { createNote, ensureFolder, isGameNotePath, linkTarget, noteFields, noteStem, quotedLink } from "./notes";
+import { SESSIONS_FOLDER, createNote, ensureFolder, isGameNotePath, linkTarget, noteFields, noteStem, quotedLink } from "./notes";
 abstract class HomeCreateModal extends Modal {
   protected name = "";
   constructor(app: App, protected readonly plugin: TableTools, protected readonly view: HomePanel) { super(app); }
@@ -55,7 +55,8 @@ export class WorldModal extends HomeCreateModal {
     const folder = `Library/${this.system}/Worlds/${name}`;
     if (!this.folderAvailable(folder)) { new Notice(this.plugin.strings.homeExists); return; }
     const file = await this.createFromTemplate("world", folder, "World.md", { type: "world", system: this.system });
-    for (const section of ["Locations", "Factions", "NPCs", "Events", "Mechanics", "Lore", ...["Religion", "History", "Culture", "Peoples", "Languages", "Magic", "Cosmology", "Economy", "Creatures", "Other"].map(name => `Lore/${name}`)]) await ensureFolder(this.app, `${folder}/${section}`);
+    const pkg = await this.plugin.systemPackage(this.system);
+    for (const entry of pkg.layout.world.filter((item: { folder: string; create?: boolean }) => item.create ?? !item.folder.includes("/"))) await ensureFolder(this.app, `${folder}/${entry.folder}`);
     await this.complete(file);
   }
 }
@@ -84,16 +85,26 @@ export class CampaignModal extends HomeCreateModal {
     const systems = await this.plugin.systemPackages();
     if (!systems.some(system => system.id === this.system)) this.system = systems[0]?.id ?? "generic";
     let systemDropdown: { setValue: (value: string) => unknown } | null = null;
+    let worldDropdown: { setValue: (value: string) => unknown; addOption: (value: string, label: string) => unknown } | null = null;
+    const worlds = this.app.vault.getMarkdownFiles().filter(file => isGameNotePath(file.path) && noteFields(this.app, file).type === "world");
+    const updateWorlds = () => {
+      if (!worldDropdown) return;
+      const element = (worldDropdown as any).selectEl as HTMLSelectElement;
+      if (element) element.replaceChildren();
+      worldDropdown.addOption("", this.plugin.strings.homeNoWorld);
+      worlds.filter(file => String(noteFields(this.app, file).system ?? "generic") === this.system).forEach(file => worldDropdown?.addOption(file.path, folderName(file)));
+      if (this.world && !worlds.some(file => file.path === this.world && String(noteFields(this.app, file).system ?? "generic") === this.system)) this.world = "";
+      worldDropdown.setValue(this.world);
+    };
     new Setting(this.contentEl).setName(this.plugin.strings.homeFieldSystem).addDropdown(dropdown => {
       systemDropdown = dropdown;
       systems.forEach(system => dropdown.addOption(system.id, system.name));
-      dropdown.setValue(this.system).onChange(value => { this.system = value; });
+      dropdown.setValue(this.system).onChange(value => { this.system = value; updateWorlds(); });
     });
     new Setting(this.contentEl).setName(this.plugin.strings.homeFieldWorld).addDropdown(dropdown => {
-      dropdown.addOption("", this.plugin.strings.homeNoWorld);
-      this.app.vault.getMarkdownFiles().filter(file => isGameNotePath(file.path) && noteFields(this.app, file).type === "world")
-        .forEach(file => dropdown.addOption(file.path, folderName(file)));
-      dropdown.setValue(this.world).onChange(value => {
+      worldDropdown = dropdown;
+      updateWorlds();
+      dropdown.onChange(value => {
         this.world = value;
         const file = this.app.vault.getAbstractFileByPath(value);
         if (file instanceof TFile) {
@@ -107,11 +118,12 @@ export class CampaignModal extends HomeCreateModal {
   private async create(): Promise<void> {
     const name = this.validName();
     if (!name) return;
-    const folder = `Campaigns/${name}`;
+    const folder = `Library/${this.system}/Campaigns/${name}`;
     if (!this.folderAvailable(folder)) { new Notice(this.plugin.strings.homeExists); return; }
     const world = this.world ? quotedLink(this.world) : '""';
     const file = await this.createFromTemplate("campaign", folder, "Campaign.md", { type: "campaign", system: this.system, world });
-    for (const section of this.world ? ["Quests", "Encounters", "Handouts"] : ["NPCs", "Locations", "Quests", "Factions", "Encounters", "Handouts"]) await ensureFolder(this.app, `${folder}/${section}`);
+    const pkg = await this.plugin.systemPackage(this.system);
+    for (const entry of pkg.layout.campaign.filter((item: { folder: string; create?: boolean }) => (item.create ?? !item.folder.includes("/")) && (!this.world || !["NPCs", "Locations", "Factions"].includes(item.folder)))) await ensureFolder(this.app, `${folder}/${entry.folder}`);
     await this.complete(file);
   }
 }
@@ -173,7 +185,8 @@ export class RunModal extends HomeCreateModal {
       party: quotedLink(party),
     });
     await this.app.vault.create(`${folder}/State.md`, `---\ntype: state\nrun: "[[${folder}/Run]]"\n---\n\n# State\n\n## What players know\n\n## World changes\n`);
-    await this.app.vault.create(`${folder}/World Day.md`, "---\ntype: world-day\n---\n\n# World Day\n");
+    await this.app.vault.create(`${folder}/World Day.md`, "---\ntype: world-day\nworld_date: \"\"\n---\n\n# World Day\n\n```gmvault-day\n```\n\n## Notes\n");
+    await ensureFolder(this.app, `${folder}/${SESSIONS_FOLDER}`);
     if (this.makeActive) await this.plugin.setActiveRun(run.path);
     await this.complete(run);
   }

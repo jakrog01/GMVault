@@ -79,14 +79,14 @@ The **Log** panel shows the most recent combat events, including additions, init
 An encounter set is a saved list of source-backed enemies prepared before a session.
 Open **Encounter sets** to load a set, delete one, or **Save the current enemies as a set** with a name and description.
 Loading adds the set's enemies to the current combat; saving stores encounter sets in Table Tools plugin data.
-**Start encounter** on the toolbar (also in **Encounter sets**) loads a `type: encounter` note; **Save as encounter note** saves the current non-player participants. Starting a note loads its `creatures` entries and adds missing party players once. Missing creature links are reported together while valid creatures still load. The note writer creates `Campaigns/<campaign>/Encounters/<name>.md`, adds a number to a duplicate name, groups source-backed creatures as `creature` and `count` entries, and lists manual participants below the title. Each legacy set also has **Save as note** to copy it into a note while keeping the set. An encounter note's **Look up** card has **Start encounter**.
+**Start encounter** on the toolbar (also in **Encounter sets**) loads a `type: encounter` note; **Save as encounter note** saves the current non-player participants. Starting a note loads its `creatures` entries and adds missing party players once. Missing creature links are reported together while valid creatures still load. The note writer creates `Library/<system>/Campaigns/<campaign>/Encounters/<name>.md`, adds a number to a duplicate name, groups source-backed creatures as `creature` and `count` entries, and lists manual participants below the title. Each legacy set also has **Save as note** to copy it into a note while keeping the set. An encounter note's **Look up** card has **Start encounter**.
 **Save to the active note** appends a combat callout with the initiative table and recent log to the active Markdown note.
 If no note is open, the same export is copied to the clipboard and reports **No open note; the combat was copied to the clipboard.**
 
 ## Where creatures and players come from
 
 The **Enemy** picker reads creature notes with `type: creature` and notes inside configured bestiary folders.
-Without an override, those folders are `Library/Mechanics/<system>/Bestiary` and the active campaign's `Mechanics/Bestiary`.
+Without an override, those folders come from creature entries in the system layout, usually world or campaign `Lore/Creatures/`. Legacy `Mechanics/Bestiary/` paths also remain searchable.
 Creatures may use a fenced `statblock` YAML block or a `monster` frontmatter value; the note basename is used when a statblock has no name.
 The **Players** picker reads `type: npc` with `subtype: pc`, plus notes in the active party folder except its folder note and `Party.md`.
 Party frontmatter can provide HP, AC, `init_mod`, and level; missing values can be filled in from the add-players form.

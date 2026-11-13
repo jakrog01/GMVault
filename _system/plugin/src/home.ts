@@ -3,6 +3,7 @@ import type TableTools from "./main";
 import { format } from "./strings";
 import { RecordedUpdate, recordedUpdate, shippedPath } from "./update";
 import { newestRunSession, sessionLinks } from "./wrap-up";
+import { daySummary, describeRunDay } from "./day";
 import { CampaignModal, CharacterModal, PartyModal, RunModal, WorldModal } from "./home-create";
 import { isGameNotePath, linkTarget, noteFields, resolveLink } from "./notes";
 import { HOME_RECENT_TYPES } from "./contract";
@@ -210,10 +211,12 @@ export class HomePanel {
     this.button(nextActions, s.wrapUp, () => void this.plugin.wrapUp());
   }
   private async firstDayLine(file: TFile): Promise<string> {
+    const info = await describeRunDay(this.plugin, file);
+    if (info) return daySummary(this.plugin, info);
     const content = await this.app.vault.cachedRead(file);
     const lines = content.split("\n").map(line => line.trim());
     const body = lines[0] === "---" ? lines.slice((lines.indexOf("---", 1) + 1) || lines.length) : lines;
-    return body.find(line => line && !line.startsWith("#")) ?? "";
+    return body.find(line => line && !line.startsWith("#") && !line.startsWith("```")) ?? "";
   }
   brokenLinks(): { source: string; target: string }[] {
     const cache = this.app.metadataCache as typeof this.app.metadataCache & { unresolvedLinks?: Record<string, Record<string, number>> };

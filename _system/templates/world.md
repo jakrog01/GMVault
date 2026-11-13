@@ -1,6 +1,6 @@
 ---
 type: world
-system: "<%* tR += (parts => parts[0] === "Library" && parts[2] === "Worlds" ? parts[1] : "")(tp.file.folder(true).split("/")) %>"
+system: "<% await tp.user.gmvault_layout(tp, "system") %>"
 calendar: Calendar
 map: ""
 ---

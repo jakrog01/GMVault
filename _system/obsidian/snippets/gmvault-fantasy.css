@@ -214,6 +214,46 @@ body.theme-dark {
   display: none;
 }
 
+/* Tables, rules and quotes inside a stat block use the paper palette, not the page theme. */
+.callout[data-callout="statblock"] .callout-content {
+  --background-secondary: transparent;
+  --background-modifier-border: color-mix(in srgb, var(--rpg-statblock-red) 35%, transparent);
+  --table-header-background: transparent;
+  --table-row-background: transparent;
+  --table-row-alt-background: transparent;
+  --table-header-color: var(--rpg-statblock-red);
+  --table-text-color: var(--rpg-statblock-ink);
+  --rpg-stripe: transparent;
+  --blockquote-border-color: var(--rpg-statblock-red);
+  --hr-color: var(--rpg-statblock-red);
+  --code-background: color-mix(in srgb, var(--rpg-statblock-ink) 8%, transparent);
+  --code-normal: var(--rpg-statblock-ink);
+}
+
+.callout[data-callout="statblock"] table {
+  border: 0;
+  background: transparent;
+}
+
+.callout[data-callout="statblock"] table thead th {
+  border-bottom: 1px solid var(--rpg-statblock-red);
+  background: transparent;
+  color: var(--rpg-statblock-red);
+}
+
+.callout[data-callout="statblock"] table :is(th, td),
+.callout[data-callout="statblock"] table tbody tr,
+.callout[data-callout="statblock"] table tbody tr:nth-child(even) {
+  border-color: transparent;
+  background: transparent;
+  color: var(--rpg-statblock-ink);
+}
+
+.callout[data-callout="statblock"] .callout {
+  border-color: var(--rpg-statblock-red);
+  background: color-mix(in srgb, var(--rpg-statblock-red) 6%, transparent);
+}
+
 body.theme-dark .callout[data-callout="quote"] {
   --callout-color: 212, 162, 76;
 }

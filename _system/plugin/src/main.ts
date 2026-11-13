@@ -15,11 +15,13 @@ import { AddPlayersModal, CreaturePickerModal, EncounterNameModal, EncounterNote
 import { QuickNpcModal } from "./quick-npc";
 import { wrapUp } from "./wrap-up";
 import { TimelineView, TIMELINE_VIEW } from "./timeline";
-import { createNote, linkTarget, noteFields, pathLink, resolveLink } from "./notes";
+import { SESSIONS_FOLDER, createNote, linkTarget, noteFields, pathLink, resolveLink } from "./notes";
+import { DayBlock } from "./day";
 import { MapBlock, MapPanel, MapView, MAP_VIEW } from "./map";
 import { HOME_TYPES, MAP_TYPES } from "./contract";
 import { GameContext, contextStamp, resolveGameContext } from "./context";
 import { TableToolsSettingTab } from "./settings";
+import layout from "../../scripts/gmvault_layout.js";
 interface PluginData { settings: Settings; combat: Combat; encounterSets: EncounterSet[] }
 const STRINGS_OVERRIDE = "_local/plugins/table-tools/strings.json";
 const SCOPE_PATHS = assistantLayerPaths("scope.json");
@@ -36,6 +38,7 @@ export default class TableTools extends Plugin {
   mapPanels = new Set<MapPanel>();
   index!: AssistantIndex;
   skills = new Map<string, Skill>();
+  private packages = new Map<string, any>();
   invalidSkillsKey = "";
   commandRunner = (file: string, args: string[], onOutput: (chunk: string) => void): Promise<number> => {
     return this.runDesktopCommand(file, args, onOutput);
@@ -50,6 +53,7 @@ export default class TableTools extends Plugin {
     await this.loadStrings();
     await this.loadSettings();
     await this.loadScopePolicy();
+    try { await this.systemPackages(); } catch {}
     this.index = new AssistantIndex(this);
     this.index.start();
     this.app.vault.getMarkdownFiles().forEach(file => this.homeChangeAffects(file, file.path));
@@ -75,6 +79,9 @@ export default class TableTools extends Plugin {
       const path = source.match(/^note:\s*(.+)$/m)?.[1];
       const owner = path ? this.app.metadataCache.getFirstLinkpathDest(linkTarget(path), context.sourcePath) : this.app.vault.getAbstractFileByPath(context.sourcePath);
       if (owner instanceof TFile) context.addChild(new MapBlock(element, this.app, this, owner.path));
+    });
+    this.registerMarkdownCodeBlockProcessor("gmvault-day", (_source, element, context) => {
+      context.addChild(new DayBlock(element, this, context.sourcePath));
     });
     this.addRibbonIcon("home", s.ribbonHome, () => this.openHome());
     this.addRibbonIcon("swords", s.ribbonCombat, () => void this.openView(COMBAT_VIEW));
@@ -270,14 +277,13 @@ export default class TableTools extends Plugin {
     this.refreshViews();
     this.notesChanged([this.settings.activePointerPath]);
   }
+  async systemPackage(id: string): Promise<any> {
+    const value = await (layout as any).readPackage(this.app.vault.adapter, id);
+    this.packages.set(id, value);
+    return value;
+  }
   async systemName(id: string): Promise<string> {
-    for (const root of ["_local/", "_system/"]) {
-      try {
-        const value = JSON.parse(await this.app.vault.adapter.read(`${root}systems/${id}/package.json`)) as { name?: unknown };
-        if (typeof value.name === "string" && value.name) return value.name;
-      } catch {}
-    }
-    return id;
+    try { const value = await this.systemPackage(id); return value.name || id; } catch { return id; }
   }
   async systemPackages(): Promise<{ id: string; name: string }[]> {
     const packages = new Map<string, string>();
@@ -294,6 +300,7 @@ export default class TableTools extends Plugin {
     if (!packages.size) packages.set("generic", await this.systemName("generic"));
     return [...packages].map(([id, name]) => ({ id, name })).sort((left, right) => left.name.localeCompare(right.name));
   }
+  layoutPath(file: string): any { return (layout as any).resolve(file, Object.fromEntries(this.packages)); }
   assistant(): AssistantView | undefined {
     return this.app.workspace.getLeavesOfType(ASSISTANT_VIEW)[0]?.view as AssistantView | undefined;
   }
@@ -304,7 +311,11 @@ export default class TableTools extends Plugin {
     const folder = run.parent?.path ?? run.path.slice(0, run.path.lastIndexOf("/"));
     const now = new Date();
     const date = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
-    const file = await createNote(this.app, { template: "session", folder, name: `Session ${date}`, values: { type: "session", run: `"[[${folder}/Run]]"`, date }, date });
+    const day = this.app.vault.getAbstractFileByPath(`${folder}/World Day.md`);
+    const worldDate = day instanceof TFile ? String(noteFields(this.app, day).world_date ?? "") : "";
+    const values: Record<string, string> = { type: "session", run: `"[[${folder}/Run]]"`, date };
+    if (worldDate) values.world_date = JSON.stringify(worldDate);
+    const file = await createNote(this.app, { template: "session", folder: `${folder}/${SESSIONS_FOLDER}`, name: `Session ${date}`, values, date });
     await this.app.workspace.openLinkText(file.path, "");
   }
   openQuickNpc(): void { new QuickNpcModal(this.app, this).open(); }
@@ -326,6 +337,10 @@ export default class TableTools extends Plugin {
     const context = this.context();
     const system = context?.system ?? "generic";
     const world = context?.world.path === context?.campaign.path ? null : context?.world;
-    return [`Library/${system}/Mechanics/Bestiary`, `Library/Mechanics/${system}/Bestiary`, ...(context?.campaign.parent ? [`${context.campaign.parent.path}/Mechanics/Bestiary`] : []), ...(world?.parent ? [`${world.parent.path}/Mechanics/Bestiary`] : [])];
+    const pkg = this.packages.get(system) ?? this.packages.get("generic");
+    const roots = { mechanics: `Library/${system}/Mechanics`, campaign: context?.campaign.parent?.path ?? "", world: world?.parent?.path ?? "" };
+    const paths = (["mechanics", "campaign", "world"] as const).flatMap(section => roots[section] ? (pkg?.layout?.[section] ?? []).filter((entry: any) => entry.type === "creature").map((entry: any) => `${roots[section]}/${entry.folder}`) : []);
+    return [...new Set([...paths, `Library/${system}/Mechanics/Bestiary`, `Library/Mechanics/${system}/Bestiary`, ...(context?.campaign.parent ? [`${context.campaign.parent.path}/Mechanics/Bestiary`] : []), ...(world?.parent ? [`${world.parent.path}/Mechanics/Bestiary`] : [])])];
+
   }
 }

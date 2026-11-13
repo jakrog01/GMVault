@@ -2,7 +2,7 @@
 type: run
 origin: demo
 role: player
-campaign: "[[Campaigns/Glassgate/Campaign]]"
+campaign: "[[Library/generic/Campaigns/Glassgate/Campaign]]"
 ---
 
 # Glassgate Player S01

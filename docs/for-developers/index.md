@@ -8,3 +8,4 @@ These pages explain implementation boundaries and release decisions.
 - [ADR 0002: active run pointer location](../adr/0002-active-pointer-location.md) records the pointer choice.
 - [ADR 0003: assistant retrieval](../adr/0003-assistant-retrieval.md) records retrieval choices.
 - [ADR 0004: note contract](../adr/0004-note-contract.md) records note types, relation fields, and evolution rules.
+- [ADR 0007: system-driven layouts](../adr/0007-system-layouts.md) records package layouts and campaign paths.

@@ -13,7 +13,7 @@ Fix the reported files, then run `doctor` again rather than assuming the first i
 ## `missing content root: <folder>`
 
 Meaning: one of the six declared content roots is absent.
-Usual cause: a root such as `Campaigns/` or `Archive/` was deleted or renamed.
+Usual cause: a required root such as `Library/` or `Archive/` was deleted or renamed.
 Fix: restore the named root at the vault root; it is a user-content folder and can be empty.
 
 ## `undeclared root: <name>`
@@ -105,6 +105,18 @@ Fix: restore the shipped file from a known-good release; keep tracked shipped te
 Meaning: a lone `.gitkeep` or `.gmvault-keep` marks an empty folder that is not declared as a scaffold or content root.
 Usual cause: an empty temporary folder was committed outside the recognised folder layout.
 Fix: remove the placeholder and folder, or move the intended folder under the appropriate declared content root or local layer.
+
+## `invalid system package: <id>`
+
+Meaning: a system package has no `noteTypes` list. A local package for a new id must define the full package.
+
+## `invalid layout type: <id>/<section>/<folder>`
+
+Meaning: a layout entry names a type outside the package's `noteTypes` list. Fix the type or add the contract type to the package.
+
+## `invalid nested type: <id>/<section>/<folder>`
+
+Meaning: a layout entry's nested type is outside `noteTypes`. Fix the nested type or the package list.
 
 ## Common failures outside the doctor catalogue
 

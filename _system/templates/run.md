@@ -7,6 +7,7 @@ party: "<%* { const filesParty = app.vault.getMarkdownFiles().filter(file => fil
 
 # <% tp.file.title %>
 
-![[<% tp.file.folder(true) %>/World Day]]
+```gmvault-day
+```
 
 ## Session log
