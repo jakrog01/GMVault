@@ -37,14 +37,6 @@ Right-click a game note in the file explorer, its tab, or the editor to get the 
 
 ## Combat tracker
 
-## Look up and Quick NPC
-
-Use **Look up** from the ribbon, command palette, or the active run card in Home. Type a name, alias, or folder name. Results from the active run, campaign, party, world, and system appear first. Enter opens a compact card with a note preview and **At this table** references from the run state and recent sessions. **Open** opens the note, **Open to the side** uses another pane, **Insert link** writes a wikilink into the editor you were using, and **Add to combat** adds an NPC or creature. Press Mod+Enter on a result to open its note directly. The card preview uses the first 60 body lines; **More** opens the full note.
-
-Use **Quick NPC** from the command palette or Home's active run card. It starts with a random **Name** and **Trait**; use the dice buttons to reroll. **Where** chooses the linked world's `NPCs/` folder by default, or the campaign's `NPCs/` folder. Press Enter or **Create**. The NPC is created from `_local/templates/npc.md` when present, otherwise `_system/templates/npc.md`. A link is inserted at the previous editor cursor and the current note stays open. Duplicate names get a number suffix.
-
-The shipped name and trait lists are `_system/tables/names.txt` and `_system/tables/traits.txt`. Put one entry per line in `_local/tables/names.txt` or `_local/tables/traits.txt` to replace either list. Non-empty local lists take priority; this is also where to put Polish names. The commands have no default hotkeys. To bind one, open Obsidian Settings, Hotkeys, search for **Look up** or **Quick NPC**, and assign a shortcut.
-
 Open **Combat** from the ribbon, command palette, home card, or the **Open combat** command.
 The toolbar has **Players**, **Enemy**, and **Initiative** for adding party members, adding a bestiary creature, and rolling initiative.
 Before combat starts, **Start** begins round 1 and rolls initiative for participants without one.
@@ -100,6 +92,14 @@ Save an encounter set when a group should recur later.
 Export the combat to an open session note before clearing it.
 The Settings reference documents bestiary, party, hit-point, group-initiative, and attack-roll controls.
 See [Assistant](ASSISTANT.md) for how combat state can be attached to a request.
+
+## Look up and Quick NPC
+
+Use **Look up** from the command palette, a game note's right-click menu, or the active run card in Home. Type a name, alias, or folder name. Results from the active run, campaign, party, world, and system appear first. Enter opens a compact card with a note preview and **At this table** references from the run state and recent sessions. **Open** opens the note, **Open to the side** uses another pane, **Insert link** writes a wikilink into the editor you were using, and **Add to combat** adds an NPC or creature. Press Mod+Enter on a result to open its note directly. The card preview uses the first 60 body lines; **More** opens the full note.
+
+Use **Quick NPC** from the command palette or Home's active run card. It starts with a random **Name** and **Trait**; use the dice buttons to reroll. **Where** chooses the linked world's `NPCs/` folder by default, or the campaign's `NPCs/` folder. Press Enter or **Create**. The NPC is created from `_local/templates/npc.md` when present, otherwise `_system/templates/npc.md`. A link is inserted at the previous editor cursor and the current note stays open. Duplicate names get a number suffix.
+
+The shipped name and trait lists are `_system/tables/names.txt` and `_system/tables/traits.txt`. Put one entry per line in `_local/tables/names.txt` or `_local/tables/traits.txt` to replace either list. Non-empty local lists take priority; this is also where to put Polish names. The commands have no default hotkeys. To bind one, open Obsidian Settings, Hotkeys, search for **Look up** or **Quick NPC**, and assign a shortcut.
 
 ## Timeline
 

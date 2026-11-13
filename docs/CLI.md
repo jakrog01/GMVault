@@ -38,7 +38,7 @@ node _system/bin/gmvault.mjs update --check
 node _system/bin/gmvault.mjs update --latest [--dry-run]
 ```
 
-`--from` is required and names a release directory or a `.zip` release containing `_system/`.
+`--from` names a release directory or a `.zip` release containing `_system/`. Use it for offline installs; `--latest` downloads the archive for you.
 Without `--dry-run`, update copies the current `_system/` to `.gmvault/backups/<timestamp>/`, replaces `_system/` and the shipped `Home.md`, then runs `finalize-update`. The lean-vault migration backs up old repository files in `.gmvault/backups/2026-10-20-lean-vault/`.
 Shipped folders are mirrored, so files absent from the release are removed; every overwritten or removed item is saved in that backup first.
 The report gives one line for each shipped entry: `replaced` with written and removed counts plus a backup when work occurred, `unchanged` when the release matches it, or `kept` when the release provides none.
@@ -142,6 +142,7 @@ It fails if a migration, managed artifact refresh, plugin refresh, state write, 
 `--check` belongs to `update` and reports whether the configured release host has a newer version.
 `--latest` belongs to `update` and fetches, validates, and installs a newer configured release.
 `--dry-run` belongs to `update` and `migrate system-library` and previews work without changing the vault.
+`--system` belongs to `migrate system-library` and names the system for legacy folders that do not identify one.
 `--map` belongs to `adopt` and supplies the import mapping JSON file.
 No other CLI flags are accepted by the current command parser.
 Use [Troubleshooting](TROUBLESHOOTING.md) to interpret a failed `doctor` command.

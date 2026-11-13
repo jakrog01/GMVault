@@ -15,7 +15,7 @@ Before replacing `_system/` or `Home.md`, the updater preserves the old version 
 
 ## Content and packages
 
-`contentRoots` declares `Campaigns`, `Parties`, `Runs`, `Library`, `Calendar`, and `Archive`. Campaigns hold reusable world material, parties hold rosters, and runs hold table-specific records. Library holds mechanics and assets; Calendar holds table-plugin data; Archive is excluded from automation. `doctor` requires the declared roots, but they may be empty.
+`contentRoots` declares `Parties`, `Runs`, `Library`, `Calendar`, and `Archive`. Library holds each system's mechanics, worlds, and campaigns under `Library/<system>/`, plus shared assets; parties hold rosters, and runs hold table-specific records. Calendar holds calendar notes; Archive is excluded from automation. `doctor` requires the declared roots, but they may be empty. `legacyContentRoots` keeps the earlier `Worlds/` and `Campaigns/` roots readable until `migrate system-library` moves them.
 
 System packages under `_system/systems/<id>/` describe supported note shapes and required frontmatter for a game system. They provide structure rather than published rulebook text or statblocks. Local experimentation belongs in `_local` until a package is ready to ship.
 

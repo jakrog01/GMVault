@@ -10,7 +10,7 @@ When `Active.md` points to a complete run, the **Active run** card shows:
 
 - the run folder name and its role, **Game master** or **Player**
 - the campaign, its system, and the party
-- the first non-heading line of the run's world-day note
+- the run's in-world date: with a [world calendar](CALENDAR.md), the date, holiday, season, moons, and weather; without one, the first text line of `World Day.md`
 
 | Button | Opens |
 | --- | --- |
@@ -91,7 +91,7 @@ Asks for **Name**, **Role**, **Campaign**, **Party**, and **Make active after cr
 - **Campaign** and **Party** list notes by their `type` frontmatter. Both are required, otherwise the form reports **Choose both a campaign and a party for the run.**
 - **Make active after creating** starts on, so the new run also updates `Active.md`. Turn it off for preparation material that should not become the current run.
 
-It creates `Runs/<name>/Run.md` with role, campaign, and party links, plus `State.md` and `World Day.md`.
+It creates `Runs/<name>/Run.md` with role, campaign, and party links, plus `State.md`, `World Day.md`, and an empty `Sessions/` folder.
 
 ## Update banner
 

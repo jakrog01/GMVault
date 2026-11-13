@@ -12,7 +12,7 @@ Fix the reported files, then run `doctor` again rather than assuming the first i
 
 ## `missing content root: <folder>`
 
-Meaning: one of the six declared content roots is absent.
+Meaning: one of the five declared content roots (`Parties`, `Runs`, `Library`, `Calendar`, `Archive`) is absent.
 Usual cause: a required root such as `Library/` or `Archive/` was deleted or renamed.
 Fix: restore the named root at the vault root; it is a user-content folder and can be empty.
 
