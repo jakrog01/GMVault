@@ -39,8 +39,10 @@ GMVault/
 | Campaign | `Library/<system>/Campaigns/<campaign>/Campaign.md` | `campaign.md` |
 | Quest, encounter, handout | The matching folder under the campaign | Matching template |
 | Party, character | `Parties/<party>/` | `party.md`, `pc.md` |
-| Run, session | `Runs/<run>/` | `run.md`, `session.md` |
+| Run | `Runs/<run>/` | `run.md` |
+| Session | `Runs/<run>/Sessions/` | `session.md` |
 | System mechanics | `Library/<system>/Mechanics/<folder>/` | Package layout chooses template |
+| Calendar notes | `Calendar/` | None; the calendar itself is set up in Calendarium, see [World calendar](CALENDAR.md) |
 | Assets | `Library/Assets/` | None |
 
 The system package declares mechanics folders and suggests lore categories. **New world** creates only its top-level folders. **New campaign** creates the main campaign folders; it also creates NPC, location, and faction folders when no world is linked. Create lore categories as you need them. The One Ring 2e package uses `Callings/`, `Cultures/`, `Virtues/`, and `Rewards/` instead of D&D folder names.

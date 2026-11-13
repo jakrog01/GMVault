@@ -1,6 +1,17 @@
 # Sessions and runs
 
-Each `Runs/<run>/` folder keeps the run record, current state, world day, and session notes together. [Home](HOME.md) can create a dated session with **New session**. Creating any other Markdown note in the run folder also starts with the session template when Templater is enabled.
+Each `Runs/<run>/` folder keeps the run record, current state, world day, and session notes together:
+
+```text
+Runs/<run>/
+|-- Run.md          campaign, party, and role
+|-- State.md        what this table changed
+|-- World Day.md    the run's in-world date
+`-- Sessions/
+    `-- Session YYYY-MM-DD.md
+```
+
+[Home](HOME.md) creates a dated session with **New session**. Creating any other Markdown note in the run folder or its `Sessions/` folder also starts with the session template when Templater is enabled.
 
 ## Run record
 
@@ -39,24 +50,25 @@ type: state
 
 ## World day
 
-`World Day.md` records the current in-world date. Run and session notes embed it.
+`World Day.md` records the run's current in-world date in `world_date`. Its `gmvault-day` block, which also appears in `Run.md` and every session note, shows and changes that date. See [World calendar](CALENDAR.md) to connect a Calendarium calendar.
 
 ```yaml
 ---
 type: world-day
+world_date: "1492-03-14"
 ---
 ```
 
 ## Session notes
 
-**New session** creates `Session YYYY-MM-DD.md` in the run folder using the local date. Another session on the same day gets a numeric suffix. The note opens after creation. A note created directly in that folder receives the session template through Templater, except `Run.md`.
+**New session** creates `Sessions/Session YYYY-MM-DD.md` in the run folder using the local date, and copies the run's current `world_date`. Another session on the same day gets a numeric suffix. The note opens after creation. Sessions kept directly in the run folder by earlier versions are still read. A note created in the run folder or `Sessions/` receives the session template through Templater, except `Run.md`.
 
 ```yaml
 ---
 type: session
 run: "[[Runs/Harbor/Run]]"
 date: 2026-10-21
-world_date: ""
+world_date: "1492-03-14"
 ---
 ```
 
@@ -78,7 +90,7 @@ type: claim
 about: "[[People/Guide]]"
 what: "The bridge is safe"
 from: "[[People/Scout]]"
-session: "[[Runs/Harbor/Session 2026-10-21]]"
+session: "[[Runs/Harbor/Sessions/Session 2026-10-21]]"
 status: current
 ---
 ```

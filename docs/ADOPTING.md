@@ -7,8 +7,8 @@ The map names each folder import, plugin-data import, and calendar-definition im
 ```json
 {
   "folders": [
-    { "from": "Old Campaigns", "to": "Campaigns" },
-    { "from": "Rules/*/Creatures", "to": "Library/Mechanics/*/Bestiary", "optional": true }
+    { "from": "Old Campaigns", "to": "Library/generic/Campaigns" },
+    { "from": "Rules/*/Spells", "to": "Library/*/Mechanics/Spells", "optional": true }
   ],
   "pluginData": [
     {
@@ -21,6 +21,8 @@ The map names each folder import, plugin-data import, and calendar-definition im
   "calendar": { "from": ".obsidian/plugins/calendarium/data.json", "to": ".obsidian/plugins/calendarium/data.json" }
 }
 ```
+
+Map worlds and campaigns straight into `Library/<system>/`. If you import the older `Worlds/` and `Campaigns/` layout, run `node _system/bin/gmvault.mjs migrate system-library --dry-run` afterwards and then without `--dry-run`.
 
 Entries are required unless marked `"optional": true`; a missing required source fails before the target vault changes, while a missing optional source appears in the report's `skipped` array.
 If every required folder is missing but one non-dot source folder would contain a match, the failure prints that inner folder's absolute path as a wrapped-source hint.

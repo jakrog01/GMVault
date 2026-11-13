@@ -24,16 +24,16 @@ Choose **Open folder as vault** and select the `GMVault` folder. Nothing is gene
 
 ## 3. Enable the plugins
 
-Open **Settings → Community plugins**, turn community plugins on, and enable:
+On first open Obsidian asks whether you trust the vault's author; choose **Trust author and enable plugins**. If you missed the prompt, open **Settings → Community plugins**, turn community plugins on, and enable:
 
 | Plugin | What it does |
 | --- | --- |
 | `table-tools` | Home, combat tracker, dice, assistant |
 | `templater-obsidian` | Fills new notes from templates |
-| `calendarium` | In-world calendar |
+| `calendarium` | In-world calendar definitions; see [World calendar](CALENDAR.md) |
 | `obsidian-style-settings` | Appearance options |
 
-The ids come from `.obsidian/community-plugins.json`.
+The ids come from `.obsidian/community-plugins.json`. Home opens on its own once Table Tools is enabled.
 
 ## 4. Check the vault
 
