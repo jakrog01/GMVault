@@ -1,7 +1,13 @@
 # Changelog
 
-## Unreleased
+## 2.8.0
 
+- GMVault system packages declare their mechanics, world, campaign, and suggested lore folders. Templater uses one layout dispatcher.
+- Local packages can override selected layout lists without copying the shipped package.
+- New campaigns live under `Library/<system>/Campaigns/`; legacy campaign paths stay readable.
+- `migrate system-library` also moves campaigns, rewrites links, and refuses target collisions.
+- Added The One Ring 2e package with Callings, Cultures, Virtues, and Rewards.
+- Removed empty root world, campaign, and mechanics scaffolds and empty lore categories from new worlds.
 - **World calendars, per-run dates.** A world's `calendar` field names a Calendarium calendar; each run keeps its own `world_date` in `World Day.md`. The new `gmvault-day` block (in World Day, the run note and every session) shows the date, day of the week, holiday, season, moon phases and generated weather, with ±1 day / ±1 week buttons and a year/month/day picker. Home and the assistant show the same one-line summary; new sessions copy the run's date.
 - New sessions go to `Runs/<run>/Sessions/`; sessions in the run folder are still read.
 - The player character template has a full stat block (species, subclass, background, abilities, speed, proficiency, passive Perception, spell DC).
