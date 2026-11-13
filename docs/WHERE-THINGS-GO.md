@@ -4,89 +4,51 @@ Use this map when deciding where to create a note. Names in angle brackets stand
 
 ```text
 GMVault/
-|-- Active.md                    active run pointer
-|-- Home.md                      the Home screen as a note
-|-- Worlds/                     earlier world layout, still supported
-|-- Campaigns/
-|   `-- <campaign>/
-|       |-- Campaign.md          premise, factions, locations
-|       |-- Quests/              tasks and leads
-|       |-- Encounters/, Handouts/
-|       |-- NPCs/, Locations/, Factions/ (when no world)
-|       `-- Mechanics/           campaign homebrew rules and bestiary
-|-- Parties/
-|   `-- <party>/
-|       |-- Party.md             party record
-|       `-- <character>.md       player character
-|-- Runs/
-|   `-- <run>/
-|       |-- Run.md               role, campaign, party
-|       |-- State.md             lasting facts, resources, world changes
-|       |-- World Day.md         current in-world date
-|       |-- Session YYYY-MM-DD.md
-|       `-- <claim>.md           optional player claim
+|-- Active.md
+|-- Home.md
 |-- Library/
 |   |-- <system>/
-|   |   |-- Mechanics/
-|   |   |   |-- Classes/<class>/<class>.md (class), <subclass>.md (subclass)
-|   |   |   |-- Races/<race>/<race>.md (race), <subrace>.md (subrace)
-|   |   |   |-- Backgrounds/ (background), Feats/ (feat), Rules/<chapter>/
-|   |   |   `-- Spells/, Bestiary/, Items/
-|   |   `-- Worlds/<world>/
-|   |       |-- World.md
-|   |       |-- Locations/<place>/<place>.md
-|   |       |-- Lore/<category>/
-|   |       `-- Factions/, NPCs/, Events/, Mechanics/
-|   |-- Mechanics/<system>/      earlier mechanics layout, still supported
+|   |   |-- Mechanics/<folders from the system package>/
+|   |   |-- Worlds/<world>/
+|   |   |   |-- World.md
+|   |   |   |-- Locations/, NPCs/, Factions/, Events/
+|   |   |   |-- Lore/<category>/
+|   |   |   `-- Mechanics/
+|   |   `-- Campaigns/<campaign>/
+|   |       |-- Campaign.md
+|   |       |-- Quests/, Encounters/, Handouts/
+|   |       |-- NPCs/, Locations/, Factions/ (when no world)
+|   |       `-- Lore/, Mechanics/
 |   `-- Assets/
-|-- Calendar/                    calendar content
-|-- Archive/                     retired material
+|-- Parties/<party>/Party.md, <character>.md
+|-- Runs/<run>/Run.md, State.md, World Day.md, Sessions/
+|-- Calendar/
+|-- Archive/
 |-- _local/
-|   |-- templates/               your template overrides
-|   |-- scripts/                 your scripts
-|   `-- assistant/               optional policy and skills
-|-- _system/                     shipped files
-|-- .obsidian/                   Obsidian settings and plugins
-`-- .gmvault/                    state, cache, backups
+|-- _system/
+|-- .obsidian/
+`-- .gmvault/
 ```
 
 | I want to add... | Put it in... | Template it gets |
 | --- | --- | --- |
-| World overview | `Library/<system>/Worlds/<world>/World.md` | **New world** uses `world.md` |
-| World NPC, location, faction, lore, event | `Library/<system>/Worlds/<world>/` matching subfolder | Automatic matching template |
-| Nested place | `Library/<system>/Worlds/<world>/Locations/<place>/` | `location.md` links the parent place |
-| Religion, history, culture, peoples, languages, magic, cosmology, economy, creatures, other lore | `Library/<system>/Worlds/<world>/Lore/<category>/` | Automatic `lore.md` |
-| Campaign overview | `Campaigns/<campaign>/Campaign.md` | **New campaign** uses `campaign.md` |
-| NPC | `Campaigns/<campaign>/NPCs/<name>.md` | Automatic `npc.md` |
-| Location | `Campaigns/<campaign>/Locations/<name>.md` | Automatic `location.md` |
-| Quest | `Campaigns/<campaign>/Quests/<name>.md` | Automatic `quest.md` |
-| Faction | `Campaigns/<campaign>/Factions/<name>.md` | Automatic `faction.md` |
-| Encounter or handout | `Campaigns/<campaign>/Encounters/` or `Handouts/` | Automatic matching template; **Save as note** in Combat also writes encounters here |
-| Party and roster | `Parties/<party>/Party.md` | **New party** uses `party.md` |
-| Player character | `Parties/<party>/<name>.md` | **New character** uses `pc.md` |
-| Run | `Runs/<run>/Run.md` | **New run** uses `run.md` |
-| Session | `Runs/<run>/Session YYYY-MM-DD.md` | **New session** or automatic `session.md` |
-| Persistent state | `Runs/<run>/State.md` | Created by **New run** |
-| In-world date | `Runs/<run>/World Day.md` | Created by **New run** |
-| Player claim | `Runs/<run>/<claim>.md` | Insert `claim.md` with **Templater: Insert template** |
-| Creature, spell, item | `Library/<system>/Mechanics/Bestiary/`, `Spells/`, or `Items/` | Automatic `creature.md`, `spell.md`, or `item.md` |
-| Class, subclass, race, subrace | `Library/<system>/Mechanics/Classes/<class>/` or `Races/<race>/` | Automatic `class.md`, `subclass.md`, or `race.md` with parent link where needed |
-| Background or feat | `Library/<system>/Mechanics/Backgrounds/` or `Feats/` | Automatic `background.md` or `feat.md` |
-| Rules or house rules | `Library/<system>/Mechanics/Rules/<chapter>/` or a campaign or world `Mechanics/` folder | System rules get `rules.md`; homebrew can use it manually |
-| Calendar content | `Calendar/` | No automatic template |
-| Retired note | `Archive/` | No automatic template |
-| Template override | `_local/templates/<kind>.md` | Your local version takes precedence for Table Tools creation |
+| World | `Library/<system>/Worlds/<world>/World.md` | `world.md` |
+| World person, place, faction, event | The matching folder under the world | Matching template |
+| Creature | The world's `Lore/Creatures/`, or a campaign's when there is no world | `creature.md` |
+| Other lore | `Lore/<category>/` under a world or campaign | `lore.md` |
+| Campaign | `Library/<system>/Campaigns/<campaign>/Campaign.md` | `campaign.md` |
+| Quest, encounter, handout | The matching folder under the campaign | Matching template |
+| Party, character | `Parties/<party>/` | `party.md`, `pc.md` |
+| Run, session | `Runs/<run>/` | `run.md`, `session.md` |
+| System mechanics | `Library/<system>/Mechanics/<folder>/` | Package layout chooses template |
+| Assets | `Library/Assets/` | None |
 
-!!! note "Automatic templates"
-    Templater applies folder rules when enabled and when you create a new Markdown file in Obsidian. Campaign templates set `campaign` from the campaign folder; world templates set `world` from the world folder. Character notes set `party` from the party folder. The `type` field defines a note's identity; folders are the recommended layout.
+The system package declares mechanics folders and suggests lore categories. **New world** creates only its top-level folders. **New campaign** creates the main campaign folders; it also creates NPC, location, and faction folders when no world is linked. Create lore categories as you need them. The One Ring 2e package uses `Callings/`, `Cultures/`, `Virtues/`, and `Rewards/` instead of D&D folder names.
 
-!!! warning "Updates replace shipped files"
-    `_system/` is replaced on update. Keep your notes in the content roots and your overrides in `_local/`. [Templates and overrides](CUSTOMISING.md) explains the local layer.
-
-Read [Your first campaign](FIRST-CAMPAIGN.md) for the creation sequence and [Sessions and runs](RUNS.md) for the run files.
+Templater reads the merged system package and applies the matching template. `_local/templates/<kind>.md` takes precedence. Home creation also uses local templates. See [Game systems](AUTHORING-SYSTEMS.md) for layout overrides.
 
 ## Existing vaults
 
-The earlier `Worlds/<world>/` and `Library/Mechanics/<system>/` paths remain valid. To move them with backups and rewritten explicit links, run `node _system/bin/gmvault.mjs migrate system-library --dry-run`, then run it without `--dry-run`. A world with sub-places can use `Locations/<place>/<place>.md` with child places in the same folder. Organise lore under `Religion/`, `History/`, `Culture/`, `Peoples/`, `Languages/`, `Magic/`, `Cosmology/`, `Economy/`, `Creatures/`, or `Other/`.
+The earlier `Campaigns/<campaign>/`, `Worlds/<world>/`, and `Library/Mechanics/<system>/` paths remain readable. To move them with backups and rewritten links, run `node _system/bin/gmvault.mjs migrate system-library --dry-run`, then run it without `--dry-run`. Use `--system <id>` when a legacy world or campaign has no system field or linked world that identifies one. Migration refuses target collisions.
 
-Put map images in `Library/Assets/` (or anywhere in the vault). Link them from world and location notes using [Maps](MAPS.md).
+A place with sub-places can use `Locations/<place>/<place>.md` and child places in the same folder. Put map images in `Library/Assets/` (or anywhere in the vault) and link them from world and location notes using [Maps](MAPS.md).

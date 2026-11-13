@@ -16,6 +16,10 @@ To override selected Table Tools labels, create `_local/plugins/table-tools/stri
 
 Use `_local/templates` for local versions of templates and `_local/scripts` for private scripts. Home reads a local template before the shipped one when creating a campaign, party, run, or session. See [Sessions and runs](RUNS.md) for the session template and the templates inserted through Templater. The rest of the `_local` mirror can hold another shipped-path override when the resolver supports it. Keep normal table notes in the declared content roots rather than in any infrastructure layer.
 
+## System layout overrides
+
+Create `_local/systems/<id>/package.json` to change a shipped layout without copying the package. Each supplied `layout` key replaces that whole list; omitted keys keep the shipped list. For example, a One Ring vault can rename Rewards to Treasures by copying the `mechanics` list from [Game systems](AUTHORING-SYSTEMS.md) and changing its last item to `{"folder":"Treasures","type":"item"}`. The plugin, Templater, assistant context, and doctor read the merged package.
+
 ## Obsidian additions
 
 Your own community plugins, themes, snippets, and their settings remain in the vault through updates. Updates reconcile only the Obsidian artifacts the manifest manages; they do not remove local plugin ids or user appearance files.

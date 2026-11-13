@@ -20,15 +20,13 @@ GMVault separates files it ships from files you own, so updates never overwrite 
 
 ## Content roots
 
-The manifest declares seven content roots. Your notes live here; updates never replace them.
+The manifest declares five current content roots. Legacy `Worlds/` and `Campaigns/` remain readable. Your notes live in these folders; updates never replace them.
 
 | Folder | Holds |
 | --- | --- |
-| `Worlds/` | Legacy settings shared by campaigns; still supported |
-| `Campaigns/` | Campaign stories: quests, encounters, handouts, and campaign specific notes |
 | `Parties/` | Party records and rosters |
 | `Runs/` | Table-specific records: sessions, state, world day |
-| `Library/` | System mechanics, worlds, and shared assets |
+| `Library/` | System mechanics, worlds, campaigns, and shared assets |
 | `Calendar/` | Calendar content for the table |
 | `Archive/` | Retired material, ignored by automation and assistant indexing |
 
@@ -37,7 +35,7 @@ The manifest also creates `_local/templates/` and `_local/scripts/`; those are n
 ## Worlds, campaigns, parties, and runs
 
 - A **world** is a setting that several campaigns can share. New worlds live under `Library/<system>/Worlds/`; earlier `Worlds/` notes remain valid.
-- A **campaign** is one story in a world. A campaign without a world link acts as its own world.
+- A **campaign** lives under `Library/<system>/Campaigns/` and is one story in a world. A campaign without a world link acts as its own world.
 - A **party** is the group of characters playing it.
 - A **run** is one table's game: it connects a campaign, a party, and a role (game master or player).
 
@@ -57,7 +55,7 @@ These note names may repeat across folders because their paths tell them apart: 
 
 ## Systems
 
-Mechanics live under `Library/<system>/Mechanics/`; the earlier `Library/Mechanics/<system>/` layout remains valid. System packages in `_system/systems/` describe note shapes and radar requirements for a game system. They contain no published rules text or statblocks. Experiment with a local package first; see [Game systems](AUTHORING-SYSTEMS.md).
+Mechanics live under `Library/<system>/Mechanics/`; the earlier `Library/Mechanics/<system>/` layout remains valid. System packages in `_system/systems/` describe layout, note shapes, and radar requirements for a game system. They contain no published rules text or statblocks. Experiment with a local package first; see [Game systems](AUTHORING-SYSTEMS.md).
 
 ## Vault state
 
@@ -66,7 +64,7 @@ Mechanics live under `Library/<system>/Mechanics/`; the earlier `Library/Mechani
     - `.gmvault/cache/` holds local derived caches, including assistant indexing data.
     - `.gmvault/backups/` receives a timestamped copy of `_system/` before an update replaces it, and a named backup of repository files moved by the lean-vault migration.
 
-An update may replace `_system/`, reconcile manifest-managed Obsidian artifacts, refresh the bundled plugin, and write state. It does not replace `_local/`, the seven content roots, or the root active pointer.
+An update may replace `_system/`, reconcile manifest-managed Obsidian artifacts, refresh the bundled plugin, and write state. It does not replace `_local/`, the five current content roots, or the root active pointer.
 
 ## Next
 

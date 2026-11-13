@@ -3,11 +3,11 @@
 Follow these steps from an empty GMVault to a first played session. [Install](GETTING-STARTED.md) the vault first.
 
 !!! tip "See a filled example first"
-    Run `node _system/bin/gmvault.mjs demo install` from the vault root. Explore `Campaigns/Glassgate/`, its party, and its runs. Run `node _system/bin/gmvault.mjs demo remove` when you are ready for your own game.
+    Run `node _system/bin/gmvault.mjs demo install` from the vault root. Explore `Library/generic/Campaigns/Glassgate/`, its party, and its runs. Run `node _system/bin/gmvault.mjs demo remove` when you are ready for your own game.
 
-1. Open **Open Home**. Choose **New world**, enter a **Name**, choose a **System**, then choose **Create**. Home creates `Library/<system>/Worlds/<name>/World.md` and folders for locations, factions, NPCs, events, mechanics, and categorised lore. Describe the setting in the world note.
+1. Open **Open Home**. Choose **New world**, enter a **Name**, choose a **System**, then choose **Create**. Home creates `Library/<system>/Worlds/<name>/World.md` and folders for locations, factions, NPCs, events, mechanics, and an empty `Lore/` folder. Describe the setting in the world note.
 
-2. Choose **New campaign**, enter a **Name**, choose the world in **World**, select a **System**, then choose **Create**. Home links the campaign to the world and creates `Quests/`, `Encounters/`, and `Handouts/`. Choosing **No world** instead creates the familiar NPC, location, quest, and faction folders as well.
+2. Choose **New campaign**, enter a **Name**, choose the world in **World**, select a **System**, then choose **Create**. Home creates `Library/<system>/Campaigns/<name>/Campaign.md`, links it to the world, and creates `Quests/`, `Encounters/`, and `Handouts/`. Choosing **No world** instead creates the familiar NPC, location, quest, and faction folders as well.
 
 3. Add a character or place under the world's `NPCs/` or `Locations/` folder. Templater fills the `world` link. Add a quest under the campaign's `Quests/` folder; its template fills the `campaign` link.
 

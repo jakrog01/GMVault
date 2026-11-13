@@ -73,7 +73,7 @@ It refuses a release missing the expected asset, an unavailable or timed-out dow
 node _system/bin/gmvault.mjs migrate system-library [--dry-run] [--system <id>]
 ```
 
-Move old `Worlds/<world>/` and `Library/Mechanics/<system>/` folders into `Library/<system>/Worlds/` and `Library/<system>/Mechanics/`. The command rewrites explicit moved-path wikilinks in content notes and backs up every moved or rewritten file under `.gmvault/backups/<timestamp>-system-library/`. It refuses destination collisions and worlds whose system cannot be determined. It uses the world's `system`, agreeing linked campaigns, or `--system` in that order. `--dry-run` prints the planned moves without writing anything. Running it again after migration reports no changes.
+Move old `Worlds/<world>/`, `Campaigns/<campaign>/`, and `Library/Mechanics/<system>/` folders under `Library/<system>/`. The command rewrites explicit moved-path wikilinks, including campaign links in parties and runs, and backs up every moved or rewritten file under `.gmvault/backups/<timestamp>-system-library/`. It refuses destination collisions and folders whose system cannot be determined. A campaign uses its `system`, its linked world's system, or `--system` in that order. `--dry-run` prints the planned moves without writing anything. Running it again after migration reports no changes.
 
 ## `demo install`
 

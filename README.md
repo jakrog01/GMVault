@@ -2,7 +2,7 @@
 
 Download [`GMVault.zip` from the latest release](https://github.com/jakrog01/GMVault/releases/latest/download/GMVault.zip), unzip it, and open the folder as a vault in Obsidian. Enable community plugins when Obsidian asks. You can also browse [all releases](https://github.com/jakrog01/GMVault/releases).
 
-GMVault keeps its system in `_system/`, your overrides in `_local/`, and game material in `Campaigns/`, `Parties/`, `Runs/`, `Library/`, `Calendar/`, and `Archive/`.
+GMVault keeps its system in `_system/`, your overrides in `_local/`, and game material in `Library/<system>/` (mechanics, worlds, and campaigns), `Parties/`, `Runs/`, `Calendar/`, and `Archive/`.
 
 To update, choose **Install update** in Home or run `node _system/bin/gmvault.mjs update --latest`. The updater backs up affected files in `.gmvault/backups/`.
 
