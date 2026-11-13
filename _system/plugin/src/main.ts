@@ -21,6 +21,7 @@ import { MapBlock, MapPanel, MapView, MAP_VIEW } from "./map";
 import { HOME_TYPES, MAP_TYPES } from "./contract";
 import { GameContext, contextStamp, resolveGameContext } from "./context";
 import { TableToolsSettingTab } from "./settings";
+import layout from "../../scripts/gmvault_layout.js";
 interface PluginData { settings: Settings; combat: Combat; encounterSets: EncounterSet[] }
 const STRINGS_OVERRIDE = "_local/plugins/table-tools/strings.json";
 const SCOPE_PATHS = assistantLayerPaths("scope.json");
@@ -37,6 +38,7 @@ export default class TableTools extends Plugin {
   mapPanels = new Set<MapPanel>();
   index!: AssistantIndex;
   skills = new Map<string, Skill>();
+  private packages = new Map<string, any>();
   invalidSkillsKey = "";
   commandRunner = (file: string, args: string[], onOutput: (chunk: string) => void): Promise<number> => {
     return this.runDesktopCommand(file, args, onOutput);
@@ -51,6 +53,7 @@ export default class TableTools extends Plugin {
     await this.loadStrings();
     await this.loadSettings();
     await this.loadScopePolicy();
+    try { await this.systemPackages(); } catch {}
     this.index = new AssistantIndex(this);
     this.index.start();
     this.app.vault.getMarkdownFiles().forEach(file => this.homeChangeAffects(file, file.path));
@@ -274,14 +277,13 @@ export default class TableTools extends Plugin {
     this.refreshViews();
     this.notesChanged([this.settings.activePointerPath]);
   }
+  async systemPackage(id: string): Promise<any> {
+    const value = await (layout as any).readPackage(this.app.vault.adapter, id);
+    this.packages.set(id, value);
+    return value;
+  }
   async systemName(id: string): Promise<string> {
-    for (const root of ["_local/", "_system/"]) {
-      try {
-        const value = JSON.parse(await this.app.vault.adapter.read(`${root}systems/${id}/package.json`)) as { name?: unknown };
-        if (typeof value.name === "string" && value.name) return value.name;
-      } catch {}
-    }
-    return id;
+    try { const value = await this.systemPackage(id); return value.name || id; } catch { return id; }
   }
   async systemPackages(): Promise<{ id: string; name: string }[]> {
     const packages = new Map<string, string>();
@@ -298,6 +300,7 @@ export default class TableTools extends Plugin {
     if (!packages.size) packages.set("generic", await this.systemName("generic"));
     return [...packages].map(([id, name]) => ({ id, name })).sort((left, right) => left.name.localeCompare(right.name));
   }
+  layoutPath(file: string): any { return (layout as any).resolve(file, Object.fromEntries(this.packages)); }
   assistant(): AssistantView | undefined {
     return this.app.workspace.getLeavesOfType(ASSISTANT_VIEW)[0]?.view as AssistantView | undefined;
   }
@@ -334,6 +337,10 @@ export default class TableTools extends Plugin {
     const context = this.context();
     const system = context?.system ?? "generic";
     const world = context?.world.path === context?.campaign.path ? null : context?.world;
-    return [`Library/${system}/Mechanics/Bestiary`, `Library/Mechanics/${system}/Bestiary`, ...(context?.campaign.parent ? [`${context.campaign.parent.path}/Mechanics/Bestiary`] : []), ...(world?.parent ? [`${world.parent.path}/Mechanics/Bestiary`] : [])];
+    const pkg = this.packages.get(system) ?? this.packages.get("generic");
+    const roots = { mechanics: `Library/${system}/Mechanics`, campaign: context?.campaign.parent?.path ?? "", world: world?.parent?.path ?? "" };
+    const paths = (["mechanics", "campaign", "world"] as const).flatMap(section => roots[section] ? (pkg?.layout?.[section] ?? []).filter((entry: any) => entry.type === "creature").map((entry: any) => `${roots[section]}/${entry.folder}`) : []);
+    return [...new Set([...paths, `Library/${system}/Mechanics/Bestiary`, `Library/Mechanics/${system}/Bestiary`, ...(context?.campaign.parent ? [`${context.campaign.parent.path}/Mechanics/Bestiary`] : []), ...(world?.parent ? [`${world.parent.path}/Mechanics/Bestiary`] : [])])];
+
   }
 }

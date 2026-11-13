@@ -247,15 +247,19 @@ export class AssistantIndex {
     if (RUN_TYPES.includes(type)) return "run";
     if (type === "state") return "state";
     if (type === "rules" && frontmatter.subtype === "house-rule") return "house-rule";
-    if (RULE_TYPES.includes(type)) return frontmatter.campaign || frontmatter.world || /^Campaigns\/[^/]+\/Mechanics\//.test(file.path) ? "homebrew" : frontmatter.system ? "system" : "note";
+    const resolved = this.plugin.layoutPath(file.path);
+    if (RULE_TYPES.includes(type)) {
+      if ((resolved.world || resolved.campaign) && !file.path.includes("/Mechanics/")) return "campaign";
+      return frontmatter.campaign || frontmatter.world || (resolved.world || resolved.campaign) && file.path.includes("/Mechanics/") ? "homebrew" : frontmatter.system ? "system" : "note";
+    }
     if (WORLD_TYPES.includes(type)) return "campaign";
     if (type) return "note";
     if (/^Runs\//.test(file.path)) return file.basename === "State" ? "state" : "run";
-    if (/^Campaigns\//.test(file.path)) return file.path.includes("/Mechanics/") ? "homebrew" : "campaign";
-    if (/^Worlds\//.test(file.path)) return file.path.includes("/Mechanics/") ? "homebrew" : "campaign";
+    if (resolved.campaign) return file.path.includes("/Mechanics/") ? "homebrew" : "campaign";
+    if (resolved.world) return file.path.includes("/Mechanics/") ? "homebrew" : "campaign";
     if (/^Parties\//.test(file.path)) return "party";
     if (/^Library\/Mechanics\//.test(file.path)) return "system";
-    if (/^Library\/[^/]+\/Worlds\//.test(file.path)) return file.path.includes("/Mechanics/") ? "homebrew" : "campaign";
+
     if (/^Library\/[^/]+\/Mechanics\//.test(file.path)) return "system";
     return "note";
   }
@@ -292,7 +296,7 @@ export class AssistantIndex {
     const rooted = sourceKind(scope, chunk.path);
     if (rooted) return true;
     if (!scope.runFolder || scope.role !== "gm" || !SCOPED_RULE_TYPES.includes(chunk.type)) return false;
-    if (chunk.path.startsWith("Campaigns/")) return false;
+    if (/^(?:Campaigns\/|Library\/[^/]+\/Campaigns\/)/.test(chunk.path)) return false;
     if (/^Library\/Mechanics\//.test(chunk.path)) return false;
     if (chunk.campaignLink) return this.linksFor(scope, chunk).campaign === scope.campaignPath;
     return chunk.system === scope.system;

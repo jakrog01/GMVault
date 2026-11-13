@@ -2,6 +2,7 @@
 type: creature
 origin: demo
 system: generic
+world: "[[Library/generic/Worlds/Glass Coast/World]]"
 ---
 
 # Storm Wisp

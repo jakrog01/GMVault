@@ -1,7 +1,7 @@
 ---
 type: campaign
 world: ""
-system: generic
+system: "<% await tp.user.gmvault_layout(tp, "system") %>"
 calendar: Calendar
 ---
 

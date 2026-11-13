@@ -22,7 +22,7 @@ const unpack = async () => {
   return vault
 }
 const seed = async vault => {
-  for (const file of ["README.md", "CHANGELOG.md", "package.json"]) await writeFile(path.join(vault, file), file)
+  for (const file of ["README.md", "CHANGELOG.md", "package.json"]) await writeFile(path.join(vault, file), file === "package.json" ? "{}" : file)
   for (const folder of ["docs", "tests", ".github"]) {
     await mkdir(path.join(vault, folder))
     await writeFile(path.join(vault, folder, "owner.txt"), folder)
@@ -51,15 +51,15 @@ test("the packaged hidden demo installs and removes from an unzipped vault", asy
     finally { process.argv = argv; console.log = log }
     return lines.join("\n")
   }
-  assert.ok(await exists(path.join(vault, "_system/.demo/Campaigns/Glassgate/Campaign.md")))
+  assert.ok(await exists(path.join(vault, "_system/.demo/Library/generic/Campaigns/Glassgate/Campaign.md")))
   assert.equal(await exists(path.join(vault, "_system/demo")), false)
   assert.match(await demo("status"), /demo notes: 0/)
   assert.match(await demo("install"), /demo installed/)
-  assert.ok(await exists(path.join(vault, "Campaigns/Glassgate/Campaign.md")))
+  assert.ok(await exists(path.join(vault, "Library/generic/Campaigns/Glassgate/Campaign.md")))
   assert.match(await demo("status"), /demo notes: [1-9]/)
   assert.match(await demo("remove"), /removed [1-9]/)
   assert.match(await demo("status"), /demo notes: 0/)
-  assert.equal(await exists(path.join(vault, "Campaigns/Glassgate/Campaign.md")), false)
+  assert.equal(await exists(path.join(vault, "Library/generic/Campaigns/Glassgate/Campaign.md")), false)
   await rm(vault, { recursive: true, force: true })
 })
 

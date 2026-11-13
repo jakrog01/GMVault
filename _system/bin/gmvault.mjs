@@ -6,6 +6,7 @@ import { promisify } from 'node:util'
 import path from 'node:path'
 import process from 'node:process'
 import os from 'node:os'
+import layout from '../scripts/gmvault_layout.js'
 
 const exec = promisify(execFile)
 const root = path.resolve(path.dirname(new URL(import.meta.url).pathname), '../..')
@@ -208,7 +209,7 @@ const init = async () => {
 }
 
 const frontmatter = text => Object.fromEntries([...text.matchAll(/^([A-Za-z][\w-]*):\s*(.+)$/gm)].map(([, key, value]) => [key, value.trim().replace(/^['"]|['"]$/g, '')]))
-const contentFiles = async () => (await Promise.all(manifest.contentRoots.map(folder => files(path.join(root, folder))))).flat().filter(file => file.endsWith('.md'))
+const contentFiles = async () => (await Promise.all([...manifest.contentRoots, ...(manifest.legacyContentRoots ?? [])].map(folder => files(path.join(root, folder))))).flat().filter(file => file.endsWith('.md'))
 
 const doctor = async () => {
   const failures = []
@@ -223,7 +224,7 @@ const doctor = async () => {
     if (!manifest.ownedGlobs.includes(replacement)) failures.push(`replaceOnUpdate entry has no owned glob: ${replacement}`)
   }
   for (const folder of manifest.contentRoots) if (!(await exists(path.join(root, folder)))) failures.push(`missing content root: ${folder}`)
-  const allowedDirectories = new Set(['_system', '_local', '.obsidian', '.gmvault', '.git', '.github', '.agents', '.codex', 'docs', 'tests', 'node_modules', '.trash', ...manifest.contentRoots])
+  const allowedDirectories = new Set(['_system', '_local', '.obsidian', '.gmvault', '.git', '.github', '.agents', '.codex', 'docs', 'tests', 'node_modules', '.trash', ...manifest.contentRoots, ...(manifest.legacyContentRoots ?? [])])
   const allowedFiles = new Set(['.git', 'Active.md', 'Home.md', 'README.md', 'CHANGELOG.md', 'package.json', '.gitignore', '.gitattributes'])
   for (const entry of await readdir(root, { withFileTypes: true })) {
     if (entry.isDirectory() && !allowedDirectories.has(entry.name)) failures.push(`undeclared root: ${entry.name}`)
@@ -269,6 +270,16 @@ const doctor = async () => {
       if (manifest.contractualNames.includes(path.basename(target)) && !target.includes('/')) failures.push(`unqualified contractual embed in ${rel(item)}: ${target}`)
     }
   }
+  const adapter = { read: relative => readFile(path.join(root, relative), 'utf8') }
+  const systemIds = new Set([...await readdir(path.join(system, 'systems')), ...await readdir(path.join(root, '_local', 'systems')).catch(() => [])])
+  for (const id of systemIds) {
+    const pkg = await layout.readPackage(adapter, id)
+    if (!Array.isArray(pkg.noteTypes)) { failures.push(`invalid system package: ${id}`); continue }
+    for (const section of ['mechanics', 'world', 'campaign']) for (const entry of pkg.layout[section] ?? []) {
+      if (!pkg.noteTypes.includes(entry.type)) failures.push(`invalid layout type: ${id}/${section}/${entry.folder}`)
+      if (entry.nested && !pkg.noteTypes.includes(entry.nested)) failures.push(`invalid nested type: ${id}/${section}/${entry.folder}`)
+    }
+  }
   const allContent = await contentFiles()
   for (const item of allContent) {
     const name = path.basename(item)
@@ -297,7 +308,7 @@ const doctor = async () => {
       const children = await readdir(path.dirname(item))
       const folder = rel(path.dirname(item))
       const insideContent = manifest.contentRoots.some(contentRoot => folder === contentRoot || folder.startsWith(`${contentRoot}/`))
-      if (children.length === 1 && !insideContent && !manifest.contentRoots.includes(folder) && !manifest.folders.some(entry => entry.path === folder)) failures.push(`empty scaffold without declaration: ${folder}`)
+      if (children.length === 1 && !insideContent && !manifest.contentRoots.includes(folder) && !(manifest.legacyContentRoots ?? []).includes(folder) && !manifest.folders.some(entry => entry.path === folder)) failures.push(`empty scaffold without declaration: ${folder}`)
     }
   }
   if (failures.length) {
@@ -319,7 +330,7 @@ const migrateSystemLibrary = async args => {
   const mechanics = path.join(root, 'Library', 'Mechanics')
   if (await exists(mechanics)) for (const entry of await readdir(mechanics, { withFileTypes: true })) if (entry.isDirectory()) moves.push({ from: `Library/Mechanics/${entry.name}`, to: `Library/${entry.name}/Mechanics` })
   const worlds = path.join(root, 'Worlds')
-  const campaignFiles = (await files(path.join(root, 'Campaigns'))).filter(item => item.endsWith('.md'))
+  const campaignFiles = (await files(path.join(root, 'Campaigns'))).filter(item => item.endsWith('/Campaign.md'))
   const campaigns = await Promise.all(campaignFiles.map(async item => ({ fields: fields(await readFile(item, 'utf8')), file: item })))
   if (await exists(worlds)) for (const entry of await readdir(worlds, { withFileTypes: true })) {
     if (!entry.isDirectory()) continue
@@ -333,6 +344,21 @@ const migrateSystemLibrary = async args => {
     if (!id || !/^[A-Za-z0-9][A-Za-z0-9_-]*$/.test(id)) throw new Error(`cannot determine system for ${from}; use --system <id>`)
     moves.push({ from, to: `Library/${id}/Worlds/${entry.name}`, system: id })
   }
+  const campaignRoot = path.join(root, 'Campaigns')
+  if (await exists(campaignRoot)) for (const entry of await readdir(campaignRoot, { withFileTypes: true })) {
+    if (!entry.isDirectory()) continue
+    const from = `Campaigns/${entry.name}`
+    const file = path.join(root, from, 'Campaign.md')
+    const body = await exists(file) ? await readFile(file, 'utf8') : ''
+    const values = fields(body)
+    const worldLink = /^\[\[([^\]|#]+)/.exec(values.world)?.[1]?.replace(/\.md$/, '') ?? ''
+    const worldMove = moves.find(move => worldLink === `${move.from}/World` || worldLink === `${move.to}/World`)
+    const worldFile = worldLink ? path.join(root, `${worldLink}.md`) : ''
+    const worldSystem = worldMove?.system || (worldFile && await exists(worldFile) ? fields(await readFile(worldFile, 'utf8')).system : '') || /^Library\/([^/]+)\/Worlds\//.exec(worldLink)?.[1] || ''
+    const id = values.system || worldSystem || fallbackSystem
+    if (!id || !/^[A-Za-z0-9][A-Za-z0-9_-]*$/.test(id)) throw new Error(`cannot determine system for ${from}; use --system <id>`)
+    moves.push({ from, to: `Library/${id}/Campaigns/${entry.name}`, system: id })
+  }
   if (!moves.length) { console.log('system-library: no changes'); return }
   for (const move of moves) if (await exists(path.join(root, move.to))) throw new Error(`target already exists: ${move.to}`)
   const movedFiles = []
@@ -344,12 +370,16 @@ const migrateSystemLibrary = async args => {
     const old = replacements.find(([from]) => link === from || link.startsWith(`${from}/`))
     return old ? `[[${old[1]}${link.slice(old[0].length)}${suffix}]]` : whole
   })
-  const content = (await Promise.all(manifest.contentRoots.map(name => files(path.join(root, name))))).flat().filter(item => item.endsWith('.md'))
+  const content = await contentFiles()
   const changed = new Map()
   for (const item of content) {
     const relative = rel(item)
     const before = await readFile(item, 'utf8')
     let after = rewrite(before)
+    if (/^(Parties|Runs)\//.test(relative)) after = after.replace(/^(campaign:\s*[\"']?)\[\[([^\]|#]+)([^\]]*)\]\]/m, (whole, prefix, link, suffix) => {
+      const candidates = moves.filter(move => move.from.startsWith('Campaigns/') && (link === path.basename(move.from) || link === `${path.basename(move.from)}/Campaign` || link === `Campaigns/${path.basename(move.from)}/Campaign`))
+      return candidates.length === 1 ? `${prefix}[[${candidates[0].to}/Campaign${suffix}]]` : whole
+    })
     const moved = movedFiles.find(entry => entry.from === relative)
     if (moved?.move.system && relative === `${moved.move.from}/World.md` && !fields(after).system) {
       const header = after.match(/^---\r?\n([\s\S]*?)\r?\n---/)
@@ -378,6 +408,7 @@ const migrateSystemLibrary = async args => {
   }
   for (const [relative, body] of changed) if (!movedFiles.some(entry => entry.from === relative)) await writeFile(path.join(root, relative), body)
   for (const move of moves) await rm(path.join(root, move.from), { recursive: true })
+  for (const legacy of ['Campaigns', 'Worlds', 'Library/Mechanics']) if (await exists(path.join(root, legacy)) && !(await readdir(path.join(root, legacy))).length) await rm(path.join(root, legacy), { recursive: true })
   console.log(`backup ${rel(backup)}`)
 }
 const demoInstall = async () => {
@@ -702,6 +733,7 @@ const finalizeUpdate = async () => {
   state.installedVersion = version
   await writeJson(statePath, state)
   await doctor()
+  if ((await Promise.all(['Campaigns', 'Worlds'].map(folder => files(path.join(root, folder))))).flat().some(item => item.endsWith('.md'))) console.log('legacy roots contain notes; run gmvault migrate system-library --dry-run')
 }
 
 const copyImportedFiles = async (source, destination) => {

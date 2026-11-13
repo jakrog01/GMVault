@@ -63,15 +63,15 @@ test("a new campaign is created with its system and rendered title", async () =>
   setting(env, modal, plugin.strings.homeFieldName).change("Sunken Crown")
   system.change("coc7e")
   await submit(env, plugin, modal)
-  await until(() => env.files.has("Campaigns/Sunken Crown/Campaign.md"), 2000, "campaign created")
-  const entry = env.files.get("Campaigns/Sunken Crown/Campaign.md")
+  await until(() => env.files.has("Library/coc7e/Campaigns/Sunken Crown/Campaign.md"), 2000, "campaign created")
+  const entry = env.files.get("Library/coc7e/Campaigns/Sunken Crown/Campaign.md")
   assert.equal(entry.frontmatter.type, "campaign")
   assert.equal(entry.frontmatter.system, "coc7e")
   assert.ok(entry.content.includes("# Sunken Crown"), "title rendered from the template")
   assert.ok(entry.content.includes("## Factions"), "template body kept")
   assert.ok(!entry.content.includes("<%"), "no Templater syntax left for Templater to execute")
-  for (const section of ["NPCs", "Locations", "Quests", "Factions", "Encounters", "Handouts"]) assert.ok(env.folders.has(`Campaigns/Sunken Crown/${section}`), `${section} folder created`)
-  await until(() => find(view.contentEl, node => node.classes?.has("tt-home-campaign") && node.attributes["data-path"] === "Campaigns/Sunken Crown/Campaign.md").length === 1, 2000, "listed")
+  for (const section of ["NPCs", "Locations", "Quests", "Factions", "Encounters", "Handouts"]) assert.ok(env.folders.has(`Library/coc7e/Campaigns/Sunken Crown/${section}`), `${section} folder created`)
+  await until(() => find(view.contentEl, node => node.classes?.has("tt-home-campaign") && node.attributes["data-path"] === "Library/coc7e/Campaigns/Sunken Crown/Campaign.md").length === 1, 2000, "listed")
   await unload(plugin)
 })
 
@@ -92,10 +92,10 @@ test("a new world is listed and a campaign in it links the world", async () => {
   setting(env, campaignModal, plugin.strings.homeFieldName).change("Tides")
   setting(env, campaignModal, plugin.strings.homeFieldWorld).change("Library/generic/Worlds/Glass Coast/World.md")
   await submit(env, plugin, campaignModal)
-  await until(() => env.files.has("Campaigns/Tides/Campaign.md"), 2000, "campaign created")
-  assert.equal(env.files.get("Campaigns/Tides/Campaign.md").frontmatter.world, "[[Library/generic/Worlds/Glass Coast/World]]")
-  for (const section of ["Quests", "Encounters", "Handouts"]) assert.ok(env.folders.has(`Campaigns/Tides/${section}`), section)
-  for (const section of ["NPCs", "Locations", "Factions"]) assert.ok(!env.folders.has(`Campaigns/Tides/${section}`), section)
+  await until(() => env.files.has("Library/generic/Campaigns/Tides/Campaign.md"), 2000, "campaign created")
+  assert.equal(env.files.get("Library/generic/Campaigns/Tides/Campaign.md").frontmatter.world, "[[Library/generic/Worlds/Glass Coast/World]]")
+  for (const section of ["Quests", "Encounters", "Handouts"]) assert.ok(env.folders.has(`Library/generic/Campaigns/Tides/${section}`), section)
+  for (const section of ["NPCs", "Locations", "Factions"]) assert.ok(!env.folders.has(`Library/generic/Campaigns/Tides/${section}`), section)
   assert.ok(find(view.contentEl, node => node.classes?.has("tt-home-world"))[0].textContent.includes("Campaigns: 1"))
   await unload(plugin)
 })
@@ -168,6 +168,7 @@ test("a new run creates Run, State, and World Day notes, links campaign and part
 test("invalid or duplicate names and a run without campaign or party create nothing and explain why", async () => {
   const env = creationVault()
   const { plugin, view } = await ready(env)
+  env.addFile("Library/generic/Campaigns/Glass/Campaign.md", "", { type: "campaign", system: "generic" })
   const before = env.created.length
   for (const [label, name, key] of [
     [plugin.strings.homeNewCampaign, "Bad/Name", "homeInvalidName"],

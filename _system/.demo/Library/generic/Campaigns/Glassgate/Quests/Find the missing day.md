@@ -2,7 +2,7 @@
 type: quest
 origin: demo
 status: active
-campaign: "[[Campaigns/Glassgate/Campaign]]"
+campaign: "[[Library/generic/Campaigns/Glassgate/Campaign]]"
 ---
 
 # Find the missing day

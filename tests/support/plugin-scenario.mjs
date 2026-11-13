@@ -622,6 +622,7 @@ export async function runScenario({ override } = {}) {
   homeModal.close()
   await byLabel(home.contentEl, s.homeNewCampaign)[0].click()
   homeModal = modals.at(-1)
+  addFile("Library/generic/Campaigns/Glass/Campaign.md", "# Duplicate", { type: "campaign", system: "generic" })
   settingByName(homeModal.contentEl, s.homeFieldName).components[0].change("Glass")
   await buttonComponent(homeModal.contentEl, s.homeCreate).click()
   assert.ok(notices.includes(s.homeExists))
